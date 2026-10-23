@@ -47,3 +47,9 @@ CI runs the same checks on Linux and macOS.
 ## Docs
 
 Design, plan and acceptance criteria (English; Chinese originals are the `-cn.md` files): `docs/engineering-design.md`, `docs/implementation-plan.md`, `docs/acceptance-criteria.md`.
+
+## License
+
+[Apache-2.0](LICENSE)
+
+Copyright 2026 belltoy. Licensed under the Apache License, Version 2.0.
