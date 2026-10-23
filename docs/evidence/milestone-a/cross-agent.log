@@ -1,0 +1,19 @@
+claude: 2.1.309 (Claude Code)
+codex: codex-cli 0.164.0
+date: 2026-10-23T12:34:54Z
+
+== 1. Claude Code saves, Codex retrieves ==
+00ae6ce5-da15-47b1-93df-e690b0676672
+tokens used
+8,247
+zebra-2757512393
+PASS (Claude -> Codex): retrieved 'zebra-2757512393'
+== 2. Codex saves, Claude Code retrieves ==
+10,564
+47564910-0ed4-4cb5-8b18-f810617fb356
+The ticket code is `otter-2982831593`. It comes from the "Rollback checklist" memory, which says to drain the queue before a rollback.
+
+Search returned that one hit, so nothing else matched "rollback".
+PASS (Codex -> Claude): retrieved 'otter-2982831593'
+PASS: both directions share one database
+exit=0

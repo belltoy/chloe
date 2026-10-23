@@ -23,6 +23,26 @@ const MAX_LIMIT: usize = 100;
 const COLS: &str =
     "id, project_id, kind, title, content, status, source, created_at, updated_at, revision";
 
+/// Creates missing parent directories (0700) and the database file (0600) so memories are
+/// readable only by the current user; SQLite gives the WAL/SHM files the database's mode.
+fn create_private(path: &Path) -> Result<()> {
+    let mut dirs = std::fs::DirBuilder::new();
+    dirs.recursive(true);
+    let mut file = std::fs::OpenOptions::new();
+    file.create(true).append(true);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::{DirBuilderExt, OpenOptionsExt};
+        dirs.mode(0o700);
+        file.mode(0o600);
+    }
+    if let Some(dir) = path.parent().filter(|d| !d.as_os_str().is_empty()) {
+        dirs.create(dir).map_err(storage)?;
+    }
+    file.open(path).map_err(storage)?;
+    Ok(())
+}
+
 fn storage(e: impl std::fmt::Display) -> Error {
     Error::Storage(e.to_string())
 }
@@ -50,9 +70,7 @@ pub struct SqliteStore {
 impl SqliteStore {
     /// Opens (creating if needed) the database and applies pending migrations.
     pub fn open(path: &Path) -> Result<Self> {
-        if let Some(dir) = path.parent().filter(|d| !d.as_os_str().is_empty()) {
-            std::fs::create_dir_all(dir).map_err(storage)?;
-        }
+        create_private(path)?;
         let mut conn = Connection::open(path).map_err(storage)?;
         conn.busy_timeout(Duration::from_secs(5)).map_err(storage)?;
         conn.execute_batch(
@@ -64,6 +82,12 @@ impl SqliteStore {
             conn: Mutex::new(conn),
             actor: "unknown".into(),
         })
+    }
+
+    /// How long a write waits for another process's lock before failing with `Error::Storage`.
+    pub fn with_busy_timeout(self, timeout: Duration) -> Result<Self> {
+        self.conn().busy_timeout(timeout).map_err(storage)?;
+        Ok(self)
     }
 
     pub fn with_actor(mut self, actor: &str) -> Self {

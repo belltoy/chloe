@@ -158,3 +158,66 @@ fn global_scope_is_explicit() {
     assert_eq!(hits[0]["memory"]["title"], "G");
     assert_eq!(payload(&r[2])["revision"], 2);
 }
+
+#[test]
+fn search_results_are_bounded() {
+    let dir = tempfile::tempdir().unwrap();
+    let store = SqliteStore::open(&dir.path().join("t.db")).unwrap();
+    let proj = dir.path().join("p");
+    std::fs::create_dir(&proj).unwrap();
+    let pid = store.resolve_project(&proj).unwrap();
+    let long = format!("needle {}", "x".repeat(5000));
+
+    let r = session(
+        &store,
+        pid,
+        &[
+            call(
+                1,
+                "memory_save",
+                json!({"kind": "fact", "title": "Long", "content": long}),
+            ),
+            call(
+                2,
+                "memory_save",
+                json!({"kind": "fact", "title": "Short", "content": "needle"}),
+            ),
+            call(
+                3,
+                "memory_search",
+                json!({"query": "needle", "limit": 1000}),
+            ),
+        ],
+    );
+    let id = payload(&r[0])["id"].as_str().unwrap().to_string();
+    let hits = payload(&r[2]);
+    let long_hit = hits
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|h| h["memory"]["title"] == "Long")
+        .unwrap();
+    assert_eq!(
+        long_hit["memory"]["content"]
+            .as_str()
+            .unwrap()
+            .chars()
+            .count(),
+        1000
+    );
+    assert_eq!(long_hit["content_truncated"], true);
+    let short_hit = hits
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|h| h["memory"]["title"] == "Short")
+        .unwrap();
+    assert_eq!(short_hit["content_truncated"], false);
+
+    // memory_get still returns the full body.
+    let r = session(&store, pid, &[call(1, "memory_get", json!({"id": id}))]);
+    assert_eq!(
+        payload(&r[0])["content"].as_str().unwrap().len(),
+        long.len()
+    );
+}

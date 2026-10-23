@@ -34,7 +34,7 @@
 | A-16 | P0 | Offline operation | With the network disabled and no LLM/embedding configured, run MCP CRUD and FTS search | All operations succeed; nothing attempts an outbound connection |
 | A-17 | P0 | Audit trail | Create, update and archive one memory; read `memory history` | Rows appear in order with operation, actor, revision and snapshot; UPDATE/DELETE on the audit table is rejected |
 | A-18 | P0 | Explicit global scope | Save one global and one project memory; search from another project with and without `include_global` | Global memory appears only with `include_global`; the project memory never appears; invalid scope returns a clear error |
-| A-19 | P1 | `doctor` diagnostics | Run `doctor` on a healthy setup, then on a read-only database, a broken configuration and a non-startable MCP binary | Healthy passes; each fault is named in the output and exits non-zero; the user's real database is untouched |
+| A-19 | P1 | `doctor` diagnostics | Run `doctor` on a healthy setup, then on a read-only database and on an unusable database path | Healthy passes; each fault is named in the output and exits non-zero; the user's real database is untouched |
 | A-20 | P1 | Agent guidance | Call `initialize` and inspect the response; follow `docs/agents/` snippets in a real agent | `instructions` is present and accurate; the real agent searches before work and saves a durable decision when prompted by the snippet |
 
 **Minimal manual A acceptance script (illustrative, not implying implemented):**

@@ -17,6 +17,9 @@ never save transient task state or secrets. Use scope=global only for knowledge 
 To change a memory, memory_get it, then memory_update or memory_archive with its current expected_revision; \
 on a conflict error, re-read and retry. Search returns active memories of the current project only \
 (set include_global to add global ones).";
+/// Search results carry at most this many characters of each body; `memory_get` returns it all.
+const SNIPPET_CHARS: usize = 1000;
+const MAX_LIMIT: usize = 50;
 const LATEST: &str = "2025-06-18";
 const SUPPORTED: &[&str] = &["2025-06-18", "2025-03-26", "2024-11-05"];
 
@@ -126,7 +129,7 @@ fn tools() -> Value {
                 "Full-text search memories of the current project (active only by default).",
                 json!({
                     "query": {"type": "string"},
-                    "limit": {"type": "integer", "minimum": 1, "default": 10},
+                    "limit": {"type": "integer", "minimum": 1, "maximum": MAX_LIMIT, "default": 10},
                     "include_global": {"type": "boolean", "default": false},
                     "include_inactive": {"type": "boolean", "default": false}
                 }),
@@ -200,15 +203,27 @@ fn call_tool<S: MemoryService>(
             })?)
         }),
         "memory_search" => parse::<Search>(args).and_then(|a| {
-            to_json(&svc.search(
+            let hits = svc.search(
                 p,
                 SearchQuery {
                     query: a.query,
-                    limit: a.limit.unwrap_or(10),
+                    limit: a.limit.unwrap_or(10).min(MAX_LIMIT),
                     include_global: a.include_global,
                     include_inactive: a.include_inactive,
                 },
-            )?)
+            )?;
+            hits.into_iter()
+                .map(|mut h| {
+                    let cut = h.memory.content.chars().count() > SNIPPET_CHARS;
+                    if cut {
+                        h.memory.content = h.memory.content.chars().take(SNIPPET_CHARS).collect();
+                    }
+                    let mut v = to_json(&h)?;
+                    v["content_truncated"] = cut.into();
+                    Ok(v)
+                })
+                .collect::<Result<Vec<_>>>()
+                .map(Value::Array)
         }),
         "memory_get" => parse::<Get>(args).and_then(|a| to_json(&svc.get(p, a.id)?)),
         "memory_update" => parse::<Update>(args).and_then(|a| {

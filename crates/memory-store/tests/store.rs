@@ -357,3 +357,38 @@ fn global_memory_is_editable_from_any_project_but_private_is_not() {
         Err(Error::NotFound(_))
     ));
 }
+
+#[cfg(unix)]
+#[test]
+fn database_and_directory_are_private() {
+    use std::os::unix::fs::PermissionsExt;
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("data/sub/t.db");
+    let s = SqliteStore::open(&path).unwrap();
+    s.save(new(None, "t", "c")).unwrap();
+    let mode = |p: &std::path::Path| std::fs::metadata(p).unwrap().permissions().mode() & 0o777;
+    assert_eq!(mode(&path), 0o600);
+    assert_eq!(mode(path.parent().unwrap()), 0o700);
+    let wal = path.with_extension("db-wal");
+    if wal.exists() {
+        assert_eq!(mode(&wal), 0o600);
+    }
+}
+
+#[test]
+fn busy_database_fails_with_storage_error_then_recovers() {
+    let (_d, path) = db();
+    let s = SqliteStore::open(&path)
+        .unwrap()
+        .with_busy_timeout(std::time::Duration::from_millis(100))
+        .unwrap();
+    let other = rusqlite::Connection::open(&path).unwrap();
+    other.execute_batch("BEGIN IMMEDIATE").unwrap(); // holds the write lock
+    let err = s.save(new(None, "t", "c")).unwrap_err();
+    assert!(
+        matches!(&err, Error::Storage(m) if m.contains("locked")),
+        "{err}"
+    );
+    other.execute_batch("ROLLBACK").unwrap();
+    s.save(new(None, "t", "c")).unwrap();
+}
