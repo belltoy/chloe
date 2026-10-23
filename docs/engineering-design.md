@@ -200,6 +200,7 @@ Triggers: SessionEnd (if available), manual `consolidate`, idle timeout (for age
 ### 6.4 Embedding + Hybrid Retrieval
 
 - Providers are isolated behind an interface; local Ollama / compatible embedding APIs are the preferred demo option; optional external APIs must be explicitly enabled by the user.
+- The embedding model must cover English and Chinese (memories and queries are often mixed, and code docs are mostly English). Keyword search for CJK text is a separate FTS-tokenizer question deferred to B (B3-07); Milestone A documents it as a known limitation.
 - Strictly validate `model_id + dimension`; changing models requires rebuilding the vector index, and different dimensions are never mixed.
 - Take FTS and Vector top-N each, fuse by RRF, then hard-filter by project scope and status, and rerank moderately; results report retrieval source and latency.
 - When embeddings are temporarily unavailable, fall back to FTS; MCP must not become wholly unavailable due to model-service failure.

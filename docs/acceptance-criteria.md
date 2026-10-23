@@ -79,7 +79,7 @@ A-01 through A-12 and A-16 through A-18 all PASS, A-13 through A-15 and A-19 thr
 | B-10 | P0 | Full chain | Claude Code auto-produces a candidate, reviewed to Active; a new Codex session queries | Codex finds the knowledge via MCP with correct source/session; no manual `memory_save` |
 | B-11 | P0 | Scope guarantee | Two projects with similar candidates/vectors | No search branch leaks the other project's content, including Vector/RRF |
 | B-12 | P0 | Embedding degradation | No local embedding service or model unavailable | FTS still works; diagnosable degradation reason; MCP does not hang |
-| B-13 | P0 | Reproducible retrieval evaluation | Run all three modes with a fixed model/dataset/queries | Machine-readable report with Recall@5, MRR, p50/p95 and environment info |
+| B-13 | P0 | Reproducible retrieval evaluation | Run all three modes with a fixed model/dataset/queries | Machine-readable report with Recall@5, MRR, p50/p95 and environment info, broken down by language (English, Chinese, mixed, cross-language) |
 | B-14 | P1 | Schema compatibility | Event fixtures of different versions, unknown fields, missing end event | Supportable formats parse; unsupported ones are explicitly rejected and counted |
 | B-15 | P1 | Vector index consistency | Update/archive a memory then retrieve; change model_id/dimension | No wrong hits from stale vectors; different model dimensions never mixed |
 | B-16 | P1 | Extraction quality | Evaluation set mixing irrelevant and useful events | Shows candidate acceptance rate and false-extraction cases; serious factual errors never automatically become Active |
@@ -126,7 +126,7 @@ A-01 through A-12 and A-16 through A-18 all PASS, A-13 through A-15 and A-19 thr
 | B hook response | p95 ≤ 500 ms | Local short-event receipt only, not waiting for the LLM; based on 100 samples |
 | B automatic severe-conflict overwrites | 0 | At least 10 hand-designed conflict samples |
 | B agent cross-project leakage | 0 | 20 cross-project negative cases, including vector retrieval |
-| B eval size | ≥ 50 memories, ≥ 20 labelled questions | Covering code symbols, synonyms, outdated information, unrelated projects |
+| B eval size | ≥ 50 memories, ≥ 20 labelled questions | Covering code symbols, synonyms, outdated information, unrelated projects, and English, Chinese, mixed and cross-language queries |
 | B retrieval benchmark | Publish Recall@5/MRR/p50/p95 | **Hybrid is not required to win**; if worse, analyze why |
 
 These thresholds are suggested first-version acceptance targets and must be calibrated on the actual dev machine and model environment. Model inference time is excluded from `hook response`; retrieval latency reports must state whether remote embedding calls are included, and should report warm-cache / local-only / including-provider latency separately.
@@ -190,4 +190,4 @@ Evidence should be collected under `docs/evidence/milestone-a/` and `docs/eviden
 | Automatic hook/transcript | B0-01 – B0-05 | B-01 – B-05/B-14 |
 | LLM extraction and recovery | B1-01 – B1-05 | B-06/B-07/B-18 |
 | Consolidation + review | B2-01 – B2-05 | B-08/B-09/B-16 |
-| Embedding/Hybrid/Bench | B3-01 – B3-05 | B-10 – B-13/B-15/B-17 |
+| Embedding/Hybrid/Bench | B3-01 – B3-05, B3-07 | B-10 – B-13/B-15/B-17 |

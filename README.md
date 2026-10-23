@@ -42,7 +42,7 @@ CLI ───────────────────────┘    
 ## Design trade-offs and known limitations
 
 - SQLite shared by several processes (WAL + 5 s busy timeout) instead of a daemon: simple and robust, but a write blocked longer than the timeout returns a storage error.
-- FTS5 `unicode61` tokenizer: unsegmented Chinese/Japanese text matches whole runs only, so short CJK queries often miss. Planned for a later iteration.
+- FTS5 `unicode61` tokenizer: unsegmented Chinese/Japanese text matches whole runs only, so short CJK queries often miss. Deferred to Milestone B (task B3-07); memories saved now are re-indexed by that migration, nothing is lost.
 - A moved or renamed project directory becomes a new project; there is no alias-linking command yet.
 - Search snippets are cut to 1000 characters (`memory_get` returns the full body); search returns at most 50 hits.
 - Global memories can be edited from any project.

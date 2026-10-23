@@ -126,12 +126,13 @@ Continuous items across all phases: automated tests, documentation, a minimal de
 
 ### B3 Hybrid Retrieval and Evaluation
 
-- **B3-01** Embedding provider/index: persist local model ID and dimension, backfill jobs for missing vectors, rebuild on model switch.
+- **B3-01** Embedding provider/index: persist local model ID and dimension, backfill jobs for missing vectors, rebuild on model switch; the candidate model must cover both English and Chinese.
 - **B3-02** Vector top-N and FTS top-N, RRF fusion ranking, hard filtering by status/scope, degradable on anything but FTS failure.
 - **B3-03** Explainable results (matched_by, rank, source, status), with token/character limits on what is returned to the agent; a diagnostic mode (`--explain`) shows the FTS/Vector paths, scope, status filter and main ranking factors.
-- **B3-04** Fixed evaluation dataset (suggested 50–100 memories, 20–30 queries), human-labeled relevant memory IDs, run Recall@5, MRR, p50/p95 for FTS/Vector/Hybrid; record model/hardware/configuration.
+- **B3-04** Fixed evaluation dataset (suggested 50–100 memories, 20–30 queries), human-labeled relevant memory IDs, run Recall@5, MRR, p50/p95 for FTS/Vector/Hybrid, reported per language (English, Chinese, mixed, cross-language queries); record model/hardware/configuration.
 - **B3-05** Add fixture tests to CI, run benchmarks in a controlled environment; publish architecture and demo video with known limitations.
 - **B3-06** Context Pack: a size-bounded result grouped by kind (decisions / constraints / gotchas / procedures) with memory IDs and sources and a way to expand one memory on demand (`memory_get`); truncation is by a configurable token/character budget.
+- **B3-07** Chinese/CJK keyword search, deliberately deferred from A (A keeps the `unicode61` FTS tokenizer; unsegmented CJK text only matches whole runs). Choose and measure an approach: `trigram` tokenizer with `LIKE` for short tokens, or a `LIKE` fallback when FTS finds nothing. Needs a migration that rebuilds `memory_fts`; existing memories are re-indexed from `memories`, so nothing saved in A is lost.
 
 **B Exit Gate**: the full chain of automatic capture → candidate extraction → review/merge → cross-agent retrieval passes, with a reproducible performance/quality report; Hybrid is not required to beat every baseline, but underperforming a baseline must be explained and have a fallback.
 
