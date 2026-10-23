@@ -41,4 +41,4 @@ Not verified: the persistent `claude mcp add` / `codex mcp add` commands themsel
 
 `examples/cross-agent/run.sh` copies `examples/cross-agent/repo` to a temp dir with a temp database, runs both directions (Claude Code saves a memory with a random marker and Codex retrieves it; then Codex saves one and Claude Code retrieves it), and prints PASS/FAIL. Run with `CHLOE=target/debug/chloe examples/cross-agent/run.sh`. Passed on 2026-10-23 with the versions above.
 
-Agent instructions to paste into `CLAUDE.md` / `AGENTS.md`: [agents/memory-instructions.md](./agents/memory-instructions.md). `chloe doctor` checks the database and runs a real `mcp serve` round trip on a throwaway database.
+Agent instructions to paste into `CLAUDE.md` / `AGENTS.md` (required: in a control run without them, Claude Code and Codex neither searched nor saved, although the server sends the same text as MCP `instructions`): [agents/memory-instructions.md](./agents/memory-instructions.md). `chloe doctor` checks the database and runs a real `mcp serve` round trip on a throwaway database.

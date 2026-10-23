@@ -16,7 +16,7 @@ claude mcp add chloe -- chloe mcp serve  # Claude Code
 codex mcp add chloe -- chloe mcp serve   # Codex (add default_tools_approval_mode = "approve" for `codex exec`)
 ```
 
-Then paste the snippet from [`docs/agents/memory-instructions.md`](docs/agents/memory-instructions.md) into your `CLAUDE.md` / `AGENTS.md`. Both agents share one database, so what one saves the other can search. Details, verified versions and a runnable two-way demo: [`docs/mcp-clients.md`](docs/mcp-clients.md).
+**Required:** paste the snippet from [`docs/agents/memory-instructions.md`](docs/agents/memory-instructions.md) into your `CLAUDE.md` / `AGENTS.md`. Without it, Claude Code and Codex did not search or save on their own in our control run, even though the server sends the same text as MCP `instructions`. Both agents share one database, so what one saves the other can search. Details, verified versions and a runnable two-way demo: [`docs/mcp-clients.md`](docs/mcp-clients.md).
 
 Manage memories yourself with the CLI (`--json` on everything): `chloe memory add|search|list|show|update|archive|history`.
 
