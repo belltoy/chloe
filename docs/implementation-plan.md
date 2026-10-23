@@ -75,7 +75,7 @@ Continuous items across all phases: automated tests, documentation, a minimal de
 - **A2-02** CLI: init/project show/memory add|search|show|update|archive/doctor/mcp serve, supporting `--json`.
 - **A2-03** Write and actually verify MCP connection configuration for Claude Code / Codex; record the versions used and screenshots/recordings (do not rely on guesses in the README).
 - **A2-04** Provide an example repo and a cross-agent script that runs both directions: agent A saves and agent B retrieves, then B saves and A retrieves, demonstrating a shared database.
-- **A2-05** Explicit global scope: `memory_save` / `chloe memory add` accept `scope: project|global` (default `project`); global memories appear in search only with `include_global`; cross-project reads stay `NotFound`.
+- **A2-05** Explicit global scope: `memory_save` accepts `scope: project|global` (default `project`) and `chloe memory add` has `--global`; global memories appear in search only with `include_global`; cross-project reads stay `NotFound`.
 - **A2-06** Agent guidance: the MCP `initialize` response carries `instructions` (when to search, when to save, how to handle conflicts); ship recommended `CLAUDE.md` / `AGENTS.md` snippets and configuration templates under `docs/agents/`. No skill-management system.
 - **A2-07** Extend `chloe doctor`: database writable and migrated, FTS consistent, configuration valid, `mcp serve` starts and completes initialize/tools-list, and a save → search → get → archive round trip succeeds against a throwaway database (never the user's data). Real agent calls remain a separate acceptance.
 

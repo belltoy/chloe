@@ -33,6 +33,8 @@ pub struct Hit {
 pub struct Revision {
     pub revision: u32,
     pub cause: String,
+    /// Who made the change (`cli`, `mcp`, ...).
+    pub actor: String,
     pub snapshot: Memory,
 }
 

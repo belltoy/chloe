@@ -13,7 +13,10 @@ use rusqlite::{Connection, OptionalExtension, Row, Transaction, TransactionBehav
 use serde::{Serialize, de::DeserializeOwned};
 use time::OffsetDateTime;
 
-const MIGRATIONS: &[&str] = &[include_str!("migrations/001_init.sql")];
+const MIGRATIONS: &[&str] = &[
+    include_str!("migrations/001_init.sql"),
+    include_str!("migrations/002_audit.sql"),
+];
 const MAX_TITLE_CHARS: usize = 200;
 const MAX_CONTENT_BYTES: usize = 64 * 1024;
 const MAX_LIMIT: usize = 100;
@@ -40,6 +43,8 @@ impl Doctor {
 
 pub struct SqliteStore {
     conn: Mutex<Connection>,
+    /// Recorded in the audit trail for every write (e.g. `cli`, `mcp`).
+    actor: String,
 }
 
 impl SqliteStore {
@@ -57,7 +62,13 @@ impl SqliteStore {
         migrate(&mut conn)?;
         Ok(Self {
             conn: Mutex::new(conn),
+            actor: "unknown".into(),
         })
+    }
+
+    pub fn with_actor(mut self, actor: &str) -> Self {
+        self.actor = actor.into();
+        self
     }
 
     fn conn(&self) -> MutexGuard<'_, Connection> {
@@ -107,7 +118,7 @@ impl SqliteStore {
     ) -> Result<Memory> {
         let mut conn = self.conn();
         let tx = begin(&mut conn)?;
-        let mut m = fetch(&tx, project, id, false)?;
+        let mut m = fetch(&tx, project, id)?;
         if m.revision != expected {
             return Err(Error::Conflict {
                 expected,
@@ -122,7 +133,7 @@ impl SqliteStore {
             params![id.to_string(), tag(&m.kind), m.title, m.content, tag(&m.status), micros(m.updated_at), m.revision],
         )
         .map_err(storage)?;
-        write_revision(&tx, &m, cause)?;
+        write_revision(&tx, &m, cause, &self.actor)?;
         tx.commit().map_err(storage)?;
         Ok(m)
     }
@@ -176,13 +187,13 @@ impl MemoryService for SqliteStore {
             ],
         )
         .map_err(storage)?;
-        write_revision(&tx, &m, "create")?;
+        write_revision(&tx, &m, "create", &self.actor)?;
         tx.commit().map_err(storage)?;
         Ok(m)
     }
 
     fn get(&self, project: Option<ProjectId>, id: MemoryId) -> Result<Memory> {
-        fetch(&self.conn(), project, id, true)
+        fetch(&self.conn(), project, id)
     }
 
     fn update(
@@ -294,15 +305,16 @@ impl MemoryService for SqliteStore {
 
     fn history(&self, project: Option<ProjectId>, id: MemoryId) -> Result<Vec<Revision>> {
         let conn = self.conn();
-        fetch(&conn, project, id, true)?;
+        fetch(&conn, project, id)?;
         let mut stmt = conn
-            .prepare("SELECT revision, cause, snapshot FROM memory_revisions WHERE memory_id=?1 ORDER BY revision")
+            .prepare("SELECT revision, cause, snapshot, actor FROM memory_revisions WHERE memory_id=?1 ORDER BY revision")
             .map_err(storage)?;
         let rows = stmt
             .query_map([id.to_string()], |r| {
                 Ok(Revision {
                     revision: r.get(0)?,
                     cause: r.get(1)?,
+                    actor: r.get(3)?,
                     snapshot: conv(2, serde_json::from_str(&r.get::<_, String>(2)?))?,
                 })
             })
@@ -341,17 +353,14 @@ fn migrate(conn: &mut Connection) -> Result<()> {
     tx.commit().map_err(storage)
 }
 
-/// Visible to `project` only if scopes match; global memories are additionally
-/// readable from anywhere when `allow_global`. Anything else is `NotFound`.
-fn fetch(
-    conn: &Connection,
-    project: Option<ProjectId>,
-    id: MemoryId,
-    allow_global: bool,
-) -> Result<Memory> {
+/// Visible to `project` if scopes match, or if the memory is global (readable and editable
+/// from any project). Anything else is `NotFound`.
+fn fetch(conn: &Connection, project: Option<ProjectId>, id: MemoryId) -> Result<Memory> {
     conn.query_row(
-        &format!("SELECT {COLS} FROM memories WHERE id=?1 AND (project_id IS ?2 OR (?3 AND project_id IS NULL))"),
-        params![id.to_string(), project.map(|p| p.to_string()), allow_global],
+        &format!(
+            "SELECT {COLS} FROM memories WHERE id=?1 AND (project_id IS ?2 OR project_id IS NULL)"
+        ),
+        params![id.to_string(), project.map(|p| p.to_string())],
         to_memory,
     )
     .optional()
@@ -359,11 +368,11 @@ fn fetch(
     .ok_or_else(|| Error::NotFound(format!("memory {id}")))
 }
 
-fn write_revision(tx: &Transaction, m: &Memory, cause: &str) -> Result<()> {
+fn write_revision(tx: &Transaction, m: &Memory, cause: &str, actor: &str) -> Result<()> {
     let snapshot = serde_json::to_string(m).map_err(|e| Error::Internal(e.to_string()))?;
     tx.execute(
-        "INSERT INTO memory_revisions (memory_id, revision, snapshot, changed_at, cause) VALUES (?1,?2,?3,?4,?5)",
-        params![m.id.to_string(), m.revision, snapshot, micros(m.updated_at), cause],
+        "INSERT INTO memory_revisions (memory_id, revision, snapshot, changed_at, cause, actor) VALUES (?1,?2,?3,?4,?5,?6)",
+        params![m.id.to_string(), m.revision, snapshot, micros(m.updated_at), cause, actor],
     )
     .map_err(storage)?;
     Ok(())

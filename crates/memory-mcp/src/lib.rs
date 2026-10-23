@@ -10,12 +10,29 @@ use serde::Deserialize;
 use serde::de::DeserializeOwned;
 use serde_json::{Value, json};
 
+const INSTRUCTIONS: &str = "chloe is long-term project memory shared by coding agents. \
+Before starting work, call memory_search with keywords for the task. \
+Save durable knowledge with memory_save (kind: decision, constraint, gotcha, procedure or fact); \
+never save transient task state or secrets. Use scope=global only for knowledge that applies to every project. \
+To change a memory, memory_get it, then memory_update or memory_archive with its current expected_revision; \
+on a conflict error, re-read and retry. Search returns active memories of the current project only \
+(set include_global to add global ones).";
 const LATEST: &str = "2025-06-18";
 const SUPPORTED: &[&str] = &["2025-06-18", "2025-03-26", "2024-11-05"];
+
+#[derive(Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
+enum Scope {
+    #[default]
+    Project,
+    Global,
+}
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Save {
+    #[serde(default)]
+    scope: Scope,
     kind: Kind,
     title: String,
     content: String,
@@ -95,7 +112,11 @@ fn tools() -> Value {
             "memory_save",
             schema(
                 "Save a long-term memory for the current project.",
-                json!({"kind": kind, "title": {"type": "string"}, "content": {"type": "string"}}),
+                json!({
+                    "kind": kind, "title": {"type": "string"}, "content": {"type": "string"},
+                    "scope": {"type": "string", "enum": ["project", "global"], "default": "project",
+                        "description": "Use global only for knowledge that applies to every project"}
+                }),
                 &["kind", "title", "content"],
             ),
         ),
@@ -168,7 +189,10 @@ fn call_tool<S: MemoryService>(
     Some(match name {
         "memory_save" => parse::<Save>(args).and_then(|a| {
             to_json(&svc.save(NewMemory {
-                project_id: p,
+                project_id: match a.scope {
+                    Scope::Project => p,
+                    Scope::Global => None,
+                },
                 kind: a.kind,
                 title: a.title,
                 content: a.content,
@@ -235,6 +259,7 @@ fn handle<S: MemoryService>(svc: &S, project: ProjectId, msg: &Value) -> Option<
             json!({
                 "protocolVersion": version,
                 "capabilities": {"tools": {}},
+                "instructions": INSTRUCTIONS,
                 "serverInfo": {"name": "chloe", "version": env!("CARGO_PKG_VERSION")}
             })
         }

@@ -46,6 +46,12 @@ fn protocol_and_tool_lifecycle() {
     );
     assert_eq!(r.len(), 4, "notification must not be answered");
     assert_eq!(r[0]["result"]["protocolVersion"], "2024-11-05");
+    assert!(
+        r[0]["result"]["instructions"]
+            .as_str()
+            .unwrap()
+            .contains("memory_search")
+    );
     assert_eq!(r[1]["result"]["tools"].as_array().unwrap().len(), 5);
     assert_eq!(r[2]["error"]["code"], -32601);
     let saved = payload(&r[3]);
@@ -91,4 +97,64 @@ fn protocol_and_tool_lifecycle() {
     let other = store.resolve_project(&other_dir).unwrap();
     let r = session(&store, other, &[call(1, "memory_get", json!({"id": id}))]);
     assert_eq!(payload(&r[0])["code"], "not_found");
+}
+
+#[test]
+fn global_scope_is_explicit() {
+    let dir = tempfile::tempdir().unwrap();
+    let store = SqliteStore::open(&dir.path().join("t.db")).unwrap();
+    let mk = |n: &str| {
+        let p = dir.path().join(n);
+        std::fs::create_dir(&p).unwrap();
+        store.resolve_project(&p).unwrap()
+    };
+    let (a, b) = (mk("a"), mk("b"));
+
+    let r = session(
+        &store,
+        a,
+        &[
+            call(
+                1,
+                "memory_save",
+                json!({"kind": "fact", "title": "G", "content": "shared lint rule", "scope": "global"}),
+            ),
+            call(
+                2,
+                "memory_save",
+                json!({"kind": "fact", "title": "P", "content": "private lint rule"}),
+            ),
+            call(
+                3,
+                "memory_save",
+                json!({"kind": "fact", "title": "X", "content": "x", "scope": "galaxy"}),
+            ),
+        ],
+    );
+    let gid = payload(&r[0])["id"].as_str().unwrap().to_string();
+    assert!(payload(&r[0])["project_id"].is_null());
+    assert_eq!(payload(&r[2])["code"], "invalid_argument");
+
+    let r = session(
+        &store,
+        b,
+        &[
+            call(1, "memory_search", json!({"query": "lint"})),
+            call(
+                2,
+                "memory_search",
+                json!({"query": "lint", "include_global": true}),
+            ),
+            call(
+                3,
+                "memory_update",
+                json!({"id": gid, "expected_revision": 1, "title": "G2"}),
+            ),
+        ],
+    );
+    assert!(payload(&r[0]).as_array().unwrap().is_empty());
+    let hits = payload(&r[1]);
+    assert_eq!(hits.as_array().unwrap().len(), 1);
+    assert_eq!(hits[0]["memory"]["title"], "G");
+    assert_eq!(payload(&r[2])["revision"], 2);
 }

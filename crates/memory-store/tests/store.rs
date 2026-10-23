@@ -120,7 +120,7 @@ fn failed_update_rolls_back_everything() {
     rusqlite::Connection::open(&path)
         .unwrap()
         .execute(
-            "INSERT INTO memory_revisions VALUES (?1, 2, '{}', 0, 'x')",
+            "INSERT INTO memory_revisions (memory_id, revision, snapshot, changed_at, cause) VALUES (?1, 2, '{}', 0, 'x')",
             [m.id.to_string()],
         )
         .unwrap();
@@ -316,5 +316,44 @@ fn scope_resolver_git_worktree_and_plain_dir() {
     assert!(matches!(
         s.resolve_project(&dir.path().join("nope")),
         Err(Error::InvalidArgument(_))
+    ));
+}
+
+#[test]
+fn audit_trail_records_actor_and_is_append_only() {
+    let (_d, path) = db();
+    let s = SqliteStore::open(&path).unwrap().with_actor("cli");
+    let m = s.save(new(None, "t", "body")).unwrap();
+    s.archive(None, m.id, 1).unwrap();
+    let h = s.history(None, m.id).unwrap();
+    let trail: Vec<_> = h
+        .iter()
+        .map(|r| (r.revision, r.cause.as_str(), r.actor.as_str()))
+        .collect();
+    assert_eq!(trail, [(1, "create", "cli"), (2, "archive", "cli")]);
+
+    let raw = rusqlite::Connection::open(&path).unwrap();
+    assert!(
+        raw.execute("UPDATE memory_revisions SET cause='x'", [])
+            .is_err()
+    );
+    assert!(raw.execute("DELETE FROM memory_revisions", []).is_err());
+}
+
+#[test]
+fn global_memory_is_editable_from_any_project_but_private_is_not() {
+    let (dir, path) = db();
+    let s = SqliteStore::open(&path).unwrap();
+    let (a, b) = (project(&s, &dir, "a"), project(&s, &dir, "b"));
+    let g = s.save(new(None, "G", "global")).unwrap();
+    let p = s.save(new(Some(a), "P", "private")).unwrap();
+    let ch = || MemoryChanges {
+        title: Some("T".into()),
+        ..Default::default()
+    };
+    assert_eq!(s.update(Some(b), g.id, 1, ch()).unwrap().revision, 2);
+    assert!(matches!(
+        s.update(Some(b), p.id, 1, ch()),
+        Err(Error::NotFound(_))
     ));
 }

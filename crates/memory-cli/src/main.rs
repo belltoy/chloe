@@ -1,3 +1,5 @@
+mod doctor;
+
 use std::io::Read;
 use std::path::PathBuf;
 use std::process::ExitCode;
@@ -57,7 +59,7 @@ enum Command {
         #[command(subcommand)]
         command: McpCommand,
     },
-    /// Check database health (exits non-zero when unhealthy)
+    /// Check database, configuration and a full MCP round trip (non-zero exit on failure)
     Doctor {
         /// Rebuild the full-text index first
         #[arg(long)]
@@ -103,6 +105,9 @@ enum MemoryCommand {
         all: bool,
     },
     List {
+        /// List global memories instead of the project's
+        #[arg(long)]
+        global: bool,
         #[arg(long, default_value_t = 50)]
         limit: usize,
         /// Include non-active memories
@@ -110,6 +115,10 @@ enum MemoryCommand {
         all: bool,
     },
     Show {
+        id: MemoryId,
+    },
+    /// Show the append-only audit trail of a memory
+    History {
         id: MemoryId,
     },
     Update(UpdateArgs),
@@ -190,7 +199,30 @@ fn run(cli: Cli) -> anyhow::Result<bool> {
         return Ok(true);
     }
 
-    let store = SqliteStore::open(&config.db_path)?;
+    if let Command::Doctor { reindex } = cli.command {
+        let checks = doctor::run(&config.db_path, reindex);
+        let healthy = checks.iter().all(|c| c.ok);
+        if json {
+            print_json(&serde_json::json!({"healthy": healthy, "checks": checks}))?;
+        } else {
+            for c in &checks {
+                println!(
+                    "[{}] {}  {}",
+                    if c.ok { "ok" } else { "FAIL" },
+                    c.name,
+                    c.detail
+                );
+            }
+        }
+        return Ok(healthy);
+    }
+
+    let actor = if matches!(cli.command, Command::Mcp { .. }) {
+        "mcp"
+    } else {
+        "cli"
+    };
+    let store = SqliteStore::open(&config.db_path)?.with_actor(actor);
     let dir = match cli.dir {
         Some(d) => d,
         None => std::env::current_dir()?,
@@ -221,18 +253,7 @@ fn run(cli: Cli) -> anyhow::Result<bool> {
             std::io::stdin().lock(),
             std::io::stdout().lock(),
         )?,
-        Command::Doctor { reindex } => {
-            if reindex {
-                store.reindex()?;
-            }
-            let d = store.doctor()?;
-            if json {
-                print_json(&d)?;
-            } else {
-                println!("{d:#?}");
-            }
-            return Ok(d.healthy());
-        }
+        Command::Doctor { .. } => unreachable!(),
         Command::Memory { command } => match command {
             MemoryCommand::Add {
                 title,
@@ -276,8 +297,9 @@ fn run(cli: Cli) -> anyhow::Result<bool> {
                     }
                 }
             }
-            MemoryCommand::List { limit, all } => {
-                let ms = store.list(Some(project()?), all, limit)?;
+            MemoryCommand::List { global, limit, all } => {
+                let scope = if global { None } else { Some(project()?) };
+                let ms = store.list(scope, all, limit)?;
                 if json {
                     print_json(&ms)?;
                 } else {
@@ -292,6 +314,19 @@ fn run(cli: Cli) -> anyhow::Result<bool> {
                     print_json(&m)?;
                 } else {
                     println!("{}\n\n{}", line(&m), m.content);
+                }
+            }
+            MemoryCommand::History { id } => {
+                let revs = store.history(Some(project()?), id)?;
+                if json {
+                    print_json(&revs)?;
+                } else {
+                    for r in revs {
+                        println!(
+                            "r{}  {}  {}  {}",
+                            r.revision, r.cause, r.actor, r.snapshot.title
+                        );
+                    }
                 }
             }
             MemoryCommand::Update(a) => {
