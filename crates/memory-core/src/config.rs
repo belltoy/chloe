@@ -39,7 +39,7 @@ fn default_data_dir() -> Result<PathBuf> {
         ));
     }
     // Linux already honours XDG_DATA_HOME; Windows uses its own convention.
-    Ok(ProjectDirs::from("", "", "agent-memory")
+    Ok(ProjectDirs::from("", "", "chloe")
         .ok_or_else(err)?
         .data_dir()
         .to_path_buf())
@@ -50,7 +50,7 @@ fn xdg_data_dir(xdg_data_home: Option<PathBuf>, home: &Path) -> PathBuf {
     xdg_data_home
         .filter(|p| p.is_absolute())
         .unwrap_or_else(|| home.join(".local/share"))
-        .join("agent-memory")
+        .join("chloe")
 }
 
 #[cfg(test)]
@@ -69,11 +69,8 @@ mod tests {
     #[test]
     fn xdg_data_home_used_when_absolute_else_fallback() {
         let home = Path::new("/home/u");
-        assert_eq!(
-            xdg_data_dir(Some("/x".into()), home),
-            Path::new("/x/agent-memory")
-        );
-        let fallback = Path::new("/home/u/.local/share/agent-memory");
+        assert_eq!(xdg_data_dir(Some("/x".into()), home), Path::new("/x/chloe"));
+        let fallback = Path::new("/home/u/.local/share/chloe");
         assert_eq!(xdg_data_dir(Some("rel".into()), home), fallback);
         assert_eq!(xdg_data_dir(None, home), fallback);
     }

@@ -1,4 +1,4 @@
-# Local-first Coding Agent Memory — Engineering Design
+# Chloe — Local-first Coding Agent Memory — Engineering Design
 
 > Document ID: AM-DESIGN-001 · Version: v0.1 · Date: 2026-10-23 · Status: for implementation review
 >
@@ -137,15 +137,15 @@ A `memory_list` may be added for debugging, but semantic retrieval must not depe
 ### 5.2 CLI
 
 ```text
-agent-memory init [path]
-agent-memory project show [path]
-agent-memory memory add --project ...
-agent-memory memory search --project ... "keywords"
-agent-memory memory show <id>
-agent-memory memory update <id> --revision N ...
-agent-memory memory archive <id> --revision N
-agent-memory doctor
-agent-memory mcp serve
+chloe init [path]
+chloe project show [path]
+chloe memory add --project ...
+chloe memory search --project ... "keywords"
+chloe memory show <id>
+chloe memory update <id> --revision N ...
+chloe memory archive <id> --revision N
+chloe doctor
+chloe mcp serve
 ```
 
 All MCP business logic goes through the same service layer to avoid CLI/MCP behavior drift. JSON output is supported for automation.

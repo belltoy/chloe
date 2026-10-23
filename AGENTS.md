@@ -8,7 +8,7 @@ Rust workspace for a local-first MCP memory service for coding agents. Authorita
 cargo fmt --all --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
-cargo run -p memory-cli -- --help      # binary is `agent-memory`
+cargo run -p memory-cli -- --help      # binary is `chloe`
 ```
 
 All three checks must pass before a change is considered done.

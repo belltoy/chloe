@@ -6,17 +6,17 @@ use tracing_subscriber::EnvFilter;
 
 #[derive(Parser)]
 #[command(
-    name = "agent-memory",
+    name = "chloe",
     version,
     about = "Local-first long-term memory for coding agents"
 )]
 struct Cli {
     /// Path to the SQLite database [default: platform data dir]
-    #[arg(long, global = true, env = "AGENT_MEMORY_DB")]
+    #[arg(long, global = true, env = "CHLOE_DB")]
     db_path: Option<PathBuf>,
 
     /// Log level (error, warn, info, debug, trace)
-    #[arg(long, global = true, env = "AGENT_MEMORY_LOG")]
+    #[arg(long, global = true, env = "CHLOE_LOG")]
     log_level: Option<String>,
 
     /// Emit machine-readable JSON

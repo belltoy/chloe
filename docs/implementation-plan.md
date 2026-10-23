@@ -1,4 +1,4 @@
-# Local-first Coding Agent Memory — Implementation Plan
+# Chloe — Local-first Coding Agent Memory — Implementation Plan
 
 > Document ID: AM-PLAN-001 · Version: v0.1 · Date: 2026-10-23 · Depends on: AM-DESIGN-001
 >
@@ -40,7 +40,7 @@ Continuous items across all phases: automated tests, documentation, a minimal de
 - **A0-03** Configure the data directory (XDG/platform-standard), log level and optional `--db-path`; ensure test databases are never mixed with the user's database.
 - **A0-04** GitHub Actions: Linux/macOS build, `cargo fmt --check`, Clippy, unit tests; dependency license checking is a bonus.
 
-**Exit condition**: a clean checkout builds/tests, and `agent-memory --help` and configuration output run.
+**Exit condition**: a clean checkout builds/tests, and `chloe --help` and configuration output run.
 
 ### A1 SQLite and Memory Business Logic
 

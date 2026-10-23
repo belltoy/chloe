@@ -6,7 +6,7 @@ license.workspace = true
 rust-version.workspace = true
 
 [[bin]]
-name = "agent-memory"
+name = "chloe"
 path = "src/main.rs"
 
 [dependencies]

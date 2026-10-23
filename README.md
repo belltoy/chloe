@@ -1,4 +1,4 @@
-# agent-memory
+# chloe
 
 Local-first long-term memory for coding agents (Claude Code, Codex, ...). Agents save, search, update and archive project knowledge through MCP; data lives in a local SQLite file.
 
@@ -13,14 +13,14 @@ cargo run -p memory-cli -- config            # print resolved configuration
 cargo run -p memory-cli -- --json config
 ```
 
-The binary is named `agent-memory`.
+The binary is named `chloe`.
 
 ## Configuration
 
 | Setting | Flag | Env | Default |
 |---|---|---|---|
-| Database path | `--db-path` | `AGENT_MEMORY_DB` | `memory.db` in `$XDG_DATA_HOME/agent-memory`, falling back to `~/.local/share/agent-memory` (macOS and Linux); the platform data dir on Windows |
-| Log level | `--log-level` | `AGENT_MEMORY_LOG` | `info` |
+| Database path | `--db-path` | `CHLOE_DB` | `memory.db` in `$XDG_DATA_HOME/chloe`, falling back to `~/.local/share/chloe` (macOS and Linux); the platform data dir on Windows |
+| Log level | `--log-level` | `CHLOE_LOG` | `info` |
 
 Logs go to stderr; stdout is reserved for command output and (later) MCP stdio. Tests always pass an explicit temp path and never touch your real database.
 
@@ -29,7 +29,7 @@ Logs go to stderr; stdout is reserved for command output and (later) MCP stdio. 
 ```text
 crates/
   memory-core/   domain types, errors, config, service trait (no SQL, no agent code)
-  memory-cli/    `agent-memory` binary
+  memory-cli/    `chloe` binary
 ```
 
 More crates (`memory-store`, `memory-search`, `memory-mcp`, ...) are added per milestone.

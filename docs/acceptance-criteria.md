@@ -1,4 +1,4 @@
-# Local-first Coding Agent Memory — Milestone Acceptance Criteria and Test Plan
+# Chloe — Local-first Coding Agent Memory — Milestone Acceptance Criteria and Test Plan
 
 > Document ID: AM-ACCEPT-001 · Version: v0.1 · Date: 2026-10-23 · Related: AM-DESIGN-001, AM-PLAN-001
 >
@@ -35,13 +35,13 @@
 **Minimal manual A acceptance script (illustrative, not implying implemented):**
 
 ```bash
-agent-memory init /tmp/am-demo
-agent-memory project show /tmp/am-demo
-agent-memory memory add --project /tmp/am-demo --kind decision \
+chloe init /tmp/chloe-demo
+chloe project show /tmp/chloe-demo
+chloe memory add --project /tmp/chloe-demo --kind decision \
   --title "gRPC channel pooling" \
   --content "An endpoint may use multiple connections."
-agent-memory memory search --project /tmp/am-demo "channel pooling" --json
-agent-memory doctor
+chloe memory search --project /tmp/chloe-demo "channel pooling" --json
+chloe doctor
 cargo test --workspace
 ```
 
