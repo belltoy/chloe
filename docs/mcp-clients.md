@@ -36,3 +36,7 @@ Verified 2026-10-23 on macOS with Claude Code 2.1.309 and codex-cli 0.164.0, bot
 2. Codex (`codex exec -c mcp_servers.chloe.*`, same keys as the TOML above) called `memory_search`, found that memory, and `memory_update` took it from revision 1 to 2; `chloe memory show` confirmed the change.
 
 Not verified: the persistent `claude mcp add` / `codex mcp add` commands themselves (the runs above used the equivalent per-invocation config, to avoid touching the real client configs), and the interactive UIs. No screenshots or recordings were captured.
+
+## Cross-agent demo
+
+`examples/cross-agent/run.sh` copies `examples/cross-agent/repo` to a temp dir with a temp database, has Claude Code save a memory containing a random marker, then has Codex search for it, and prints PASS/FAIL. Run with `CHLOE=target/debug/chloe examples/cross-agent/run.sh`. Passed on 2026-10-23 with the versions above.
