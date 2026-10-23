@@ -1,4 +1,5 @@
 mod doctor;
+mod hook;
 
 use std::io::Read;
 use std::path::PathBuf;
@@ -59,11 +60,35 @@ enum Command {
         #[command(subcommand)]
         command: McpCommand,
     },
+    /// Agent hook capture (Claude Code)
+    Hook {
+        #[command(subcommand)]
+        command: HookCommand,
+    },
     /// Check database, configuration and a full MCP round trip (non-zero exit on failure)
     Doctor {
         /// Rebuild the full-text index first
         #[arg(long)]
         reindex: bool,
+    },
+}
+
+#[derive(Subcommand)]
+enum HookCommand {
+    /// Hook entry point for Claude Code: reads the payload on stdin, always exits 0
+    Claude,
+    /// Add chloe's hooks to the agent's settings file (other hooks are kept)
+    Install {
+        agent: hook::Agent,
+        /// Settings file [default: ~/.claude/settings.json]
+        #[arg(long)]
+        settings: Option<PathBuf>,
+    },
+    /// Remove only chloe's hooks from the agent's settings file
+    Uninstall {
+        agent: hook::Agent,
+        #[arg(long)]
+        settings: Option<PathBuf>,
     },
 }
 
@@ -199,6 +224,15 @@ fn run(cli: Cli) -> anyhow::Result<bool> {
         return Ok(true);
     }
 
+    if let Command::Hook { command } = cli.command {
+        match command {
+            HookCommand::Claude => unreachable!("handled in main"),
+            HookCommand::Install { agent, settings } => hook::edit(agent, settings, true)?,
+            HookCommand::Uninstall { agent, settings } => hook::edit(agent, settings, false)?,
+        }
+        return Ok(true);
+    }
+
     if let Command::Doctor { reindex } = cli.command {
         let checks = doctor::run(&config.db_path, reindex);
         let healthy = checks.iter().all(|c| c.ok);
@@ -253,7 +287,7 @@ fn run(cli: Cli) -> anyhow::Result<bool> {
             std::io::stdin().lock(),
             std::io::stdout().lock(),
         )?,
-        Command::Doctor { .. } => unreachable!(),
+        Command::Doctor { .. } | Command::Hook { .. } => unreachable!(),
         Command::Memory { command } => match command {
             MemoryCommand::Add {
                 title,
@@ -361,6 +395,14 @@ fn run(cli: Cli) -> anyhow::Result<bool> {
 
 fn main() -> ExitCode {
     let cli = Cli::parse();
+    // The hook runs inside the agent's loop: skip config, logging and error output.
+    if let Command::Hook {
+        command: HookCommand::Claude,
+    } = cli.command
+    {
+        hook::run_claude(cli.db_path);
+        return ExitCode::SUCCESS;
+    }
     let json = cli.json;
     match run(cli) {
         Ok(true) => ExitCode::SUCCESS,

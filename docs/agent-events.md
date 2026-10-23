@@ -31,6 +31,16 @@ Captured on 2026-10-23 with a probe command hook passed via `claude -p --setting
 
 Notes: `Stop` fires per turn, `SessionEnd` has a 1.5 s default budget (docs), so a missing `SessionEnd` must be tolerated; `PreToolUse`, `PreCompact`, `Notification`, subagent and many other events exist but are not needed. The documented transcript is JSONL at `~/.claude/projects/<project>/<session-id>.jsonl`, whose format the docs call internal and unstable. Hook timeout is in seconds (default 600 for commands); a non-zero exit other than 2 does not block the agent.
 
+## Claude Code adapter (B0-02)
+
+`chloe hook install claude [--settings PATH]` adds `chloe hook claude` (timeout 5 s) to `SessionStart`, `UserPromptSubmit`, `PostToolUse`, `PostCompact` and `SessionEnd` in `~/.claude/settings.json`. Other tools' hooks are never touched, a second install changes nothing, and `chloe hook uninstall claude` removes only our entries. An unparsable settings file is left alone. Restart running Claude Code sessions afterwards. `chloe` must be on the `PATH` Claude Code uses.
+
+`chloe hook claude` reads one payload on stdin and appends one JSON line to `<db dir>/spool/events.jsonl` (dir `0700`, file `0600`). It never opens the database, prints nothing on stdout (Claude Code feeds some hook stdout back to the model) and always exits 0; problems go to stderr. `CHLOE_CAPTURE=off` turns capture off. Measured about 6 ms per call (debug build), and a 6 MB payload took 34 ms.
+
+What is stored per event: `prompt` (4000 chars), and for tool calls only a summary of the *input* (300 chars): the Bash command, a file path, a search pattern, a URL or a query. `tool_response` is never read. Secrets are replaced by `[REDACTED]` before truncation; reason codes (`secret`, `truncated`, `sensitive_path`) are kept in `redactions`. A tool call that mentions a credential path (`.env`, `~/.ssh`, `*.pem`, …) keeps no text at all. Redaction is pattern based (known token prefixes, `NAME=VALUE` with a secret-ish name, `Bearer`, URL passwords, PEM private keys); an unknown secret format is not caught.
+
+Interim limits, replaced by later tasks: the spool is a plain append-only file with no dedup or draining (B0-04 adds the events table and idempotent import, B0-05 the queue and crash recovery); invalid payloads are only reported on stderr, not counted (B0-04); payloads over 8 MiB are dropped; `chloe doctor` does not check the hooks yet.
+
 ## Codex 0.164.0 (hooks) — verified by capture, except compaction
 
 Captured on 2026-10-23 by appending a probe command hook to `~/.codex/hooks.json` (removed afterwards) and trusting it in the TUI; two sessions: a `codex exec` run (`originator: codex_exec`) and a session started from the desktop/IDE client (`originator: agent_hud_origin`, `source: vscode`).
