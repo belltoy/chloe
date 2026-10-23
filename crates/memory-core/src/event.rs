@@ -59,16 +59,20 @@ pub struct AgentEvent {
 
 impl AgentEvent {
     /// Stable key for dropping duplicate captures: `(agent, session, kind, native_event_id)`.
-    /// Without a native id, repeats of the same kind in one session (a resumed `SessionStart`,
-    /// say) collapse into one; adapters should supply an id wherever the agent has one.
+    /// An event without a native id is identified by `occurred_at` instead, which the adapter
+    /// fixed when it captured it: re-importing the same capture gives the same key, while two
+    /// real `SessionEnd`s of a resumed session stay distinct.
     pub fn idempotency_key(&self) -> String {
         // Length-prefixed so no field value can shift into its neighbour.
-        let id = self.native_event_id.as_deref().unwrap_or("");
+        let id = match &self.native_event_id {
+            Some(id) => id.clone(),
+            None => format!("@{}", self.occurred_at.unix_timestamp_nanos()),
+        };
         let parts = [
             self.native_agent.as_str(),
             self.native_session_id.as_str(),
             self.kind.as_str(),
-            id,
+            id.as_str(),
         ];
         parts
             .iter()
@@ -106,6 +110,14 @@ mod tests {
         assert_ne!(
             ev("s", Some("t1")).idempotency_key(),
             ev("s", Some("t2")).idempotency_key()
+        );
+        // Without a native id, the capture time tells two real events apart.
+        let mut later = ev("s", None);
+        later.occurred_at += time::Duration::seconds(1);
+        assert_ne!(ev("s", None).idempotency_key(), later.idempotency_key());
+        assert_eq!(
+            ev("s", None).idempotency_key(),
+            ev("s", None).idempotency_key()
         );
         // "a|1:b" + "" must not collide with "a" + "b".
         assert_ne!(

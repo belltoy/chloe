@@ -14,7 +14,7 @@ Adapters map each agent's native events onto `memory_core::AgentEvent` (schema v
 
 Identity fields: `native_agent` (open string: `claude_code`, `codex`), `native_session_id`, `kind`, `occurred_at`, `schema_version`. `native_event_id` is the agent's own id for the event when it has one.
 
-**Idempotency key** = `(native_agent, native_session_id, kind, native_event_id)` (`AgentEvent::idempotency_key`). Only at-least-once delivery after durable acceptance is promised. Without a native id, repeats of one kind in one session collapse into one event, so adapters must supply an id wherever the agent offers one.
+**Idempotency key** = `(native_agent, native_session_id, kind, native_event_id)` (`AgentEvent::idempotency_key`). Only at-least-once delivery after durable acceptance is promised. Without a native id, `occurred_at` (fixed by the adapter at capture time) stands in for it, so re-importing the same capture adds nothing while two real `SessionEnd`s of a resumed session stay distinct. A hook that fires twice with different capture times would be stored twice, so adapters should supply an id wherever the agent offers one.
 
 ## Claude Code 2.1.309 (hooks) — verified by capture
 
