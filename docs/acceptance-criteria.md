@@ -23,7 +23,7 @@
 | A-05 | P0 | FTS index correctness | Add, update a keyword, archive, searching each time | Hit after add; old term no longer hits after update; archived not returned by default |
 | A-06 | P0 | Project isolation | Initialize repo-A/repo-B, write an A-only entry in A | Default query in B returns 0; read by ID in B is rejected/invisible |
 | A-07 | P0 | Worktree project identity | Initialize and read two worktrees of one repository | Identified as the same repository ID by default, without overwriting other repositories |
-| A-08 | P0 | Two-agent sharing | Claude Code writes via MCP; a brand-new Codex session searches via MCP | Codex retrieves the same id/content; no database file was copied |
+| A-08 | P0 | Two-agent sharing, both directions | Claude Code writes via MCP and a brand-new Codex session searches it; then Codex writes and a brand-new Claude Code session searches it | Each agent retrieves the same id/content written by the other; no database file was copied |
 | A-09 | P0 | MCP conformance | List tools, call with valid/invalid JSON parameters | Tool schemas recognizable; invalid parameters return structured errors without crashing |
 | A-10 | P0 | Concurrent version conflict | Concurrently update the same id at the same revision | Exactly one request succeeds; the other returns a conflict; no half-written data |
 | A-11 | P0 | SQLite fault recovery | Simulate `SQLITE_BUSY` and unexpected process termination, then restart | Correct retry/error; DB reopens and records are undamaged |
@@ -31,6 +31,11 @@
 | A-13 | P1 | FTS rebuild | Deliberately create a test index anomaly, run `doctor/reindex` | Anomaly detected and repaired, result consistent with records |
 | A-14 | P1 | CLI JSON mode | Use `--json` for CRUD/search | Output machine-parseable, error codes stable |
 | A-15 | P1 | Quickstart | Follow the README in a clean environment for the minimal use case | No guessing of undocumented configuration; two-agent operation completes |
+| A-16 | P0 | Offline operation | With the network disabled and no LLM/embedding configured, run MCP CRUD and FTS search | All operations succeed; nothing attempts an outbound connection |
+| A-17 | P0 | Audit trail | Create, update and archive one memory; read `memory history` | Rows appear in order with operation, actor, revision and snapshot; UPDATE/DELETE on the audit table is rejected |
+| A-18 | P0 | Explicit global scope | Save one global and one project memory; search from another project with and without `include_global` | Global memory appears only with `include_global`; the project memory never appears; invalid scope returns a clear error |
+| A-19 | P1 | `doctor` diagnostics | Run `doctor` on a healthy setup, then on a read-only database, a broken configuration and a non-startable MCP binary | Healthy passes; each fault is named in the output and exits non-zero; the user's real database is untouched |
+| A-20 | P1 | Agent guidance | Call `initialize` and inspect the response; follow `docs/agents/` snippets in a real agent | `instructions` is present and accurate; the real agent searches before work and saves a durable decision when prompted by the snippet |
 
 **Minimal manual A acceptance script (illustrative, not implying implemented):**
 
@@ -56,7 +61,7 @@ Real-agent tests require configuring MCP in their project directories and having
 
 ### A Exit Criteria
 
-A-01 through A-12 all PASS, A-13 through A-15 have no unexplained FAIL; the README shows a reproducible cross-agent scenario; tag `v0.1.0`.
+A-01 through A-12 and A-16 through A-18 all PASS, A-13 through A-15 and A-19 through A-20 have no unexplained FAIL; the README shows a reproducible cross-agent scenario; tag `v0.1.0`.
 
 ## 3. Milestone B Acceptance Matrix
 
@@ -80,6 +85,10 @@ A-01 through A-12 all PASS, A-13 through A-15 have no unexplained FAIL; the READ
 | B-16 | P1 | Extraction quality | Evaluation set mixing irrelevant and useful events | Shows candidate acceptance rate and false-extraction cases; serious factual errors never automatically become Active |
 | B-17 | P1 | Diagnostic visibility | `doctor/stats/jobs` to view backlog, failures and provider | User can diagnose why no memory was generated automatically |
 | B-18 | P2 | Manual session compensation | Simulate missing SessionEnd, run compensation/idle handling | Session can enter extraction, and dedup holds |
+| B-19 | P0 | Evidence / provenance | Extract a candidate from a fixture session and accept it | The memory shows agent, session and event IDs (and commit/path when present); a memory without evidence cannot become Active automatically |
+| B-20 | P0 | Supersession | Propose superseding an old Decision, then one that is a user Constraint | The Decision is superseded with a link and revisions on both; the Constraint change waits for human approval and is not applied silently |
+| B-21 | P1 | Explain | Run a query with `--explain` in FTS, Vector and Hybrid modes | Output lists matched paths, ranks, scope, status filter and ranking factors; degraded paths are named; archived memories are filtered |
+| B-22 | P1 | Context Pack | Request a pack with a small and a large budget | Output stays within the budget, is grouped by kind, lists memory IDs and sources, and expansion by ID returns the full memory; a cross-project ID is not expandable |
 
 ### Key Executable Scenarios for B
 
@@ -151,6 +160,7 @@ Evidence should be collected under `docs/evidence/milestone-a/` and `docs/eviden
 ### Milestone A — Release Gate
 
 - All A P0 items pass; both real agent clients complete MCP interoperation.
+- Each real agent reads memories written by the other, and MCP CRUD/FTS works offline.
 - Data remains queryable after process restart; FTS sync, CAS and cross-project isolation have automated tests.
 - README configuration steps are reproducible; no remote network service is enabled by default.
 
@@ -171,6 +181,12 @@ Evidence should be collected under `docs/evidence/milestone-a/` and `docs/eviden
 | FTS, versions and reliable storage | A1-03 – A1-05 | A-04/A-05/A-10/A-11/A-13 |
 | MCP + CLI for two agents | A2-01 – A2-04 | A-08/A-09/A-14/A-15 |
 | Default privacy | A3-01 | A-12 |
+| Audit trail | A1-06 | A-17 |
+| Explicit global scope | A2-05 | A-18 |
+| Agent guidance and `doctor` | A2-06 – A2-07 | A-19/A-20 |
+| Offline operation | A1 – A2 | A-16 |
+| Provenance and supersession | B1-03, B2-01, B2-06 | B-19/B-20 |
+| Explain and Context Pack | B3-03, B3-06 | B-21/B-22 |
 | Automatic hook/transcript | B0-01 – B0-05 | B-01 – B-05/B-14 |
 | LLM extraction and recovery | B1-01 – B1-05 | B-06/B-07/B-18 |
 | Consolidation + review | B2-01 – B2-05 | B-08/B-09/B-16 |

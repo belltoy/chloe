@@ -34,11 +34,13 @@ Milestone B does **not** guarantee that all agents expose equivalent native even
 - **UC-A2**: After Claude Code is closed, Codex reads the existing memories via MCP in the same repository.
 - **UC-A3**: An ordinary query in another repository does not accidentally return `repo-X` private memories; authorized global memories can be queried explicitly.
 - **UC-A4**: Edit a memory, view versions, deprecate an old conclusion; search returns only Active status by default.
+- **UC-A5**: A new user runs `chloe doctor` and learns whether the database, configuration and MCP server work; the agent, guided by the server's instructions, searches before starting work and saves durable decisions.
 - **UC-B1**: Key activity happens in a new Claude Code session; the adapter captures it and it enters the extraction queue after the session ends.
 - **UC-B2**: Duplicate reports of the same session produce no duplicate events/memories; model-call failures are recoverable.
 - **UC-B3**: Duplicate technical conclusions merge into one; candidates that conflict with a confirmed decision enter a review queue.
 - **UC-B4**: Codex can retrieve knowledge produced by Claude Code, with source and task context.
 - **UC-B5**: A benchmark compares FTS, Vector and Hybrid on Recall@K, latency and context tokens.
+- **UC-B6**: A new task asks for a Context Pack and gets a compact, source-linked summary by kind, expanding single memories only when needed.
 
 ## 3. Overall Architecture
 
@@ -98,6 +100,10 @@ Memory {
 ```
 
 - The first version builds no complex confidence scoring; provenance and status matter more than false-precision scores.
+- Types and states are closed enums validated in the service and by database `CHECK` constraints; invalid values return `InvalidArgument` and never touch stored data.
+- Global scope is explicit: a memory is global only when saved with `scope: global`; a project-scoped caller sees global memories in search only with `include_global`.
+- Every create/update/archive appends a row to `memory_revisions` (operation, actor, revision, snapshot); the table is append-only (triggers reject UPDATE/DELETE). This is an audit trail, not event sourcing.
+- B memories carry evidence: agent, session, event IDs and, when available, file path or commit. A supersession is a `supersedes` link plus status `superseded`, proposed by the extractor and applied only per the review policy.
 - B adds the unconfirmed `CandidateMemory`, `SourceRef` (agent/session/event/commit/path, etc.) and a merge operation log.
 - `revision` provides optimistic concurrency control; updates require expected_revision, and a failure returns a conflict hint.
 - Search returns only Active by default; history is available through an explicit include_inactive; each result returns id, scope, snippet, status, source and score.
@@ -109,13 +115,14 @@ Memory {
 | `projects` | id, canonical_path, created_at | Stable project identity |
 | `project_aliases` | project_id, path, remote_url, kind | worktree / moved-path mapping |
 | `memories` | id, project_id, kind, title, content, status, revision, timestamps | Current memories |
-| `memory_revisions` | memory_id, revision, snapshot, changed_at, cause | Auditable history |
+| `memory_revisions` | memory_id, revision, snapshot, changed_at, cause, actor | Append-only audit trail |
 | `memory_fts` | title, content | FTS5 external-content index |
 | `sessions` (B) | id, agent, native_id, project_id, state | Session association |
 | `events` (B) | idempotency_key, session_id, event_type, safe_payload, timestamp | Normalized capture |
 | `jobs` (B) | id, kind, state, attempts, lease_until, last_error | Durable background jobs |
 | `candidates` (B) | id, session_id, content, proposal_state, evidence | Knowledge awaiting confirmation |
 | `memory_sources` (B) | memory_id, source_kind, source_ref, details | Provenance |
+| `memory_links` (B) | from_id, to_id, relation (`supersedes` / `conflicts_with`), created_at | Supersession and conflict relations |
 | `embeddings` (B) | memory_id, model_id, dimension, vector, updated_at | Semantic retrieval |
 
 Enable SQLite `foreign_keys=ON`, WAL and `busy_timeout`; use migration scripts and transactions. FTS5 external-content must have INSERT/UPDATE/DELETE triggers, plus `rebuild` and consistency-check commands. Full-text search must never interpolate unescaped strings into hand-built SQL.
@@ -126,13 +133,15 @@ Enable SQLite `foreign_keys=ON`, WAL and `busy_timeout`; use migration scripts a
 
 The following tools are suggested (parameters and error objects are schema-validated):
 
-- `memory_save({project, kind, title, content}) -> {id, revision, status}`: explicit creation.
+- `memory_save({project, kind, title, content, scope?}) -> {id, revision, status}`: explicit creation; `scope` is `project` (default) or `global`.
 - `memory_search({project, query, limit?, include_global?}) -> {hits[]}`: project isolation and Active by default; FTS5 + explainable ranking.
 - `memory_get({id, project}) -> {memory, revisions_summary}`: fetch details by ID; a cross-project read is rejected / invisible.
 - `memory_update({id, expected_revision, changes}) -> {revision}`: concurrency-safe update.
 - `memory_archive({id, expected_revision})`: soft delete / deprecate, keeping history.
 
 A `memory_list` may be added for debugging, but semantic retrieval must not depend on a list implementation. The MCP server and client configuration adapt to the supported SDK/agent versions, and the documentation gives real configuration examples for Claude Code and Codex (do not invent configuration keys; verify against real versions during implementation).
+
+The server's `initialize` response includes `instructions` telling the agent when to search (before starting work on a project), when to save (durable decisions, constraints, gotchas, procedures — not transient task state), and to re-read and retry on a revision conflict. Clients differ in how visibly they surface server instructions, so the repository also ships `CLAUDE.md` / `AGENTS.md` snippets and configuration templates under `docs/agents/`.
 
 ### 5.2 CLI
 
@@ -144,6 +153,7 @@ chloe memory search --project ... "keywords"
 chloe memory show <id>
 chloe memory update <id> --revision N ...
 chloe memory archive <id> --revision N
+chloe memory history <id>
 chloe doctor
 chloe mcp serve
 ```
@@ -159,6 +169,10 @@ All MCP business logic goes through the same service layer to avoid CLI/MCP beha
 ### 5.4 Lifecycle
 
 A's `save` is an atomic transaction: write the current record + initial revision + FTS trigger. `update` does a compare-and-swap on revision, inserts a history version and updates the index in one transaction; `archive` is a status change. A conflict or I/O failure must never return success.
+
+### 5.5 Agent Guidance and `doctor`
+
+`chloe doctor` verifies, in order: the database opens, is writable and migrated; FTS is consistent (`--reindex` repairs it); the configuration resolves; `mcp serve` starts and answers initialize and tools/list; and a save → search → get → archive round trip works. The round trip runs against a throwaway database, never the user's data. It exits non-zero when any check fails and supports `--json`. Whether a real agent actually calls the tools is verified separately by the acceptance runs, not by `doctor`.
 
 ## 6. Milestone B: Automatic Memory Loop
 
@@ -180,6 +194,7 @@ Triggers: SessionEnd (if available), manual `consolidate`, idle timeout (for age
 - Classify candidates as `create / merge / supersede-proposal / flag-conflict / reject`.
 - Only clearly duplicate, low-risk candidates may be auto-merged; conflicts with explicit user constraints/decisions must enter the review queue.
 - Original memories and merge sources always keep a queryable revision record; prevent a model-generated contradictory conclusion from directly overwriting user-confirmed information.
+- Supersession: the extractor may only propose `supersede`; applying it sets the old memory to `superseded`, links it with `supersedes`, and appends a revision to both. Superseding an explicit user Constraint/Decision requires human approval.
 - CLI review is acceptable initially; no complex GUI.
 
 ### 6.4 Embedding + Hybrid Retrieval
@@ -193,6 +208,11 @@ Triggers: SessionEnd (if available), manual `consolidate`, idle timeout (for age
 ### 6.5 Background Jobs
 
 A job goes `pending → leased → succeeded / retry / dead_letter`. Each job stores `attempts`, error, next retry time and lease deadline; expired leases are reclaimed after a crash. Extraction is deduplicated by session ID; repeating any step must be idempotent. Exponential backoff has an upper bound, and users can inspect the failure queue and retry via the CLI.
+
+### 6.6 Explain and Context Pack
+
+- **Explain**: a diagnostic mode returns, per hit, the retrieval paths that matched (FTS / Vector), their ranks, the scope, status and the main ranking factors, plus whether a path was skipped or degraded. Hard filters (scope, status) are applied before ranking and are reported.
+- **Context Pack**: given a task description and a token/character budget, returns memories grouped by kind, each as a short summary with its memory ID and source, in a bounded size; the agent expands a single memory with `memory_get`. It reuses the same retrieval and filters as search, so isolation guarantees are identical, and it never injects automatically.
 
 ## 7. Security, Privacy and Reliability
 
@@ -234,6 +254,7 @@ Suggested metrics: MCP operation latency/error rate, sqlite_busy retry count, ca
 
 - **AM-PLAN-001**: tasks and dependencies for A/B.
 - **AM-ACCEPT-001**: repeatable acceptance criteria and evidence requirements for each item.
+- Rationale for the A5–A8 / B6–B9 additions: [competitor-research](./competitor-research.md) and [milestone-adjustments-cn](./milestone-adjustments-cn.md).
 - Public repository: `README.md`, `ARCHITECTURE.md`, `SECURITY.md`, `docs/agents/`, `examples/`, `benchmarks/`, CI.
 
 ## 12. Items to Verify (not blocking Milestone A)
