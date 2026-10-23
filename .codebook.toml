@@ -2,9 +2,10 @@ words = [
     "CAS",
     "fts",
     "gitdir",
+    "nextest",
+    "proj",
     "roundtrips",
+    "svc",
     "untag",
 ]
-ignore_patterns = [
-    '''\w+'s\b''',
-]
+ignore_patterns = ['''\w+'s\b''']

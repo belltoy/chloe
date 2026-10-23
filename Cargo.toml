@@ -23,6 +23,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 uuid = { version = "1", features = ["v4", "serde"] }
 
 memory-core = { path = "crates/memory-core" }
+memory-mcp = { path = "crates/memory-mcp" }
 memory-store = { path = "crates/memory-store" }
 
 [workspace.lints.rust]

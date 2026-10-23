@@ -369,6 +369,7 @@ dependencies = [
  "anyhow",
  "clap",
  "memory-core",
+ "memory-mcp",
  "memory-store",
  "serde",
  "serde_json",
@@ -388,6 +389,17 @@ dependencies = [
  "thiserror",
  "time",
  "uuid",
+]
+
+[[package]]
+name = "memory-mcp"
+version = "0.1.0"
+dependencies = [
+ "memory-core",
+ "memory-store",
+ "serde",
+ "serde_json",
+ "tempfile",
 ]
 
 [[package]]

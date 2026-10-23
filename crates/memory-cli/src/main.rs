@@ -52,12 +52,23 @@ enum Command {
         #[command(subcommand)]
         command: MemoryCommand,
     },
+    /// MCP server commands
+    Mcp {
+        #[command(subcommand)]
+        command: McpCommand,
+    },
     /// Check database health (exits non-zero when unhealthy)
     Doctor {
         /// Rebuild the full-text index first
         #[arg(long)]
         reindex: bool,
     },
+}
+
+#[derive(Subcommand)]
+enum McpCommand {
+    /// Serve MCP over stdio, scoped to the project of --dir / the current directory
+    Serve,
 }
 
 #[derive(Subcommand)]
@@ -202,6 +213,14 @@ fn run(cli: Cli) -> anyhow::Result<bool> {
                 println!("db_path    = {}", info.db_path.display());
             }
         }
+        Command::Mcp {
+            command: McpCommand::Serve,
+        } => memory_mcp::serve(
+            &store,
+            project()?,
+            std::io::stdin().lock(),
+            std::io::stdout().lock(),
+        )?,
         Command::Doctor { reindex } => {
             if reindex {
                 store.reindex()?;
