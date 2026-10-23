@@ -285,13 +285,14 @@ impl MemoryService for SqliteStore {
     }
 
     fn search(&self, project: Option<ProjectId>, q: SearchQuery) -> Result<Vec<Hit>> {
-        // Quote every token so user input can never be parsed as FTS5 syntax.
+        // Quote every token so user input can never be parsed as FTS5 syntax. Tokens are OR-ed:
+        // agents send long natural-language queries, and AND returns nothing if one word is absent.
         let fts_query = q
             .query
             .split_whitespace()
             .map(|t| format!("\"{}\"", t.replace('"', "\"\"")))
             .collect::<Vec<_>>()
-            .join(" ");
+            .join(" OR ");
         if fts_query.is_empty() {
             return Err(Error::InvalidArgument("empty query".into()));
         }

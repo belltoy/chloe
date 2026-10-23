@@ -237,6 +237,23 @@ fn search_input_is_never_fts_syntax() {
 }
 
 #[test]
+fn search_matches_any_token_and_ranks_more_matches_first() {
+    let (_d, path) = db();
+    let s = SqliteStore::open(&path).unwrap();
+    s.save(new(
+        None,
+        "Use sqlx pool size 8",
+        "Pool size 8 chosen after load tests",
+    ))
+    .unwrap();
+    s.save(new(None, "Retry policy", "size of the retry budget"))
+        .unwrap();
+    let hits = s.search(None, q("pool size connection pool")).unwrap();
+    assert_eq!(hits.len(), 2);
+    assert_eq!(hits[0].memory.title, "Use sqlx pool size 8");
+}
+
+#[test]
 fn validation() {
     let (_d, path) = db();
     let s = SqliteStore::open(&path).unwrap();
