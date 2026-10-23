@@ -2,7 +2,7 @@
 
 Local-first long-term memory for coding agents (Claude Code, Codex, ...). Agents save, search, update and archive project knowledge through MCP; data lives in a local SQLite file.
 
-> **Status: A0 (workspace skeleton).** Only the CLI scaffold and configuration work today. Storage, MCP and search land in A1–A3 and are not available yet. See `docs/implementation-plan.md`.
+> **Status: A2 (in progress).** Storage, FTS search, the CLI and the MCP stdio server work; see `docs/mcp-clients.md` to connect Claude Code / Codex. Cross-agent example and release polish land in A2-04/A3. See `docs/implementation-plan.md`.
 
 ## Build and run
 
@@ -29,10 +29,12 @@ Logs go to stderr; stdout is reserved for command output and (later) MCP stdio. 
 ```text
 crates/
   memory-core/   domain types, errors, config, service trait (no SQL, no agent code)
+  memory-store/  SQLite store, scope resolver, FTS5 search
+  memory-mcp/    MCP stdio server
   memory-cli/    `chloe` binary
 ```
 
-More crates (`memory-store`, `memory-search`, `memory-mcp`, ...) are added per milestone.
+More crates are added per milestone.
 
 ## Development
 
