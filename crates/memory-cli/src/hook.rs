@@ -54,7 +54,7 @@ fn capture(spec: &Spec, db_path: Option<PathBuf>) -> anyhow::Result<()> {
         return Ok(());
     };
     let config = Config::resolve(db_path, None)?;
-    spool::append(&spool::path_for(&config.db_path), &event).context("writing the event spool")
+    spool::enqueue(&spool::dir_for(&config.db_path), &event).context("queueing the event")
 }
 
 fn default_settings(agent: Agent) -> anyhow::Result<PathBuf> {

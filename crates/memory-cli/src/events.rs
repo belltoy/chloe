@@ -7,13 +7,14 @@ use clap::Subcommand;
 use memory_core::{Config, EventStore};
 use memory_ingest::spool;
 use memory_store::SqliteStore;
+use serde::Serialize;
 use serde_json::json;
 
 #[derive(Subcommand)]
 pub enum EventsCommand {
-    /// Import the hook spool into the database; importing twice adds nothing
+    /// Import the hook queue into the database; running it again is harmless
     Import {
-        /// Spool file [default: next to the database]
+        /// Queue directory [default: `spool` next to the database]
         #[arg(long)]
         spool: Option<PathBuf>,
     },
@@ -30,6 +31,52 @@ pub enum EventsCommand {
     },
 }
 
+/// Files handled per run (and per transaction below); the rest wait for the next run.
+const MAX_PER_RUN: usize = 10_000;
+const BATCH: usize = 500;
+
+#[derive(Debug, Default, Serialize)]
+pub struct Totals {
+    pub inserted: usize,
+    pub duplicates: usize,
+    /// Queue files that were not a readable event.
+    pub unreadable: usize,
+    /// Events the store refused (unsupported version, invalid field, too long).
+    pub refused: usize,
+}
+
+/// Drain the queue into the database. A file is deleted only after the transaction that holds
+/// its event has committed, so a crash anywhere re-imports it as a duplicate; two importers
+/// running at once are harmless for the same reason.
+pub fn import(store: &SqliteStore, dir: &std::path::Path) -> anyhow::Result<Totals> {
+    let mut totals = Totals::default();
+    let entries = spool::pending(dir, MAX_PER_RUN)
+        .with_context(|| format!("reading the queue in {}", dir.display()))?;
+    for chunk in entries.chunks(BATCH) {
+        let (readable, unreadable): (Vec<_>, Vec<_>) =
+            chunk.iter().partition(|e| e.event.is_some());
+        for e in unreadable {
+            spool::quarantine(dir, &e.path)?;
+            totals.unreadable += 1;
+        }
+        let events: Vec<_> = readable.iter().filter_map(|e| e.event.clone()).collect();
+        let report = store.ingest(&events)?;
+        totals.inserted += report.inserted;
+        totals.duplicates += report.duplicates;
+        totals.refused += report.rejected.len();
+        let refused: std::collections::HashSet<_> =
+            report.rejected.iter().map(|r| r.index).collect();
+        for (i, e) in readable.iter().enumerate() {
+            if refused.contains(&i) {
+                spool::quarantine(dir, &e.path)?;
+            } else {
+                spool::done(&e.path)?;
+            }
+        }
+    }
+    Ok(totals)
+}
+
 pub fn run(
     store: &SqliteStore,
     config: &Config,
@@ -38,27 +85,25 @@ pub fn run(
 ) -> anyhow::Result<()> {
     match command {
         EventsCommand::Import { spool } => {
-            let path = spool.unwrap_or_else(|| spool::path_for(&config.db_path));
-            let read = spool::read(&path).with_context(|| format!("reading {}", path.display()))?;
-            let report = store.ingest(&read.events)?;
+            let dir = spool.unwrap_or_else(|| spool::dir_for(&config.db_path));
+            let totals = import(store, &dir)?;
             if json {
-                crate::print_json(
-                    &json!({"spool": path, "report": report, "bad_lines": read.bad_lines}),
-                )?;
+                crate::print_json(&json!({"spool": dir, "totals": totals}))?;
             } else {
                 println!(
-                    "{}: {} new, {} already stored, {} rejected, {} unreadable lines",
-                    path.display(),
-                    report.inserted,
-                    report.duplicates,
-                    report.rejected.len(),
-                    read.bad_lines.len()
+                    "{}: {} new, {} already stored, {} quarantined ({} unreadable, {} refused by the store)",
+                    dir.display(),
+                    totals.inserted,
+                    totals.duplicates,
+                    totals.unreadable + totals.refused,
+                    totals.unreadable,
+                    totals.refused
                 );
-                for r in &report.rejected {
-                    println!("  event #{} rejected: {}", r.index + 1, r.reason);
-                }
-                if !read.bad_lines.is_empty() {
-                    println!("  unreadable line numbers: {:?}", read.bad_lines);
+                if totals.unreadable + totals.refused > 0 {
+                    println!(
+                        "  quarantined files are in {}",
+                        dir.join("rejected").display()
+                    );
                 }
             }
         }

@@ -5,6 +5,7 @@ use std::path::Path;
 use std::process::{Child, ChildStdin, ChildStdout, Command, Stdio};
 
 use anyhow::{Context, bail};
+use memory_ingest::spool;
 use memory_store::SqliteStore;
 use serde::Serialize;
 use serde_json::{Value, json};
@@ -47,6 +48,16 @@ pub fn run(db_path: &Path, reindex: bool) -> Vec<Check> {
                         .map_err(Into::into),
                 );
             }
+            add(
+                "capture_queue",
+                spool::counts(&spool::dir_for(db_path))
+                    .map(|(pending, rejected)| {
+                        format!(
+                            "{pending} waiting for `chloe events import`, {rejected} quarantined"
+                        )
+                    })
+                    .map_err(Into::into),
+            );
             match store.doctor() {
                 Ok(d) => {
                     add("schema_version", Ok(d.schema_version.to_string()));

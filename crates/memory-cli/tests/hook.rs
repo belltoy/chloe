@@ -30,15 +30,24 @@ fn run_agent_hook(agent: &str, db: &Path, stdin: &[u8], capture: Option<&str>) -
     child.wait_with_output().unwrap()
 }
 
+fn queue_dir(db: &Path) -> std::path::PathBuf {
+    memory_ingest::spool::dir_for(db)
+}
+
+fn queued_files(db: &Path) -> Vec<std::path::PathBuf> {
+    let mut v: Vec<_> = std::fs::read_dir(queue_dir(db).join("pending"))
+        .map(|rd| rd.filter_map(Result::ok).map(|e| e.path()).collect())
+        .unwrap_or_default();
+    v.retain(|p| p.extension().is_some_and(|e| e == "json"));
+    v.sort();
+    v
+}
+
 fn spool_lines(db: &Path) -> Vec<Value> {
-    let p = memory_ingest::spool::path_for(db);
-    std::fs::read_to_string(p)
-        .map(|s| {
-            s.lines()
-                .map(|l| serde_json::from_str(l).unwrap())
-                .collect()
-        })
-        .unwrap_or_default()
+    queued_files(db)
+        .iter()
+        .map(|p| serde_json::from_slice(&std::fs::read(p).unwrap()).unwrap())
+        .collect()
 }
 
 #[test]
@@ -58,7 +67,7 @@ fn hook_spools_a_redacted_event_and_prints_nothing() {
     assert_eq!(lines[0]["text"], "deploy with API_KEY=[REDACTED] please");
     assert_eq!(lines[0]["kind"], "user_prompt");
     assert!(
-        !std::fs::read_to_string(memory_ingest::spool::path_for(&db))
+        !std::fs::read_to_string(&queued_files(&db)[0])
             .unwrap()
             .contains("hunter2")
     );
@@ -237,28 +246,56 @@ fn spool_import_is_idempotent_and_tolerates_damage() {
         "claude",
         json!({"session_id":"s2","hook_event_name":"SessionEnd","reason":"other"}),
     );
-    // A crash left a cut line at the end; a future-version event sits in the middle.
-    let spool = memory_ingest::spool::path_for(&db);
-    let mut body = std::fs::read_to_string(&spool).unwrap();
-    body.push_str(r#"{"schema_version":99,"native_agent":"claude_code","native_session_id":"s3","kind":"session_start","occurred_at":"2027-01-01T00:00:00Z"}"#);
-    body.push_str("\n{\"schema_version\":1,\"nat");
-    std::fs::write(&spool, body).unwrap();
+    // Damage in the queue: a cut file (a crash mid-write on a filesystem without atomic
+    // rename, or a hand edit) and an event from a future schema version.
+    let pending = queue_dir(&db).join("pending");
+    std::fs::write(
+        pending.join("00000000000000000001-1-0.json"),
+        "{\"schema_version\":1,\"nat",
+    )
+    .unwrap();
+    std::fs::write(pending.join("00000000000000000002-1-0.json"), r#"{"schema_version":99,"native_agent":"claude_code","native_session_id":"s3","kind":"session_start","occurred_at":"2027-01-01T00:00:00Z"}"#).unwrap();
+    let kept = dir.path().join("kept");
+    std::fs::create_dir_all(&kept).unwrap();
+    for f in queued_files(&db) {
+        std::fs::copy(&f, kept.join(f.file_name().unwrap())).unwrap();
+    }
 
     let first = events_cmd(&db, &["import"]);
-    assert_eq!(first["report"]["inserted"], 5);
-    assert_eq!(
-        first["report"]["rejected"][0]["reason"],
-        "unsupported_schema_version"
-    );
-    assert_eq!(first["bad_lines"], json!([7]));
-    let again = events_cmd(&db, &["import"]);
+    let t = &first["totals"];
     assert_eq!(
         (
-            again["report"]["inserted"].as_u64(),
-            again["report"]["duplicates"].as_u64()
+            t["inserted"].as_u64(),
+            t["unreadable"].as_u64(),
+            t["refused"].as_u64()
         ),
+        (Some(5), Some(1), Some(1))
+    );
+    assert!(
+        queued_files(&db).is_empty(),
+        "everything handled leaves the queue"
+    );
+    assert_eq!(
+        std::fs::read_dir(queue_dir(&db).join("rejected"))
+            .unwrap()
+            .count(),
+        2
+    );
+    let nothing = events_cmd(&db, &["import"]);
+    assert_eq!(nothing["totals"]["inserted"], 0);
+
+    // Crash after the commit but before the files were deleted: the same files come back.
+    for e in std::fs::read_dir(&kept).unwrap() {
+        let e = e.unwrap();
+        std::fs::copy(e.path(), pending.join(e.file_name())).unwrap();
+    }
+    let again = events_cmd(&db, &["import"]);
+    let t = &again["totals"];
+    assert_eq!(
+        (t["inserted"].as_u64(), t["duplicates"].as_u64()),
         (Some(0), Some(5))
     );
+    assert!(queued_files(&db).is_empty());
 
     let sessions = events_cmd(&db, &["sessions"]);
     let state = |id: &str| {
@@ -285,4 +322,143 @@ fn spool_import_is_idempotent_and_tolerates_damage() {
             .collect::<Vec<_>>(),
         ["session_start", "user_prompt"]
     );
+}
+
+fn queued_event(session: &str, id: usize) -> memory_core::AgentEvent {
+    memory_core::AgentEvent {
+        schema_version: memory_core::EVENT_SCHEMA_VERSION,
+        native_agent: "claude_code".into(),
+        native_session_id: session.into(),
+        native_event_id: Some(format!("e{id}")),
+        kind: memory_core::EventKind::UserPrompt,
+        occurred_at: time::OffsetDateTime::from_unix_timestamp(1_800_000_000 + id as i64).unwrap(),
+        cwd: None,
+        tool_name: None,
+        text: None,
+        redactions: vec![],
+    }
+}
+
+#[test]
+fn concurrent_importers_and_live_hooks_lose_and_duplicate_nothing() {
+    let dir = tempfile::tempdir().unwrap();
+    let db = dir.path().join("t.db");
+    for i in 0..150 {
+        memory_ingest::spool::enqueue(&queue_dir(&db), &queued_event("big", i)).unwrap();
+    }
+    // Two importers race each other while 30 hook processes keep writing.
+    let importer = || {
+        let mut c = chloe();
+        c.arg("--db-path")
+            .arg(&db)
+            .args(["--json", "events", "import"]);
+        c.stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .unwrap()
+    };
+    let (a, b) = (importer(), importer());
+    for i in 0..30 {
+        let p = json!({"session_id":"live","hook_event_name":"PostToolUse","tool_name":"Bash",
+            "tool_input":{"command":"ls"},"tool_use_id":format!("t{i}")});
+        assert!(
+            run_hook(&db, p.to_string().as_bytes(), None)
+                .status
+                .success()
+        );
+    }
+    for child in [a, b] {
+        let out = child.wait_with_output().unwrap();
+        assert!(
+            out.status.success(),
+            "{}{}",
+            String::from_utf8_lossy(&out.stdout),
+            String::from_utf8_lossy(&out.stderr)
+        );
+    }
+    events_cmd(&db, &["import"]); // picks up whatever arrived after the racers listed the queue
+    assert!(queued_files(&db).is_empty());
+    let sessions = events_cmd(&db, &["sessions"]);
+    let count = |id: &str| {
+        sessions
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|s| s["native_session_id"] == id)
+            .unwrap()["events"]
+            .as_u64()
+    };
+    assert_eq!((count("big"), count("live")), (Some(150), Some(30)));
+}
+
+#[test]
+fn hook_queues_even_when_the_database_is_unusable() {
+    let dir = tempfile::tempdir().unwrap();
+    // A database file full of garbage: opening it as SQLite would fail, but the hook never does.
+    let db = dir.path().join("t.db");
+    std::fs::write(&db, b"this is not a database").unwrap();
+    let p = json!({"session_id":"s1","hook_event_name":"SessionStart"}).to_string();
+    let out = run_hook(&db, p.as_bytes(), None);
+    assert!(out.status.success() && out.stdout.is_empty() && out.stderr.is_empty());
+    assert_eq!(queued_files(&db).len(), 1);
+
+    // Nowhere writable to queue: the agent is still not disturbed, and nothing is printed.
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let ro = dir.path().join("ro");
+        std::fs::create_dir(&ro).unwrap();
+        std::fs::set_permissions(&ro, std::fs::Permissions::from_mode(0o500)).unwrap();
+        let out = run_hook(&ro.join("t.db"), p.as_bytes(), None);
+        std::fs::set_permissions(&ro, std::fs::Permissions::from_mode(0o700)).unwrap();
+        assert!(out.status.success() && out.stdout.is_empty());
+        assert!(
+            !ro.join("spool").exists()
+                || std::fs::read_dir(ro.join("spool"))
+                    .unwrap()
+                    .next()
+                    .is_none()
+        );
+    }
+}
+
+#[test]
+fn a_failed_import_leaves_the_queue_untouched() {
+    let dir = tempfile::tempdir().unwrap();
+    let spool = dir.path().join("spool");
+    for i in 0..3 {
+        memory_ingest::spool::enqueue(&spool, &queued_event("s", i)).unwrap();
+    }
+    // The "database" is a directory, so the store cannot open: nothing may be consumed.
+    let out = chloe()
+        .arg("--db-path")
+        .arg(dir.path())
+        .args(["events", "import", "--spool"])
+        .arg(&spool)
+        .output()
+        .unwrap();
+    assert!(!out.status.success());
+    assert_eq!(std::fs::read_dir(spool.join("pending")).unwrap().count(), 3);
+}
+
+#[test]
+fn doctor_reports_the_queue() {
+    let dir = tempfile::tempdir().unwrap();
+    let db = dir.path().join("t.db");
+    memory_ingest::spool::enqueue(&queue_dir(&db), &queued_event("s", 0)).unwrap();
+    let out = chloe()
+        .arg("--db-path")
+        .arg(&db)
+        .args(["--json", "doctor"])
+        .output()
+        .unwrap();
+    let v: Value = serde_json::from_slice(&out.stdout).unwrap();
+    let q = v["checks"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|c| c["name"] == "capture_queue")
+        .unwrap();
+    assert_eq!(q["ok"], true);
+    assert!(q["detail"].as_str().unwrap().starts_with("1 waiting"));
 }
