@@ -64,6 +64,16 @@ Observed: the `codex exec` run produced a `SessionEnd` call. The desktop/IDE ses
 
 Rollout transcript: `~/.codex/sessions/YYYY/MM/DD/rollout-<timestamp>-<id>.jsonl`, one JSON object per line with `timestamp`, `ordinal`, `type`, `payload` (`session_meta`, `event_msg`, `response_item`, `turn_context`, `world_state`). Undocumented; whether `ordinal` is stable across rewrites was not checked. It is a fallback source, not needed while hooks work.
 
+## Codex adapter (B0-03)
+
+Path chosen: hooks, the only mechanism verified on 0.164.0. The rollout transcript is not read (undocumented format, and hooks already carry everything needed); a transcript reader stays a fallback if hooks change. The adapter is read-only toward Codex except for the one hooks file the user asks us to edit.
+
+`chloe hook install codex [--settings PATH]` adds `chloe hook codex` (timeout 3 s, the most Codex allows for `SessionEnd`) to `SessionStart`, `UserPromptSubmit`, `PostToolUse` and `SessionEnd` in `~/.codex/hooks.json` (`$CODEX_HOME/hooks.json` if set). `PostCompact` is not installed because its payload was never captured, and `Stop` is not mapped. Same rules as for Claude Code: other hooks are kept, repeat installs are no-ops, uninstall removes only ours, and `chloe hook codex` never fails, prints nothing and honours `CHLOE_CAPTURE=off`. Differences: the prompt id is `turn_id`, and `tool_response` is a string (still never read).
+
+**Trust.** Codex ignores a hook until the user approves it (`/hooks` in Codex; the approval is stored in `config.toml`, which we never write). After installing, approve the four `chloe hook codex` entries and start a new session. Changing an entry's command or timeout means approving it again. `doctor` does not yet report untrusted hooks.
+
+Verified on 2026-10-23 with a real `codex exec`: `session_start`, `user_prompt` (id = `turn_id`), `tool_result_summary` (id = `tool_use_id`) and `session_end` were spooled, and a fake `API_KEY=hunter2` in the prompt and in the command appeared only as `[REDACTED]`. Installing is global, so sessions you start meanwhile (including the desktop app) are captured too. The installer rewrites the file as pretty-printed JSON with 2-space indentation, so a hand-formatted file changes style (content and key order are kept). `codex exec` waits for stdin unless it is redirected (`< /dev/null`), which has nothing to do with the hooks.
+
 ## Comparison
 
 | Capability | Claude Code 2.1.309 | Codex 0.164.0 |

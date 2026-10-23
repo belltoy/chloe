@@ -11,8 +11,12 @@ fn chloe() -> Command {
 }
 
 fn run_hook(db: &Path, stdin: &[u8], capture: Option<&str>) -> Output {
+    run_agent_hook("claude", db, stdin, capture)
+}
+
+fn run_agent_hook(agent: &str, db: &Path, stdin: &[u8], capture: Option<&str>) -> Output {
     let mut c = chloe();
-    c.arg("--db-path").arg(db).args(["hook", "claude"]);
+    c.arg("--db-path").arg(db).args(["hook", agent]);
     if let Some(v) = capture {
         c.env("CHLOE_CAPTURE", v);
     }
@@ -131,5 +135,56 @@ fn install_and_uninstall_keep_other_hooks() {
     );
     assert!(run("uninstall").contains("removed"));
     let s: Value = serde_json::from_str(&std::fs::read_to_string(&settings).unwrap()).unwrap();
+    assert_eq!(s, original);
+}
+
+#[test]
+fn codex_hook_spools_and_installs_into_hooks_json() {
+    let dir = tempfile::tempdir().unwrap();
+    let db = dir.path().join("t.db");
+    let payload = json!({"session_id":"c1","turn_id":"t1","hook_event_name":"PostToolUse","tool_name":"Bash",
+        "tool_input":{"command":"echo hi"},"tool_response":"hi\n","tool_use_id":"exec-1"});
+    let out = run_agent_hook("codex", &db, payload.to_string().as_bytes(), None);
+    assert!(out.status.success() && out.stdout.is_empty());
+    let lines = spool_lines(&db);
+    assert_eq!(
+        (
+            lines[0]["native_agent"].as_str(),
+            lines[0]["native_event_id"].as_str()
+        ),
+        (Some("codex"), Some("exec-1"))
+    );
+
+    let hooks_json = dir.path().join("hooks.json");
+    let original = json!({"hooks":{"Stop":[{"hooks":[{"type":"command","command":"workmux set-window-status done"}]}]}});
+    std::fs::write(
+        &hooks_json,
+        serde_json::to_string_pretty(&original).unwrap(),
+    )
+    .unwrap();
+    let run = |verb: &str| {
+        let out = chloe()
+            .args(["hook", verb, "codex", "--settings"])
+            .arg(&hooks_json)
+            .output()
+            .unwrap();
+        assert!(
+            out.status.success(),
+            "{}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+        String::from_utf8(out.stdout).unwrap()
+    };
+    assert!(
+        run("install").contains("/hooks"),
+        "must tell the user to trust the hooks"
+    );
+    let s: Value = serde_json::from_str(&std::fs::read_to_string(&hooks_json).unwrap()).unwrap();
+    assert_eq!(
+        s["hooks"]["SessionEnd"][0]["hooks"][0]["command"],
+        "chloe hook codex"
+    );
+    assert!(run("uninstall").contains("removed"));
+    let s: Value = serde_json::from_str(&std::fs::read_to_string(&hooks_json).unwrap()).unwrap();
     assert_eq!(s, original);
 }

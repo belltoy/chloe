@@ -60,7 +60,7 @@ enum Command {
         #[command(subcommand)]
         command: McpCommand,
     },
-    /// Agent hook capture (Claude Code)
+    /// Agent hook capture (Claude Code, Codex)
     Hook {
         #[command(subcommand)]
         command: HookCommand,
@@ -77,10 +77,12 @@ enum Command {
 enum HookCommand {
     /// Hook entry point for Claude Code: reads the payload on stdin, always exits 0
     Claude,
+    /// Hook entry point for Codex: reads the payload on stdin, always exits 0
+    Codex,
     /// Add chloe's hooks to the agent's settings file (other hooks are kept)
     Install {
         agent: hook::Agent,
-        /// Settings file [default: ~/.claude/settings.json]
+        /// Hooks file [default: ~/.claude/settings.json or ~/.codex/hooks.json]
         #[arg(long)]
         settings: Option<PathBuf>,
     },
@@ -226,7 +228,7 @@ fn run(cli: Cli) -> anyhow::Result<bool> {
 
     if let Command::Hook { command } = cli.command {
         match command {
-            HookCommand::Claude => unreachable!("handled in main"),
+            HookCommand::Claude | HookCommand::Codex => unreachable!("handled in main"),
             HookCommand::Install { agent, settings } => hook::edit(agent, settings, true)?,
             HookCommand::Uninstall { agent, settings } => hook::edit(agent, settings, false)?,
         }
@@ -396,12 +398,16 @@ fn run(cli: Cli) -> anyhow::Result<bool> {
 fn main() -> ExitCode {
     let cli = Cli::parse();
     // The hook runs inside the agent's loop: skip config, logging and error output.
-    if let Command::Hook {
-        command: HookCommand::Claude,
-    } = cli.command
-    {
-        hook::run_claude(cli.db_path);
-        return ExitCode::SUCCESS;
+    if let Command::Hook { command } = &cli.command {
+        let agent = match command {
+            HookCommand::Claude => Some(hook::Agent::Claude),
+            HookCommand::Codex => Some(hook::Agent::Codex),
+            _ => None,
+        };
+        if let Some(agent) = agent {
+            hook::run(agent.spec(), cli.db_path);
+            return ExitCode::SUCCESS;
+        }
     }
     let json = cli.json;
     match run(cli) {
