@@ -19,8 +19,8 @@ Evidence: [`acceptance-a.log`](acceptance-a.log) (`scripts/acceptance-a.sh`), [`
 | A-16 | P0 | PASS | acceptance-a.log | macOS `sandbox-exec` with network denied |
 | A-17, A-18 | P0 | PASS | acceptance-a.log | |
 | A-19 | P1 | PASS | acceptance-a.log | Read-only database and unusable path. The criterion originally also listed a "non-startable MCP binary"; `doctor` launches its own executable, so that case cannot occur and was removed from the criterion |
-| A-20 | P1 | PARTIAL | acceptance-a.log | `instructions` content verified. That a real agent follows the `CLAUDE.md` snippet was **not** tested |
+| A-20 | P1 | PASS (manual) | acceptance-a.log | `instructions` content verified. 2026-10-23, one run per agent in a Vue project, snippet in `CLAUDE.md`/`AGENTS.md`: Codex 0.164.0 called `memory_search` before touching code and answered from the memory; given a decision in plain words it searched, then called `memory_save` (a correct Decision, listed by `chloe memory list`), then went on to edit the repo. Claude Code 2.1.309 searched and answered from the memory, but the order against its file search and a save were not captured. Single runs, no snippet-less control, screenshots not stored. A first Codex run exposed a search bug (AND over query words), fixed in `10bf017`; the snippet was reworded to say search first and save without being asked |
 
-Blockers: none known. Open before tagging `v0.1.0`: run CI on Linux (push), optionally re-run A-15 in a clean environment with a captured log, optionally A-20 with real agents.
+Blockers: none known. Open before tagging `v0.1.0`: run CI on Linux (push), optionally re-run A-15 in a clean environment with a captured log, optionally repeat A-20 (several runs per agent, a run without the snippet, Claude Code's save).
 
 Known limitations: see README ("Design trade-offs and known limitations"), notably unsegmented CJK text in FTS.
