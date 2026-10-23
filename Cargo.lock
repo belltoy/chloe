@@ -369,7 +369,10 @@ dependencies = [
  "anyhow",
  "clap",
  "memory-core",
+ "memory-store",
+ "serde",
  "serde_json",
+ "tempfile",
  "tracing",
  "tracing-subscriber",
 ]
