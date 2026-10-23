@@ -92,3 +92,35 @@ fn killed_server_leaves_committed_data_intact() {
             .success()
     );
 }
+
+/// Two agents starting `chloe mcp serve` at the same moment on a new machine open a database
+/// that does not exist yet; every one of them must get a working store.
+#[test]
+fn simultaneous_first_opens_of_a_new_database_all_succeed() {
+    for round in 0..10 {
+        let tmp = tempfile::tempdir().unwrap();
+        let db = tmp.path().join("t.db");
+        let children: Vec<_> = (0..8)
+            .map(|_| {
+                let mut c = Command::new(env!("CARGO_BIN_EXE_chloe"));
+                c.env_remove("CHLOE_DB")
+                    .arg("--db-path")
+                    .arg(&db)
+                    .args(["--json", "events", "sessions"]);
+                c.stdout(Stdio::piped())
+                    .stderr(Stdio::piped())
+                    .spawn()
+                    .unwrap()
+            })
+            .collect();
+        for child in children {
+            let out = child.wait_with_output().unwrap();
+            assert!(
+                out.status.success(),
+                "round {round}: {}{}",
+                String::from_utf8_lossy(&out.stdout),
+                String::from_utf8_lossy(&out.stderr)
+            );
+        }
+    }
+}

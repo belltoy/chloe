@@ -19,6 +19,8 @@ const MIGRATIONS: &[&str] = &[
     include_str!("migrations/002_audit.sql"),
     include_str!("migrations/003_events.sql"),
 ];
+/// How long `open` keeps retrying a locked initialisation.
+const OPEN_RETRY: Duration = Duration::from_secs(5);
 const MAX_TITLE_CHARS: usize = 200;
 const MAX_CONTENT_BYTES: usize = 64 * 1024;
 const MAX_LIMIT: usize = 100;
@@ -75,11 +77,7 @@ impl SqliteStore {
         create_private(path)?;
         let mut conn = Connection::open(path).map_err(storage)?;
         conn.busy_timeout(Duration::from_secs(5)).map_err(storage)?;
-        conn.execute_batch(
-            "PRAGMA journal_mode = WAL; PRAGMA synchronous = NORMAL; PRAGMA foreign_keys = ON;",
-        )
-        .map_err(storage)?;
-        migrate(&mut conn)?;
+        init(&mut conn)?;
         Ok(Self {
             conn: Mutex::new(conn),
             actor: "unknown".into(),
@@ -363,6 +361,30 @@ fn schema_version(conn: &Connection) -> Result<u32> {
 }
 
 /// Forward-only; a database from a newer binary is refused (downgrade unsupported).
+/// Switching to WAL and migrating a brand-new database needs locks that SQLite's busy timeout
+/// does not always wait for, so several processes opening it at once (two agents starting
+/// `chloe mcp serve` together) can see "database is locked". Both steps are idempotent, so
+/// retry them for as long as the busy timeout would have.
+fn init(conn: &mut Connection) -> Result<()> {
+    let started = std::time::Instant::now();
+    loop {
+        let attempt = conn
+            .execute_batch(
+                "PRAGMA journal_mode = WAL; PRAGMA synchronous = NORMAL; PRAGMA foreign_keys = ON;",
+            )
+            .map_err(storage)
+            .and_then(|()| migrate(conn));
+        match attempt {
+            // shortcut: matched on the message because errors are flattened to text here; keep
+            // it narrow and revisit if SQLite ever words this differently.
+            Err(Error::Storage(m)) if m.contains("locked") && started.elapsed() < OPEN_RETRY => {
+                std::thread::sleep(Duration::from_millis(10));
+            }
+            other => return other,
+        }
+    }
+}
+
 fn migrate(conn: &mut Connection) -> Result<()> {
     let tx = begin(conn)?;
     let current = schema_version(&tx)? as usize;
