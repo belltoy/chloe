@@ -51,6 +51,10 @@ pub struct AgentEvent {
     pub tool_name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub text: Option<String>,
+    /// Reason codes for what the adapter removed or cut (`secret`, `truncated`,
+    /// `sensitive_path`); never the removed content itself.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub redactions: Vec<String>,
 }
 
 impl AgentEvent {
@@ -89,6 +93,7 @@ mod tests {
             cwd: None,
             tool_name: Some("Bash".into()),
             text: None,
+            redactions: vec![],
         }
     }
 
