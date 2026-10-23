@@ -79,6 +79,7 @@ Initially a Cargo workspace with shared dependency versions is enough; no dynami
 ### 4.1 Project Identity / Scope
 
 - The repository ID is a locally persistent UUID; a Git `remote` is only a mutable alias and cannot be the sole globally unique key.
+- **Resolver policy (A1)**: the identity key is the canonical path of the main checkout. A Git worktree resolves to its main repository and is recorded as a `worktree` alias; a plain directory is its own project. A moved or renamed path becomes a NEW project until linked with `add_alias(project, path, "moved")`, which refuses paths already owned by another project. The remote URL is never used as identity and is not auto-populated in A.
 - Normalized local paths, the Git top-level and worktrees map to the same repository ID; standalone non-Git directories can have a project ID initialized explicitly.
 - `scope` has at least `global` / `project`; the MVP does no cross-user sharing, derives the scope from the current working path by default and validates it strictly.
 - Branch and worktree may serve as provenance metadata and future B filters; A does not enforce branch isolation.

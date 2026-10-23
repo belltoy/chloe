@@ -1,0 +1,320 @@
+use std::path::PathBuf;
+use std::sync::{Arc, Barrier};
+
+use memory_core::service::{MemoryChanges, MemoryService, NewMemory, SearchQuery};
+use memory_core::{Error, Kind, ProjectId, Source, Status};
+use memory_store::SqliteStore;
+
+fn db() -> (tempfile::TempDir, PathBuf) {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("t.db");
+    (dir, path)
+}
+
+fn new(project: Option<ProjectId>, title: &str, content: &str) -> NewMemory {
+    NewMemory {
+        project_id: project,
+        kind: Kind::Fact,
+        title: title.into(),
+        content: content.into(),
+        source: Source::Manual,
+    }
+}
+
+fn q(query: &str) -> SearchQuery {
+    SearchQuery {
+        query: query.into(),
+        limit: 10,
+        include_global: false,
+        include_inactive: false,
+    }
+}
+
+fn project(store: &SqliteStore, dir: &tempfile::TempDir, name: &str) -> ProjectId {
+    let p = dir.path().join(name);
+    std::fs::create_dir_all(&p).unwrap();
+    store.resolve_project(&p).unwrap()
+}
+
+#[test]
+fn persists_across_restart() {
+    let (dir, path) = db();
+    let (pid, id) = {
+        let s = SqliteStore::open(&path).unwrap();
+        let pid = project(&s, &dir, "a");
+        (
+            pid,
+            s.save(new(Some(pid), "Build", "use cargo nextest"))
+                .unwrap()
+                .id,
+        )
+    };
+    let s = SqliteStore::open(&path).unwrap();
+    assert_eq!(s.get(Some(pid), id).unwrap().title, "Build");
+    assert_eq!(project(&s, &dir, "a"), pid);
+    assert_eq!(s.search(Some(pid), q("nextest")).unwrap().len(), 1);
+}
+
+#[test]
+fn update_keeps_history_and_syncs_fts() {
+    let (dir, path) = db();
+    let s = SqliteStore::open(&path).unwrap();
+    let pid = project(&s, &dir, "a");
+    let m = s.save(new(Some(pid), "Lint", "run clippy")).unwrap();
+    let m2 = s
+        .update(
+            Some(pid),
+            m.id,
+            1,
+            MemoryChanges {
+                content: Some("run rustfmt".into()),
+                ..Default::default()
+            },
+        )
+        .unwrap();
+    assert_eq!(m2.revision, 2);
+    assert!(s.search(Some(pid), q("clippy")).unwrap().is_empty());
+    assert_eq!(s.search(Some(pid), q("rustfmt")).unwrap().len(), 1);
+
+    let a = s.archive(Some(pid), m.id, 2).unwrap();
+    assert_eq!((a.status, a.revision), (Status::Archived, 3));
+    assert!(s.search(Some(pid), q("rustfmt")).unwrap().is_empty());
+    assert!(s.list(Some(pid), false, 10).unwrap().is_empty());
+    assert_eq!(s.list(Some(pid), true, 10).unwrap().len(), 1);
+
+    let h = s.history(Some(pid), m.id).unwrap();
+    let causes: Vec<_> = h.iter().map(|r| (r.revision, r.cause.as_str())).collect();
+    assert_eq!(causes, [(1, "create"), (2, "update"), (3, "archive")]);
+    assert_eq!(h[0].snapshot.content, "run clippy");
+}
+
+#[test]
+fn stale_revision_conflicts() {
+    let (_d, path) = db();
+    let s = SqliteStore::open(&path).unwrap();
+    let m = s.save(new(None, "t", "c")).unwrap();
+    let ch = || MemoryChanges {
+        title: Some("x".into()),
+        ..Default::default()
+    };
+    s.update(None, m.id, 1, ch()).unwrap();
+    assert!(matches!(
+        s.update(None, m.id, 1, ch()),
+        Err(Error::Conflict {
+            expected: 1,
+            current: 2
+        })
+    ));
+    assert!(matches!(
+        s.archive(None, m.id, 1),
+        Err(Error::Conflict { .. })
+    ));
+}
+
+#[test]
+fn failed_update_rolls_back_everything() {
+    let (_d, path) = db();
+    let s = SqliteStore::open(&path).unwrap();
+    let m = s.save(new(None, "old title", "body")).unwrap();
+    // Occupy revision 2 so the history insert (last step of update) fails.
+    rusqlite::Connection::open(&path)
+        .unwrap()
+        .execute(
+            "INSERT INTO memory_revisions VALUES (?1, 2, '{}', 0, 'x')",
+            [m.id.to_string()],
+        )
+        .unwrap();
+    let ch = MemoryChanges {
+        title: Some("new title".into()),
+        ..Default::default()
+    };
+    assert!(matches!(
+        s.update(None, m.id, 1, ch),
+        Err(Error::Storage(_))
+    ));
+    let after = s.get(None, m.id).unwrap();
+    assert_eq!((after.revision, after.title.as_str()), (1, "old title"));
+    assert_eq!(s.search(None, q("old")).unwrap().len(), 1);
+    assert!(s.search(None, q("new")).unwrap().is_empty());
+}
+
+#[test]
+fn concurrent_cas_has_one_winner() {
+    let (_d, path) = db();
+    let m = SqliteStore::open(&path)
+        .unwrap()
+        .save(new(None, "t", "c"))
+        .unwrap();
+    let barrier = Arc::new(Barrier::new(8));
+    let handles: Vec<_> = (0..8)
+        .map(|i| {
+            let (path, barrier) = (path.clone(), barrier.clone());
+            std::thread::spawn(move || {
+                let s = SqliteStore::open(&path).unwrap();
+                barrier.wait();
+                s.update(
+                    None,
+                    m.id,
+                    1,
+                    MemoryChanges {
+                        title: Some(format!("w{i}")),
+                        ..Default::default()
+                    },
+                )
+            })
+        })
+        .collect();
+    let results: Vec<_> = handles.into_iter().map(|h| h.join().unwrap()).collect();
+    assert_eq!(results.iter().filter(|r| r.is_ok()).count(), 1);
+    assert!(
+        results
+            .iter()
+            .filter(|r| r.is_err())
+            .all(|r| matches!(r, Err(Error::Conflict { .. })))
+    );
+    let s = SqliteStore::open(&path).unwrap();
+    assert_eq!(s.get(None, m.id).unwrap().revision, 2);
+    assert_eq!(s.history(None, m.id).unwrap().len(), 2);
+}
+
+#[test]
+fn projects_are_isolated() {
+    let (dir, path) = db();
+    let s = SqliteStore::open(&path).unwrap();
+    let (a, b) = (project(&s, &dir, "a"), project(&s, &dir, "b"));
+    assert_ne!(a, b);
+    let ma = s.save(new(Some(a), "secret", "alpha token")).unwrap();
+    let g = s.save(new(None, "shared", "alpha global")).unwrap();
+
+    assert!(matches!(s.get(Some(b), ma.id), Err(Error::NotFound(_))));
+    assert!(matches!(
+        s.update(
+            Some(b),
+            ma.id,
+            1,
+            MemoryChanges {
+                title: Some("x".into()),
+                ..Default::default()
+            }
+        ),
+        Err(Error::NotFound(_))
+    ));
+    assert!(matches!(
+        s.archive(Some(b), ma.id, 1),
+        Err(Error::NotFound(_))
+    ));
+    assert!(matches!(s.history(Some(b), ma.id), Err(Error::NotFound(_))));
+    assert!(s.search(Some(b), q("alpha")).unwrap().is_empty());
+    assert!(s.list(Some(b), true, 10).unwrap().is_empty());
+
+    // Global memories are opt-in for search, but readable by id.
+    assert_eq!(s.get(Some(b), g.id).unwrap().id, g.id);
+    let with_global = SearchQuery {
+        include_global: true,
+        ..q("alpha")
+    };
+    let hits = s.search(Some(a), with_global).unwrap();
+    assert_eq!(hits.len(), 2);
+    assert!(matches!(
+        s.save(new(Some(ProjectId::new()), "t", "c")),
+        Err(Error::NotFound(_))
+    ));
+}
+
+#[test]
+fn search_input_is_never_fts_syntax() {
+    let (_d, path) = db();
+    let s = SqliteStore::open(&path).unwrap();
+    s.save(new(None, "Quote", "say \"hello\" world")).unwrap();
+    for bad in ["\"", "hello AND", "col:x", "NEAR(", "*", "a OR"] {
+        s.search(None, q(bad)).unwrap();
+    }
+    assert_eq!(s.search(None, q("\"hello\"")).unwrap().len(), 1);
+    assert!(matches!(
+        s.search(None, q("   ")),
+        Err(Error::InvalidArgument(_))
+    ));
+}
+
+#[test]
+fn validation() {
+    let (_d, path) = db();
+    let s = SqliteStore::open(&path).unwrap();
+    assert!(matches!(
+        s.save(new(None, " ", "c")),
+        Err(Error::InvalidArgument(_))
+    ));
+    assert!(matches!(
+        s.save(new(None, "t", &"x".repeat(70_000))),
+        Err(Error::InvalidArgument(_))
+    ));
+    let m = s.save(new(None, "t", "c")).unwrap();
+    assert!(matches!(
+        s.update(None, m.id, 1, MemoryChanges::default()),
+        Err(Error::InvalidArgument(_))
+    ));
+}
+
+#[test]
+fn doctor_detects_and_reindex_repairs() {
+    let (_d, path) = db();
+    let s = SqliteStore::open(&path).unwrap();
+    s.save(new(None, "findme", "c")).unwrap();
+    assert!(s.doctor().unwrap().healthy());
+    rusqlite::Connection::open(&path)
+        .unwrap()
+        .execute(
+            "INSERT INTO memory_fts(memory_fts) VALUES ('delete-all')",
+            [],
+        )
+        .unwrap();
+    assert!(!s.doctor().unwrap().fts_ok);
+    assert!(s.search(None, q("findme")).unwrap().is_empty());
+    s.reindex().unwrap();
+    assert!(s.doctor().unwrap().healthy());
+    assert_eq!(s.search(None, q("findme")).unwrap().len(), 1);
+}
+
+#[test]
+fn newer_schema_is_refused() {
+    let (_d, path) = db();
+    drop(SqliteStore::open(&path).unwrap());
+    rusqlite::Connection::open(&path)
+        .unwrap()
+        .pragma_update(None, "user_version", 99)
+        .unwrap();
+    assert!(matches!(SqliteStore::open(&path), Err(Error::Storage(_))));
+}
+
+#[test]
+fn scope_resolver_git_worktree_and_plain_dir() {
+    let (dir, path) = db();
+    let s = SqliteStore::open(&path).unwrap();
+    let main = dir.path().join("repo");
+    std::fs::create_dir_all(main.join(".git/worktrees/wt")).unwrap();
+    std::fs::create_dir_all(main.join("src/deep")).unwrap();
+    let wt = dir.path().join("wt");
+    std::fs::create_dir_all(&wt).unwrap();
+    let gitdir = main.join(".git/worktrees/wt").canonicalize().unwrap();
+    std::fs::write(wt.join(".git"), format!("gitdir: {}\n", gitdir.display())).unwrap();
+
+    let id = s.resolve_project(&main).unwrap();
+    assert_eq!(s.resolve_project(&main.join("src/deep")).unwrap(), id);
+    assert_eq!(s.resolve_project(&wt).unwrap(), id);
+    let plain = project(&s, &dir, "plain");
+    assert_ne!(plain, id);
+
+    // A moved checkout is a new project until explicitly linked.
+    let moved = dir.path().join("moved");
+    std::fs::create_dir_all(&moved).unwrap();
+    s.add_alias(id, &moved, "moved").unwrap();
+    assert_eq!(s.resolve_project(&moved).unwrap(), id);
+    assert!(matches!(
+        s.add_alias(plain, &moved, "moved"),
+        Err(Error::InvalidArgument(_))
+    ));
+    assert!(matches!(
+        s.resolve_project(&dir.path().join("nope")),
+        Err(Error::InvalidArgument(_))
+    ));
+}

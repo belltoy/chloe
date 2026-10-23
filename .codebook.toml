@@ -1,1 +1,10 @@
-words = ["roundtrips"]
+words = [
+    "CAS",
+    "fts",
+    "gitdir",
+    "roundtrips",
+    "untag",
+]
+ignore_patterns = [
+    '''\w+'s\b''',
+]
