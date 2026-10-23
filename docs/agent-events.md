@@ -39,7 +39,17 @@ Notes: `Stop` fires per turn, `SessionEnd` has a 1.5 s default budget (docs), so
 
 What is stored per event: `prompt` (4000 chars), and for tool calls only a summary of the *input* (300 chars): the Bash command, a file path, a search pattern, a URL or a query. `tool_response` is never read. Secrets are replaced by `[REDACTED]` before truncation; reason codes (`secret`, `truncated`, `sensitive_path`) are kept in `redactions`. A tool call that mentions a credential path (`.env`, `~/.ssh`, `*.pem`, …) keeps no text at all. Redaction is pattern based (known token prefixes, `NAME=VALUE` with a secret-ish name, `Bearer`, URL passwords, PEM private keys); an unknown secret format is not caught.
 
-Interim limits, replaced by later tasks: the spool is a plain append-only file with no dedup or draining (B0-04 adds the events table and idempotent import, B0-05 the queue and crash recovery); invalid payloads are only reported on stderr, not counted (B0-04); payloads over 8 MiB are dropped; `chloe doctor` does not check the hooks yet.
+Interim limits: the spool is a plain append-only file that is never drained or rotated (B0-05 adds the queue and crash recovery); a payload that cannot be parsed is only reported on stderr, because the hook must not touch the database; payloads over 8 MiB are dropped; `chloe doctor` does not check the hooks yet.
+
+## Event table (B0-04)
+
+`chloe events import [--spool PATH]` reads the spool and stores it in SQLite (migration 003: `sessions`, `events`) inside one transaction. `chloe events sessions` and `chloe events list <native-session-id>` show what was captured (`--json` for scripts). The hook itself never opens the database.
+
+- **Idempotent.** `events.idempotency_key` is unique; importing the same spool again reports every event as a duplicate and stores nothing (`inserted`, `duplicates`, `rejected` are returned and printed).
+- **Bad input is counted, not fatal.** An event with another `schema_version`, an empty agent or session id, or an over-long field is rejected with a reason code (`unsupported_schema_version`, `invalid_field`, `too_long`) and the rest of the batch is stored. Spool lines that are not an event (a write cut short by a crash, a hand edit) are listed by line number.
+- **Sessions.** One row per `(agent, native session id)` with `open` / `ended`, first and last event time and the working directory. The newest event decides the state: a session whose `SessionEnd` never arrived stays `open` (idle detection is B1's job), a resumed session reopens, and an old event arriving late changes nothing.
+- **Projects are looked up, never created.** A session is linked to a project only if its directory is already registered (`chloe init`); otherwise `project_id` is empty, and a later event of the same session attaches the project once it exists. Importing therefore never adds rows to `projects`.
+- Events are kept until a retention policy exists (none yet); they hold redacted summaries only.
 
 ## Codex 0.164.0 (hooks) — verified by capture, except compaction
 

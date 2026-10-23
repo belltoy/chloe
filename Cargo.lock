@@ -441,6 +441,7 @@ dependencies = [
  "serde_json",
  "tempfile",
  "time",
+ "uuid",
 ]
 
 [[package]]

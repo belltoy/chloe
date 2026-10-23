@@ -10,7 +10,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use memory_core::{Error, ProjectId, Result};
-use rusqlite::{OptionalExtension, params};
+use rusqlite::{Connection, OptionalExtension, params};
 
 use crate::{SqliteStore, begin, micros, now, storage};
 
@@ -49,23 +49,30 @@ fn worktree_main(checkout: &Path, dot_git: &Path) -> Option<PathBuf> {
     common.parent().map(Path::to_path_buf)
 }
 
+fn lookup(conn: &Connection, path: &Path) -> Result<Option<String>> {
+    conn.query_row(
+        "SELECT id FROM projects WHERE canonical_path=?1 UNION SELECT project_id FROM project_aliases WHERE path=?1",
+        [path.to_string_lossy()],
+        |r| r.get(0),
+    )
+    .optional()
+    .map_err(storage)
+}
+
+/// The already registered project for `dir`, if any; unlike `resolve_project` it never creates
+/// one, and an unreadable directory is just "none".
+pub(crate) fn find_project(conn: &Connection, dir: &Path) -> Option<String> {
+    let (checkout, root) = find_root(dir).ok()?;
+    lookup(conn, &root).ok()?.or(lookup(conn, &checkout).ok()?)
+}
+
 impl SqliteStore {
     /// Finds or creates the project for `dir`.
     pub fn resolve_project(&self, dir: &Path) -> Result<ProjectId> {
         let (checkout, root) = find_root(dir)?;
         let mut conn = self.conn();
         let tx = begin(&mut conn)?;
-        let lookup = |p: &Path| -> Result<Option<String>> {
-            let p = p.to_string_lossy();
-            tx.query_row(
-                "SELECT id FROM projects WHERE canonical_path=?1 UNION SELECT project_id FROM project_aliases WHERE path=?1",
-                [&*p],
-                |r| r.get(0),
-            )
-            .optional()
-            .map_err(storage)
-        };
-        let id = match lookup(&root)?.or(lookup(&checkout)?) {
+        let id = match lookup(&tx, &root)?.or(lookup(&tx, &checkout)?) {
             Some(id) => id,
             None => {
                 let id = ProjectId::new().to_string();

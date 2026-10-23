@@ -1,5 +1,6 @@
 //! SQLite implementation of `MemoryService`: migrations, transactions, FTS5, history, scope.
 
+mod events;
 mod project;
 
 use std::path::Path;
@@ -16,6 +17,7 @@ use time::OffsetDateTime;
 const MIGRATIONS: &[&str] = &[
     include_str!("migrations/001_init.sql"),
     include_str!("migrations/002_audit.sql"),
+    include_str!("migrations/003_events.sql"),
 ];
 const MAX_TITLE_CHARS: usize = 200;
 const MAX_CONTENT_BYTES: usize = 64 * 1024;

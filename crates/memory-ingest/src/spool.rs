@@ -38,6 +38,34 @@ pub fn append(path: &Path, event: &AgentEvent) -> std::io::Result<()> {
     o.open(path)?.write_all(&line)
 }
 
+/// What `read` found: the events, and the 1-based numbers of lines that were not an event.
+#[derive(Debug, Default)]
+pub struct Read {
+    pub events: Vec<AgentEvent>,
+    pub bad_lines: Vec<usize>,
+}
+
+/// Reads a spool file. A missing file is an empty spool. Lines that do not parse (a write cut
+/// short by a crash, a hand edit) are listed, never fatal; blank lines are skipped.
+pub fn read(path: &Path) -> std::io::Result<Read> {
+    let bytes = match std::fs::read(path) {
+        Ok(b) => b,
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(Read::default()),
+        Err(e) => return Err(e),
+    };
+    let mut out = Read::default();
+    for (i, line) in bytes.split(|&b| b == b'\n').enumerate() {
+        if line.iter().all(u8::is_ascii_whitespace) {
+            continue;
+        }
+        match serde_json::from_slice(line) {
+            Ok(e) => out.events.push(e),
+            Err(_) => out.bad_lines.push(i + 1),
+        }
+    }
+    Ok(out)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -63,6 +91,25 @@ mod tests {
         append(&path, &ev).unwrap();
         let body = std::fs::read_to_string(&path).unwrap();
         assert_eq!(body.lines().count(), 2);
+        let r = read(&path).unwrap();
+        assert_eq!((r.events.len(), r.bad_lines.len()), (2, 0));
+        assert!(
+            read(&dir.path().join("none.jsonl"))
+                .unwrap()
+                .events
+                .is_empty()
+        );
+        // A crash mid-write leaves a cut line: reported, and the good lines still load.
+        std::fs::write(
+            &path,
+            format!(
+                "{}\nnot json\n\n{{\"schema_version\":1,\"na",
+                body.lines().next().unwrap()
+            ),
+        )
+        .unwrap();
+        let r = read(&path).unwrap();
+        assert_eq!((r.events.len(), r.bad_lines), (1, vec![2, 4]));
         assert_eq!(
             serde_json::from_str::<AgentEvent>(body.lines().next().unwrap()).unwrap(),
             ev

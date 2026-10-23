@@ -188,3 +188,101 @@ fn codex_hook_spools_and_installs_into_hooks_json() {
     let s: Value = serde_json::from_str(&std::fs::read_to_string(&hooks_json).unwrap()).unwrap();
     assert_eq!(s, original);
 }
+
+fn events_cmd(db: &Path, args: &[&str]) -> Value {
+    let out = chloe()
+        .arg("--db-path")
+        .arg(db)
+        .arg("--json")
+        .arg("events")
+        .args(args)
+        .output()
+        .unwrap();
+    assert!(
+        out.status.success(),
+        "{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    serde_json::from_slice(&out.stdout).unwrap()
+}
+
+#[test]
+fn spool_import_is_idempotent_and_tolerates_damage() {
+    let dir = tempfile::tempdir().unwrap();
+    let db = dir.path().join("t.db");
+    let hook = |agent: &str, payload: Value| {
+        assert!(
+            run_agent_hook(agent, &db, payload.to_string().as_bytes(), None)
+                .status
+                .success()
+        );
+    };
+    hook(
+        "claude",
+        json!({"session_id":"s1","hook_event_name":"SessionStart"}),
+    );
+    hook(
+        "claude",
+        json!({"session_id":"s1","prompt_id":"p1","hook_event_name":"UserPromptSubmit","prompt":"hi"}),
+    );
+    hook(
+        "codex",
+        json!({"session_id":"c1","turn_id":"t1","hook_event_name":"UserPromptSubmit","prompt":"yo"}),
+    );
+    hook(
+        "claude",
+        json!({"session_id":"s2","hook_event_name":"SessionStart"}),
+    );
+    hook(
+        "claude",
+        json!({"session_id":"s2","hook_event_name":"SessionEnd","reason":"other"}),
+    );
+    // A crash left a cut line at the end; a future-version event sits in the middle.
+    let spool = memory_ingest::spool::path_for(&db);
+    let mut body = std::fs::read_to_string(&spool).unwrap();
+    body.push_str(r#"{"schema_version":99,"native_agent":"claude_code","native_session_id":"s3","kind":"session_start","occurred_at":"2027-01-01T00:00:00Z"}"#);
+    body.push_str("\n{\"schema_version\":1,\"nat");
+    std::fs::write(&spool, body).unwrap();
+
+    let first = events_cmd(&db, &["import"]);
+    assert_eq!(first["report"]["inserted"], 5);
+    assert_eq!(
+        first["report"]["rejected"][0]["reason"],
+        "unsupported_schema_version"
+    );
+    assert_eq!(first["bad_lines"], json!([7]));
+    let again = events_cmd(&db, &["import"]);
+    assert_eq!(
+        (
+            again["report"]["inserted"].as_u64(),
+            again["report"]["duplicates"].as_u64()
+        ),
+        (Some(0), Some(5))
+    );
+
+    let sessions = events_cmd(&db, &["sessions"]);
+    let state = |id: &str| {
+        sessions
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|s| s["native_session_id"] == id)
+            .unwrap()["state"]
+            .clone()
+    };
+    assert_eq!(
+        (state("s1"), state("s2")),
+        (json!("open"), json!("ended")),
+        "s1 never got its SessionEnd"
+    );
+    assert_eq!(sessions.as_array().unwrap().len(), 3);
+    let list = events_cmd(&db, &["list", "s1"]);
+    assert_eq!(
+        list.as_array()
+            .unwrap()
+            .iter()
+            .map(|e| e["kind"].as_str().unwrap())
+            .collect::<Vec<_>>(),
+        ["session_start", "user_prompt"]
+    );
+}

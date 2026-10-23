@@ -1,4 +1,5 @@
 mod doctor;
+mod events;
 mod hook;
 
 use std::io::Read;
@@ -59,6 +60,11 @@ enum Command {
     Mcp {
         #[command(subcommand)]
         command: McpCommand,
+    },
+    /// Captured agent events: import the hook spool, list sessions and events
+    Events {
+        #[command(subcommand)]
+        command: events::EventsCommand,
     },
     /// Agent hook capture (Claude Code, Codex)
     Hook {
@@ -193,7 +199,7 @@ struct ProjectInfo {
     db_path: PathBuf,
 }
 
-fn print_json(v: &impl Serialize) -> anyhow::Result<()> {
+pub(crate) fn print_json(v: &impl Serialize) -> anyhow::Result<()> {
     println!("{}", serde_json::to_string_pretty(v)?);
     Ok(())
 }
@@ -289,6 +295,7 @@ fn run(cli: Cli) -> anyhow::Result<bool> {
             std::io::stdin().lock(),
             std::io::stdout().lock(),
         )?,
+        Command::Events { command } => events::run(&store, &config, command, json)?,
         Command::Doctor { .. } | Command::Hook { .. } => unreachable!(),
         Command::Memory { command } => match command {
             MemoryCommand::Add {

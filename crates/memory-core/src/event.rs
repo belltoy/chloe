@@ -4,6 +4,8 @@
 use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
 
+use crate::{ProjectId, Result};
+
 /// Bumped when a field is removed or changes meaning; adding optional fields does not bump it.
 pub const EVENT_SCHEMA_VERSION: u32 = 1;
 
@@ -80,6 +82,57 @@ impl AgentEvent {
             .collect::<Vec<_>>()
             .join("|")
     }
+}
+
+/// Why an event was not stored. `index` is its position in the submitted batch.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Rejection {
+    pub index: usize,
+    /// `unsupported_schema_version`, `invalid_field` or `too_long`.
+    pub reason: String,
+}
+
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct IngestReport {
+    pub inserted: usize,
+    /// Already stored (same idempotency key); nothing changed.
+    pub duplicates: usize,
+    pub rejected: Vec<Rejection>,
+}
+
+/// `Ended` only when the latest event of the session is a `SessionEnd`; a session whose end
+/// was never delivered stays `Open`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SessionState {
+    Open,
+    Ended,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SessionInfo {
+    pub id: String,
+    pub native_agent: String,
+    pub native_session_id: String,
+    /// `None` when the session's directory is not a registered project.
+    pub project_id: Option<ProjectId>,
+    pub cwd: Option<String>,
+    pub state: SessionState,
+    #[serde(with = "time::serde::rfc3339")]
+    pub started_at: OffsetDateTime,
+    #[serde(with = "time::serde::rfc3339")]
+    pub last_event_at: OffsetDateTime,
+    pub events: usize,
+}
+
+/// Durable, idempotent storage of captured events (implemented in `memory-store`).
+pub trait EventStore {
+    /// Stores each valid event once; rejected events are counted, never fatal to the batch.
+    fn ingest(&self, events: &[AgentEvent]) -> Result<IngestReport>;
+    /// Most recently active sessions first.
+    fn sessions(&self, limit: usize) -> Result<Vec<SessionInfo>>;
+    /// Events of one session in arrival order.
+    fn session_events(&self, native_session_id: &str, limit: usize) -> Result<Vec<AgentEvent>>;
 }
 
 #[cfg(test)]
