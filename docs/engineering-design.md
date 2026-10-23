@@ -1,0 +1,244 @@
+# Local-first Coding Agent Memory — Engineering Design
+
+> Document ID: AM-DESIGN-001 · Version: v0.1 · Date: 2026-10-23 · Status: for implementation review
+>
+> Scope: Milestone A (a usable MCP memory service) + Milestone B (automatic capture, extraction, dedup, hybrid retrieval and evaluation).
+
+## 1. Goals and Boundaries
+
+### 1.1 Goals
+
+Build a Rust-core, single-machine, local-by-default long-term memory system that lets coding agents such as Claude Code and Codex share project knowledge across sessions and across agents. The system must provide searchable, revisable memories with project scope and provenance, rather than simply storing whole conversations. Delivery is judged by reproducible real development workflows and performance/quality evaluation.
+
+**Milestone A:** Agents explicitly save, search, read, update and deprecate project memories through MCP; two agents on the same repo see the same effective knowledge; SQLite persistence, FTS5, CLI, tests and local configuration are in place.
+
+**Milestone B:** Adapters obtain usable session events or transcripts automatically and ingest them reliably; candidate knowledge is extracted via a configurable local/remote LLM provider; results are merged and deduplicated while keeping provenance and versions; optional local embeddings and hybrid retrieval; an evaluation set demonstrates benefit and cost.
+
+### 1.2 Non-goals
+
+No cloud accounts, remote multi-user support, multi-device sync, P2P, complex web/desktop GUI, distributed storage, full session replay, complex knowledge graph, automatic code rewriting, or general-purpose coding-agent execution engine.
+Milestone B does **not** guarantee that all agents expose equivalent native events; features must degrade progressively according to actual adapter capability. Fully offline LLM inference is not required, but "data stored locally" must be clearly distinguished from "using a cloud model".
+
+### 1.3 Principles
+
+1. **Agent-agnostic core**: agent formats and hook differences are encapsulated in adapters.
+2. **Local-first & explicit egress**: listen locally and store locally by default; calling cloud models must be explicitly enabled.
+3. **Non-blocking capture**: memory failures must not impair the agent's basic operation; define which events may be lost and which persistent state must not be.
+4. **Evidence over assertion**: LLM output is first a candidate; what is finally written has provenance, is reviewable and versioned.
+5. **Deterministic baseline**: with no model configured, A is fully usable; in B, rule-based capture, candidate review and FTS keep working.
+6. **Small deployable unit**: single machine, single instance first; no multi-service orchestration just for demos.
+
+## 2. User Scenarios and Key Use Cases
+
+- **UC-A1**: Claude Code connects to MCP, saves constraints and design decisions of `repo-X`, and immediately searches them by keyword.
+- **UC-A2**: After Claude Code is closed, Codex reads the existing memories via MCP in the same repository.
+- **UC-A3**: An ordinary query in another repository does not accidentally return `repo-X` private memories; authorized global memories can be queried explicitly.
+- **UC-A4**: Edit a memory, view versions, deprecate an old conclusion; search returns only Active status by default.
+- **UC-B1**: Key activity happens in a new Claude Code session; the adapter captures it and it enters the extraction queue after the session ends.
+- **UC-B2**: Duplicate reports of the same session produce no duplicate events/memories; model-call failures are recoverable.
+- **UC-B3**: Duplicate technical conclusions merge into one; candidates that conflict with a confirmed decision enter a review queue.
+- **UC-B4**: Codex can retrieve knowledge produced by Claude Code, with source and task context.
+- **UC-B5**: A benchmark compares FTS, Vector and Hybrid on Recall@K, latency and context tokens.
+
+## 3. Overall Architecture
+
+```text
+Claude Code  ── MCP (stdio) ──┐
+Codex        ── MCP (stdio) ──┤   [memory-mcp]
+                              ├── [memory-core / service]
+CLI ──────────────────────────┤           │
+                              │           ├── [memory-store: SQLite + FTS5]
+Hooks/Transcript Readers ─────┘           ├── [memory-search]
+      │                                   └── [memory-engine: B]
+      └── [memory-ingest: B] ─── job queue ─────┘
+                                               │
+                                      Optional LLM / Embeddings
+```
+
+**Deployment convention:** In the MVP each MCP stdio process may use the same SQLite file (WAL + busy_timeout + transactions and retries) and the CLI may access it directly. In B, if hooks need fast asynchronous reporting, prefer a single-machine background worker/daemon or a local persistent spool, so that each hook does not trigger an expensive extraction. Do not assume a "single writer actor" is naturally compatible with "multiple independent stdio processes": the latter still depends on SQLite's cross-process write lock. Whether to introduce a daemon is decided by actual concurrency tests; for B, a local daemon that accepts events centrally and coordinates jobs is recommended.
+
+### 3.1 Rust Workspace
+
+```text
+crates/
+  memory-core/       # IDs, domain model, scope, state machine, traits
+  memory-store/      # SQLite migrations, transactions, FTS sync, version history
+  memory-search/     # A: FTS; B: vectors, fusion/rerank
+  memory-mcp/        # MCP tools/server; stdio lifecycle
+  memory-cli/        # init / project / memory / doctor / eval
+  memory-ingest/     # B: agent adapters, event normalization, redaction, spool
+  memory-engine/     # B: extraction, dedup, merge, review, job execution
+  memory-llm/        # B: replaceable extraction/embedding providers
+  memory-eval/       # B: evaluation tooling and fixed fixtures
+```
+
+Initially a Cargo workspace with shared dependency versions is enough; no dynamic plugin loading. Core depends on neither a specific agent nor SQL.
+
+## 4. Domain Model and Identity
+
+### 4.1 Project Identity / Scope
+
+- The repository ID is a locally persistent UUID; a Git `remote` is only a mutable alias and cannot be the sole globally unique key.
+- Normalized local paths, the Git top-level and worktrees map to the same repository ID; standalone non-Git directories can have a project ID initialized explicitly.
+- `scope` has at least `global` / `project`; the MVP does no cross-user sharing, derives the scope from the current working path by default and validates it strictly.
+- Branch and worktree may serve as provenance metadata and future B filters; A does not enforce branch isolation.
+- The MCP client passes project_id explicitly, or the server identifies it from trusted configuration/working path; do not trust a repo ID invented by the model. Multiple MCP instances must resolve to the same persistent ID.
+
+### 4.2 Memory
+
+```text
+Memory {
+  id: UUID, project_id: UUID | null, kind: Fact|Decision|Procedure|Constraint|Gotcha,
+  title: String, content: String,
+  status: Active|Disputed|Superseded|Archived,
+  source: Manual|Agent|Extracted,
+  created_at, updated_at, revision: integer
+}
+```
+
+- The first version builds no complex confidence scoring; provenance and status matter more than false-precision scores.
+- B adds the unconfirmed `CandidateMemory`, `SourceRef` (agent/session/event/commit/path, etc.) and a merge operation log.
+- `revision` provides optimistic concurrency control; updates require expected_revision, and a failure returns a conflict hint.
+- Search returns only Active by default; history is available through an explicit include_inactive; each result returns id, scope, snippet, status, source and score.
+
+### 4.3 Schema (conceptual)
+
+| Table | Key fields | Purpose |
+|---|---|---|
+| `projects` | id, canonical_path, created_at | Stable project identity |
+| `project_aliases` | project_id, path, remote_url, kind | worktree / moved-path mapping |
+| `memories` | id, project_id, kind, title, content, status, revision, timestamps | Current memories |
+| `memory_revisions` | memory_id, revision, snapshot, changed_at, cause | Auditable history |
+| `memory_fts` | title, content | FTS5 external-content index |
+| `sessions` (B) | id, agent, native_id, project_id, state | Session association |
+| `events` (B) | idempotency_key, session_id, event_type, safe_payload, timestamp | Normalized capture |
+| `jobs` (B) | id, kind, state, attempts, lease_until, last_error | Durable background jobs |
+| `candidates` (B) | id, session_id, content, proposal_state, evidence | Knowledge awaiting confirmation |
+| `memory_sources` (B) | memory_id, source_kind, source_ref, details | Provenance |
+| `embeddings` (B) | memory_id, model_id, dimension, vector, updated_at | Semantic retrieval |
+
+Enable SQLite `foreign_keys=ON`, WAL and `busy_timeout`; use migration scripts and transactions. FTS5 external-content must have INSERT/UPDATE/DELETE triggers, plus `rebuild` and consistency-check commands. Full-text search must never interpolate unescaped strings into hand-built SQL.
+
+## 5. Milestone A: MCP + Manual Memory
+
+### 5.1 MCP Interface Contract
+
+The following tools are suggested (parameters and error objects are schema-validated):
+
+- `memory_save({project, kind, title, content}) -> {id, revision, status}`: explicit creation.
+- `memory_search({project, query, limit?, include_global?}) -> {hits[]}`: project isolation and Active by default; FTS5 + explainable ranking.
+- `memory_get({id, project}) -> {memory, revisions_summary}`: fetch details by ID; a cross-project read is rejected / invisible.
+- `memory_update({id, expected_revision, changes}) -> {revision}`: concurrency-safe update.
+- `memory_archive({id, expected_revision})`: soft delete / deprecate, keeping history.
+
+A `memory_list` may be added for debugging, but semantic retrieval must not depend on a list implementation. The MCP server and client configuration adapt to the supported SDK/agent versions, and the documentation gives real configuration examples for Claude Code and Codex (do not invent configuration keys; verify against real versions during implementation).
+
+### 5.2 CLI
+
+```text
+agent-memory init [path]
+agent-memory project show [path]
+agent-memory memory add --project ...
+agent-memory memory search --project ... "keywords"
+agent-memory memory show <id>
+agent-memory memory update <id> --revision N ...
+agent-memory memory archive <id> --revision N
+agent-memory doctor
+agent-memory mcp serve
+```
+
+All MCP business logic goes through the same service layer to avoid CLI/MCP behavior drift. JSON output is supported for automation.
+
+### 5.3 Retrieval Baseline
+
+- FTS5 (optionally the unicode61 tokenizer) matches title/body; ranking is explainable, combining title boost, exact phrase and recent update.
+- Default limit of 5–10 results, with a source/readable snippet; set a maximum response character/token budget.
+- Provide predictable feedback for short queries, code symbols and no-match cases. Do not automatically inject arbitrary project knowledge into every prompt; in A the agent retrieves actively.
+
+### 5.4 Lifecycle
+
+A's `save` is an atomic transaction: write the current record + initial revision + FTS trigger. `update` does a compare-and-swap on revision, inserts a history version and updates the index in one transaction; `archive` is a status change. A conflict or I/O failure must never return success.
+
+## 6. Milestone B: Automatic Memory Loop
+
+### 6.1 Capturing & Adapters
+
+B first picks Claude Code as the primary adapter, implementing real working hooks; for Codex, choose hook notifications or a read-only local transcript reader depending on the installed version's capabilities. **Do not assume all agents have equivalent ToolStart / ToolEnd / SessionEnd events.**
+
+Unified event types are `SessionStart`, `UserPrompt`, `ToolResultSummary`, `ContextCompacted` and `SessionEnd` (fields optional), retaining `native_agent`, `native_session_id` and `schema_version`. Adapters handle native-format version compatibility and feature detection; they are tolerant of unknown fields and reject (and count) invalid core fields. Capture has timeouts, length limits, configurable sampling/filtering, secret and sensitive-path redaction, and a kill switch. Uploading full source code, environment variables or tool output to model services is forbidden by default.
+
+Reliability strategy: hooks return fast; write small redacted events to a local persistent queue/SQLite first, then run the LLM asynchronously. Idempotency uses `(agent, native_session_id, native_event_id)` or a stably reconstructible composite key; duplicate capture adds no events. Only **at-least-once processing after durable acceptance + idempotent effects** is promised, not end-to-end exactly-once.
+
+### 6.2 Extraction
+
+Triggers: SessionEnd (if available), manual `consolidate`, idle timeout (for agents without SessionEnd). Each session defines a maximum input length and a configurable segment-selection strategy. A `MemoryExtractor` trait outputs structured candidates: type/title/content/evidence/notes. Model output must be schema-validated and size-limited. Without an LLM, events are still retained, and the job is `pending_provider` or extraction is skipped, with status reported.
+
+### 6.3 Consolidation
+
+- Use same-project FTS/vector search to find existing memories that may be duplicates.
+- Classify candidates as `create / merge / supersede-proposal / flag-conflict / reject`.
+- Only clearly duplicate, low-risk candidates may be auto-merged; conflicts with explicit user constraints/decisions must enter the review queue.
+- Original memories and merge sources always keep a queryable revision record; prevent a model-generated contradictory conclusion from directly overwriting user-confirmed information.
+- CLI review is acceptable initially; no complex GUI.
+
+### 6.4 Embedding + Hybrid Retrieval
+
+- Providers are isolated behind an interface; local Ollama / compatible embedding APIs are the preferred demo option; optional external APIs must be explicitly enabled by the user.
+- Strictly validate `model_id + dimension`; changing models requires rebuilding the vector index, and different dimensions are never mixed.
+- Take FTS and Vector top-N each, fuse by RRF, then hard-filter by project scope and status, and rerank moderately; results report retrieval source and latency.
+- When embeddings are temporarily unavailable, fall back to FTS; MCP must not become wholly unavailable due to model-service failure.
+- Query-vector caching and ingest-time vector updates may come later; first ensure consistency and baseline evaluation.
+
+### 6.5 Background Jobs
+
+A job goes `pending → leased → succeeded / retry / dead_letter`. Each job stores `attempts`, error, next retry time and lease deadline; expired leases are reclaimed after a crash. Extraction is deduplicated by session ID; repeating any step must be idempotent. Exponential backoff has an upper bound, and users can inspect the failure queue and retry via the CLI.
+
+## 7. Security, Privacy and Reliability
+
+- Default configuration: local SQLite file (readable/writable only by the current user), MCP stdio, no external listening; if HTTP is enabled, default to `127.0.0.1` + token/same-machine safeguards, and document the security boundary.
+- Before writing events, apply structured-field allowlisting, secret detection (tokens, keys, etc.) and log truncation; keep reason codes and redaction statistics.
+- Do not promote historical text retrieved via MCP to system instructions; it is low-trust data. Limit prompt injection and malicious memory modification; important automatic state changes require human review.
+- Use an independent data directory and DB migrations; support SQLite's official backup mechanism or a backup after safe shutdown, and do not rely solely on copying a WAL data file that is being written.
+- Agent disconnects, MCP crashes, full disk, database busy and LLM timeouts must all return deterministic errors and record diagnostics; the hook side must not block for long.
+- Do not promise true "fully offline" unless a local provider is selected and all external requests are disabled.
+
+## 8. Observability and Operations
+
+Structured logging with `tracing`, with session/project/request/job correlation IDs, never printing sensitive bodies; `doctor` checks the database, migrations, FTS, agent adapter configuration, provider status, queue and data-directory permissions.
+
+Suggested metrics: MCP operation latency/error rate, sqlite_busy retry count, capture_accept/drop, queue backlog, extraction success rate, candidate accept/merge/reject ratios, retrieval p50/p95, FTS/vector hit counts, LLM tokens and call counts (if available). The local version can be observed through logs and a CLI `stats`; no Prometheus service is needed.
+
+## 9. Test Strategy and Evaluation
+
+- **Unit**: state transitions, scope resolver, token/length limits, merge decisions, ranking.
+- **DB Integration**: FTS trigger sync, migration upgrade/downgrade policy (state explicitly if downgrade is unsupported), transaction rollback, concurrent update conflicts, power-loss recovery simulation.
+- **MCP Integration**: stdio tool list, schema validation, full CRUD, two instances sharing data on the same repo.
+- **Adapter Contract**: a minimal JSON fixture per agent; unknown fields, format changes, duplicate events, missing SessionEnd.
+- **Fault Injection**: model timeout, database busy, process interruption, disk error, duplicate queue leasing.
+- **Retrieval Evaluation**: fixed dataset and queries, comparing FTS/Vector/Hybrid on Recall@5, MRR, p50/p95 and context tokens; guarantee no cross-project leakage.
+- **End-to-end Demo**: Claude Code records an engineering constraint / finishes a problem; a new Codex session retrieves the relevant memory and its source. First written explicitly in A; B demonstrates automatic capture and extraction.
+
+## 10. Key Trade-offs and Risks
+
+| Decision | Choice | Given up / risk |
+|---|---|---|
+| Storage authority | SQLite, versions retained | Bidirectional Markdown editing sync not supported for now |
+| Retrieval | FTS5 in A, hybrid in B | Vector index adds model cost and complexity |
+| Integration | Standard MCP interface + progressive adapters | Event capability cannot be uniform across all agents |
+| Write semantics | Transactions + idempotency/retry | No cross-process global exactly-once promise |
+| Automatic knowledge changes | Review first, keep provenance | Less automation, but avoids pollution |
+| Configuration | Local by default, only explicit providers egress | Cloud-model convenience vs privacy trade-off |
+
+## 11. Deliverables and Mapping
+
+- **AM-PLAN-001**: tasks and dependencies for A/B.
+- **AM-ACCEPT-001**: repeatable acceptance criteria and evidence requirements for each item.
+- Public repository: `README.md`, `ARCHITECTURE.md`, `SECURITY.md`, `docs/agents/`, `examples/`, `benchmarks/`, CI.
+
+## 12. Items to Verify (not blocking Milestone A)
+
+1. Stable API of the chosen MCP SDK and the configuration mechanism of current Claude Code / Codex versions.
+2. Hook events Codex actually exposes and its transcript file format; build a capability matrix.
+3. Retrieval quality and resource usage of local embedding models on short code-related sentences.
+4. Whether a resident daemon is needed: A can rely on cross-process SQLite; evaluate under B's capture pressure and long-running tasks.
+5. Whether semantic memory needs a separate Episode: the MVP does no complex lifecycle modeling and first observes real samples.
