@@ -11,8 +11,10 @@ use serde::de::DeserializeOwned;
 use serde_json::{Value, json};
 
 const INSTRUCTIONS: &str = "chloe is long-term project memory shared by coding agents. \
-Before starting work, call memory_search with keywords for the task. \
-Save durable knowledge with memory_save (kind: decision, constraint, gotcha, procedure or fact); \
+Before reading code or answering any question about this project, call memory_search first, \
+with a few keywords from the task (words missing from a memory do not exclude it). \
+When a durable decision, constraint, gotcha or procedure is made or learned, save it with memory_save \
+right away, without waiting to be asked (kind: decision, constraint, gotcha, procedure or fact); \
 never save transient task state or secrets. Use scope=global only for knowledge that applies to every project. \
 To change a memory, memory_get it, then memory_update or memory_archive with its current expected_revision; \
 on a conflict error, re-read and retry. Search returns active memories of the current project only \
