@@ -23,6 +23,7 @@ const MIGRATIONS: &[&str] = &[
     include_str!("migrations/004_jobs.sql"),
     include_str!("migrations/005_candidates.sql"),
     include_str!("migrations/006_candidate_review.sql"),
+    include_str!("migrations/007_candidate_proposal.sql"),
 ];
 /// How long `open` keeps retrying a locked initialisation.
 const OPEN_RETRY: Duration = Duration::from_secs(5);

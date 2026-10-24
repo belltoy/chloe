@@ -5,7 +5,7 @@
 use clap::Args;
 use memory_core::Config;
 use memory_core::job::JobQueue;
-use memory_engine::{Window, plan, run_next};
+use memory_engine::{Window, plan, propose_pending, run_next};
 use memory_ingest::spool;
 use memory_store::SqliteStore;
 use serde_json::json;
@@ -63,6 +63,9 @@ pub fn run(
         }
     }
 
+    // The same model compares new candidates with similar memories; when it is down those
+    // candidates stay without a proposal and the next run tries again.
+    let proposals = propose_pending(store, Some(&extractor))?;
     let counts = store.counts()?;
     if json {
         return print_json(&json!({
@@ -70,6 +73,8 @@ pub fn run(
             "sessions_queued": planned.enqueued,
             "sessions_extracted": extracted,
             "new_candidates": candidates,
+            "proposed": proposals.proposed,
+            "proposals_deferred": proposals.deferred,
             "failed": failed.iter().map(|(s, f)| json!({
                 "session": s, "error": f.error, "dead_letter": f.dead_letter,
             })).collect::<Vec<_>>(),
@@ -89,6 +94,12 @@ pub fn run(
             } else {
                 "events kept, will retry"
             }
+        );
+    }
+    if proposals.proposed + proposals.deferred > 0 {
+        println!(
+            "proposals: {} made, {} deferred (model unavailable)",
+            proposals.proposed, proposals.deferred
         );
     }
     if candidates > 0 {
@@ -112,6 +123,15 @@ pub fn list(store: &SqliteStore, limit: usize, json: bool) -> anyhow::Result<()>
             c.candidate.evidence.events.len(),
             c.candidate.evidence.native_session_id
         );
+        if let Some(p) = &c.proposal {
+            println!(
+                "    suggest {:?}{}: {} [{:?}]",
+                p.action,
+                p.target.map(|t| format!(" {t}")).unwrap_or_default(),
+                p.reason,
+                p.method
+            );
+        }
     }
     if all.is_empty() {
         println!("no pending candidates");

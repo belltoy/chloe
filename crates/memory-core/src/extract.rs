@@ -4,7 +4,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::{AgentEvent, Kind, MemoryId, ProjectId, Result};
+use crate::{AgentEvent, Kind, Memory, MemoryId, ProjectId, Result};
 
 /// A session's events, already redacted by the adapter, in the order they happened.
 #[derive(Debug, Clone)]
@@ -99,8 +99,69 @@ pub enum Resolution {
     },
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ProposedAction {
+    /// Nothing similar enough: a new memory.
+    Create,
+    /// Says what `target` already says.
+    Merge,
+    /// Contradicts `target`.
+    Conflict,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ProposalMethod {
+    Rules,
+    Model,
+}
+
+/// An existing memory found by full-text search, kept so the proposal can be explained.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct SimilarMemory {
+    pub memory_id: MemoryId,
+    pub title: String,
+    pub score: f64,
+}
+
+/// What consolidation suggests doing with a candidate. It is advice, not a decision: nothing
+/// is applied until a policy (B2-03) or a person calls `resolve_candidate`.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct Proposal {
+    pub action: ProposedAction,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub target: Option<MemoryId>,
+    pub method: ProposalMethod,
+    /// Plain-language explanation.
+    pub reason: String,
+    pub similar: Vec<SimilarMemory>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Relation {
+    Duplicate,
+    Contradicts,
+    Unrelated,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Verdict {
+    pub relation: Relation,
+    /// The memory the relation is about; `None` only for `Unrelated`.
+    pub memory: Option<MemoryId>,
+    pub reason: String,
+}
+
+/// Compares a candidate with the similar memories full-text search found. Implemented by a
+/// model provider; `Error::Unavailable` when it cannot be reached.
+pub trait RelationJudge {
+    fn judge(&self, candidate: &Candidate, similar: &[Memory]) -> Result<Verdict>;
+}
+
 /// A candidate as stored, with its review state.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct StoredCandidate {
     pub id: String,
     pub project_id: Option<ProjectId>,
@@ -110,6 +171,8 @@ pub struct StoredCandidate {
     /// The memory it created, was merged into, or conflicts with.
     pub memory_id: Option<MemoryId>,
     pub reason: Option<String>,
+    /// Latest suggestion for an open candidate.
+    pub proposal: Option<Proposal>,
     #[serde(with = "time::serde::rfc3339")]
     pub created_at: time::OffsetDateTime,
     #[serde(with = "time::serde::rfc3339::option")]
@@ -152,6 +215,9 @@ pub trait CandidateStore {
         limit: usize,
     ) -> Result<Vec<StoredCandidate>>;
     fn candidate(&self, id: &str) -> Result<StoredCandidate>;
+    /// Stores (replaces) the proposal of an open candidate; any other state is
+    /// `InvalidArgument`.
+    fn set_proposal(&self, id: &str, proposal: &Proposal) -> Result<()>;
     /// Applies a decision to a `pending` or `conflict` candidate in one transaction; any
     /// other state is `InvalidArgument`. Merge and conflict targets must be visible from the
     /// candidate's project (its own or global), otherwise `NotFound`.

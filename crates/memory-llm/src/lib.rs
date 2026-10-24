@@ -1,5 +1,6 @@
 //! Model providers for extraction (B1-02) and the prompt and validation they share (B1-03).
 
+pub mod judge;
 mod ollama;
 pub mod prompt;
 pub mod validate;

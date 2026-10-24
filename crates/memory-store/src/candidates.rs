@@ -1,8 +1,8 @@
 //! `CandidateStore` for SQLite: extraction output, its review state and provenance.
 
 use memory_core::extract::{
-    Candidate, CandidateState, CandidateStore, Evidence, MemorySource, Resolution, SourceRelation,
-    StoredCandidate,
+    Candidate, CandidateState, CandidateStore, Evidence, MemorySource, Proposal, Resolution,
+    SourceRelation, StoredCandidate,
 };
 use memory_core::{Error, Memory, MemoryId, ProjectId, Result, Source, Status};
 use rusqlite::{Connection, OptionalExtension, Row, params};
@@ -15,7 +15,7 @@ use crate::{
 
 const MAX_ROWS: usize = 1000;
 const MAX_REASON_CHARS: usize = 1000;
-const COLS: &str = "id, project_id, kind, title, content, evidence, state, memory_id, reason, created_at, decided_at";
+const COLS: &str = "id, project_id, kind, title, content, evidence, state, memory_id, reason, created_at, decided_at, proposal";
 
 impl CandidateStore for SqliteStore {
     fn add_candidates(
@@ -85,6 +85,25 @@ impl CandidateStore for SqliteStore {
 
     fn candidate(&self, id: &str) -> Result<StoredCandidate> {
         fetch(&self.conn(), id)
+    }
+
+    fn set_proposal(&self, id: &str, proposal: &Proposal) -> Result<()> {
+        let mut conn = self.conn();
+        let tx = begin(&mut conn)?;
+        let c = fetch(&tx, id)?;
+        if !c.state.is_open() {
+            return Err(Error::InvalidArgument(format!(
+                "candidate {id} is already {}",
+                c.state.as_str()
+            )));
+        }
+        tx.execute(
+            "UPDATE candidates SET proposal=?1 WHERE id=?2",
+            params![serde_json::to_string(proposal).map_err(storage)?, id],
+        )
+        .map_err(storage)?;
+        tx.commit().map_err(storage)?;
+        Ok(())
     }
 
     fn resolve_candidate(&self, id: &str, resolution: Resolution) -> Result<StoredCandidate> {
@@ -287,6 +306,10 @@ fn to_candidate(r: &Row) -> rusqlite::Result<StoredCandidate> {
             .map(|s| conv(7, s.parse()))
             .transpose()?,
         reason: r.get(8)?,
+        proposal: r
+            .get::<_, Option<String>>(11)?
+            .map(|j| conv(11, serde_json::from_str(&j)))
+            .transpose()?,
         created_at: conv(9, from_micros(r.get(9)?))?,
         decided_at: r
             .get::<_, Option<i64>>(10)?
