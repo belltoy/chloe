@@ -104,8 +104,14 @@ Model: `qwen3:8b`, temperature from the default config, window = default.
 ## Reading the numbers (written by hand after the run; labels were not changed after seeing results)
 
 - Recall 11/12. The miss (u04) is a kind mismatch: the model found the point (`make sign` before `make publish`) but filed it as a decision, my label wanted procedure/gotcha. Content-wise it is found.
-- Acceptance: of 38 candidates, 15 match a label, 17 are unlabelled extras, 9 are counted false. Most extras are restatements of the same change as a `procedure` or `fact` ("Redis dependency removed", "All tests passed", "Read module files") — noise a reviewer would reject. This is the main weakness: the model emits 2–5 candidates per useful session where 1 is wanted.
+- Acceptance: of 38 candidates, 12 match a label, 17 are unlabelled extras, 9 are counted false (3 trap matches, 6 in sessions with no knowledge). An earlier version of this note said 15 matches; that was a miscount, corrected after the review in `review.md`. Most extras are restatements of the same change as a `procedure` or `fact` ("Redis dependency removed", "All tests passed", "Read module files") — noise a reviewer would reject. This is the main weakness: the model emits 2–5 candidates per useful session where 1 is wanted.
 - Sessions with no knowledge: 4/8 produced nothing. Failures: n02 rename (2 candidates), n03 general Rust Q&A (1), n05 sandbox ping (1), t05 error-handling edit (2).
 - The 3 "trap" matches are not equal. t01 (cache workaround filed as a Constraint) is the real false extraction already seen in the e2e run. t05 (assistant's `anyhow` preference as a decision) is a real false extraction. t02 ("avoid global static for config") is arguably correct: the user did reject it with a reason, so my trap terms there are too broad and this one should not count against the model.
 - Not caught: no candidate contained the fake key (n05), nothing came from the unverified speculation (t04) or the TODO state (n04).
 - One run, temperature default, a single model (`qwen3:8b`); labels are my own, not reviewed by a second person. Treat as a first baseline, not a threshold.
+
+## After the manual review of the 17 extras (`review.md`)
+
+- 17 extras: 2 worth keeping (#7 right content but filed as decision instead of procedure; #9 gRPC timeout/retry procedure), 3 duplicates, 12 transient noise, 0 hallucinations.
+- t02's "avoid global static" candidate is a faithful record of a user-stated reason and counts as valid, so the trap match there is a false alarm of my label, not a model error. The two real false extractions stay t01 and t05.
+- Candidate-level usable rate: strict (12 matches + t02 decision + 2 extras) = 15/38 = 39.5%; lenient (+3 duplicates) = 18/38 = 47.4%. Not a deduplicated knowledge precision; the 12 matches were not re-reviewed one by one.
