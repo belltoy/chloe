@@ -33,8 +33,52 @@ pub struct Raw {
 pub struct Outcome {
     pub accepted: Vec<Candidate>,
     /// Reason codes of dropped candidates: `bad_title`, `bad_content`, `no_evidence`,
-    /// `secret`, `sensitive_path`, `unstated_rule`, `too_many`.
+    /// `secret`, `sensitive_path`, `unstated_rule`, `misattributed`, `too_many`.
     pub rejected: Vec<&'static str>,
+}
+
+/// Things the agent does and a person only asks for. Prompts are requests and decisions, so
+/// "the user fixed / committed ..." is the agent's action given to the user (or the team).
+const AGENT_ACTS: &[&str] = &[
+    "fixed",
+    "added",
+    "committed",
+    "implemented",
+    "created",
+    "wrote",
+    "changed",
+    "ran",
+    "updated",
+    "renamed",
+    "refactored",
+    "removed",
+    "deleted",
+    "installed",
+    "built",
+    "modified",
+    "replaced",
+    "edited",
+    "patched",
+];
+
+/// The first act the text gives to the user or the team that no cited user message itself
+/// reports ("I fixed it by hand"), or None.
+fn misattributed(text: &str, user_texts: &[String]) -> Option<&'static str> {
+    let t = text.to_lowercase();
+    let words: Vec<&str> = t
+        .split(|c: char| !c.is_alphanumeric() && c != '\'')
+        .filter(|w| !w.is_empty())
+        .collect();
+    words.windows(3).find_map(|w| {
+        let subject = w[0] == "the" && matches!(w[1], "user" | "team");
+        let act = AGENT_ACTS.iter().find(|a| **a == w[2])?;
+        let said = user_texts.iter().any(|u| {
+            u.to_lowercase()
+                .split(|c: char| !c.is_alphanumeric())
+                .any(|x| x == *act)
+        });
+        (subject && !said).then_some(*act)
+    })
 }
 
 fn valid_commit(c: &str) -> bool {
@@ -104,6 +148,17 @@ fn check(
         })
     {
         return Err("unstated_rule");
+    }
+    let user_texts: Vec<String> = cited
+        .iter()
+        .filter_map(|&i| input.events.get(i))
+        .filter(|e| e.kind == EventKind::UserPrompt)
+        .filter_map(|e| e.text.clone())
+        .collect();
+    if misattributed(&title, &user_texts).is_some()
+        || misattributed(&content, &user_texts).is_some()
+    {
+        return Err("misattributed");
     }
     // Reject rather than redact: a model that reproduces a secret is not to be trusted
     // with the rest of the text either.

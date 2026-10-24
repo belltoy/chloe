@@ -179,3 +179,27 @@ fn a_constraint_or_decision_needs_a_user_prompt_among_its_evidence() {
     );
     assert_eq!(gotcha.accepted.len(), 1);
 }
+
+#[test]
+fn an_act_given_to_the_user_or_team_that_no_user_message_reports_is_dropped() {
+    let mut i = input();
+    i.events.push(event("c", "I fixed the typo by hand"));
+    let run = |content: &str, ev: &str| {
+        validate(
+            &i,
+            &prompt::build(&i),
+            raw(json!({"kind": "procedure", "content": content, "evidence": [ev]})),
+        )
+    };
+    for who in ["The user", "The team"] {
+        let o = run(&format!("{who} renamed a module and committed it."), "E1");
+        assert_eq!(o.rejected, ["misattributed"], "{who}");
+    }
+    // The user said it themselves, or only decided / asked.
+    assert_eq!(run("The user fixed the typo.", "E3").accepted.len(), 1);
+    assert_eq!(
+        run("The team decided to keep SQLite.", "E1").accepted.len(),
+        1
+    );
+    assert_eq!(run("The assistant fixed a typo.", "E1").accepted.len(), 1);
+}
