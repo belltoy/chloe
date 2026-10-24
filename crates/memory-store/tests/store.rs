@@ -470,6 +470,7 @@ fn the_segmented_index_is_built_on_upgrade_and_rebuilt_when_segmentation_changes
     raw()
         .execute_batch(
             "DROP TABLE memory_fts_seg; DROP TABLE fts_meta;
+             ALTER TABLE sessions DROP COLUMN extracted_seq;
              CREATE VIRTUAL TABLE memory_fts_cjk USING fts5(title, content, tokenize='trigram');
              PRAGMA user_version = 10;",
         )

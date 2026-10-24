@@ -34,11 +34,12 @@ impl SqliteStore {
 }
 
 impl CandidateStore for SqliteStore {
-    fn add_candidates(
+    fn add_candidates_through(
         &self,
         native_agent: &str,
         native_session_id: &str,
         candidates: &[Candidate],
+        through_seq: i64,
     ) -> Result<usize> {
         let mut conn = self.conn();
         let tx = begin(&mut conn)?;
@@ -74,6 +75,11 @@ impl CandidateStore for SqliteStore {
                 )
                 .map_err(storage)?;
         }
+        tx.execute(
+            "UPDATE sessions SET extracted_seq = max(extracted_seq, ?2) WHERE id = ?1",
+            params![session_id, through_seq],
+        )
+        .map_err(storage)?;
         tx.commit().map_err(storage)?;
         Ok(added)
     }

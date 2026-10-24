@@ -263,3 +263,26 @@ fn the_window_in_the_job_limits_what_the_model_sees() {
     run_next(&s, &x, "w", t(100)).unwrap();
     assert_eq!(*x.seen.borrow(), [5]);
 }
+
+#[test]
+fn a_resumed_session_is_extracted_again_from_where_it_stopped() {
+    let (_d, s) = store();
+    let fake = Fake::default();
+    capture(&s, "s", true, 10);
+    plan(&s, t(20), IDLE, Window::default(), None).unwrap();
+    run_next(&s, &fake, "w", t(21)).unwrap().unwrap();
+    // Nothing new: not planned again.
+    assert_eq!(
+        plan(&s, t(22), IDLE, Window::default(), None)
+            .unwrap()
+            .enqueued,
+        0
+    );
+    s.ingest(&[ev("s", EventKind::UserPrompt, "late", Some("and also"), 30)])
+        .unwrap();
+    let p = plan(&s, t(40) + IDLE, IDLE, Window::default(), None).unwrap();
+    assert_eq!(p.enqueued, 1);
+    run_next(&s, &fake, "w", t(40) + IDLE).unwrap().unwrap();
+    // The second run saw only the one new event.
+    assert_eq!(*fake.seen.borrow(), [3, 1]);
+}

@@ -25,7 +25,7 @@ use time::{Duration, OffsetDateTime};
 pub const JOB_KIND: &str = "extract_session";
 /// Longer than the model call's timeout, so a slow call is not taken over mid-flight.
 const LEASE: Duration = Duration::minutes(10);
-/// Sessions looked at per `plan` call, newest first.
+/// Sessions looked at per `plan` call.
 const SESSION_SCAN: usize = 1000;
 /// Rough per-event cost in the prompt besides its text (ref, kind, tool name).
 const EVENT_OVERHEAD: usize = 40;
@@ -55,8 +55,9 @@ pub struct Plan {
 }
 
 /// Enqueues one job per session that is due: ended, or quiet for at least `idle`. With `only`
-/// (a native session id) that session is enqueued whatever its state. A session is extracted
-/// once; one resumed after its job ran is not extracted again.
+/// (a native session id) that session is enqueued whatever its state. Only sessions with events
+/// no earlier job covered are enqueued, one job per `last_seq`, so a session resumed after
+/// extraction is extracted again from where it stopped.
 pub fn plan<S: EventStore + JobQueue>(
     store: &S,
     now: OffsetDateTime,
@@ -65,13 +66,23 @@ pub fn plan<S: EventStore + JobQueue>(
     only: Option<&str>,
 ) -> Result<Plan> {
     let mut plan = Plan::default();
-    let sessions = store.sessions(SESSION_SCAN)?;
+    let sessions = if only.is_some() {
+        store.sessions(SESSION_SCAN)?
+    } else {
+        store.sessions_to_extract(SESSION_SCAN)?
+    };
     if let Some(id) = only
         && !sessions.iter().any(|s| s.native_session_id == id)
     {
         return Err(Error::NotFound(format!("session {id}")));
     }
     for s in sessions {
+        if s.last_seq <= s.extracted_seq {
+            if only.is_some_and(|id| s.native_session_id == id) {
+                plan.already_queued += 1;
+            }
+            continue;
+        }
         let due = match only {
             Some(id) => s.native_session_id == id,
             None => s.state == SessionState::Ended || s.last_event_at + idle <= now,
@@ -83,8 +94,9 @@ pub fn plan<S: EventStore + JobQueue>(
             "agent": s.native_agent,
             "session": s.native_session_id,
             "window": window,
+            "through": s.last_seq,
         });
-        let key = format!("{}|{}", s.native_agent, s.native_session_id);
+        let key = format!("{}|{}|{}", s.native_agent, s.native_session_id, s.last_seq);
         if store.enqueue(JOB_KIND, &key, payload, now)?.created {
             plan.enqueued += 1;
         } else {
@@ -113,6 +125,8 @@ struct Payload {
     agent: String,
     session: String,
     window: Window,
+    /// Last event the job covers; jobs queued before watermarks existed lack it.
+    through: Option<i64>,
 }
 
 /// The newest events that fit the window; at least the last one.
@@ -165,8 +179,22 @@ where
         Ok(p) => p,
         Err(_) => return fail(job.dedup_key.clone(), "unreadable job payload".into()),
     };
+    let info = match store.session(&p.agent, &p.session) {
+        Ok(i) => i,
+        Err(e) => return fail(p.session, e.to_string()),
+    };
+    let through = p.through.unwrap_or(info.last_seq);
+    let after = info.extracted_seq;
+    if after >= through {
+        // An earlier attempt already committed this range.
+        store.complete(&job.id, &lease, now)?;
+        return Ok(Some(Done {
+            session: p.session,
+            result: Ok(0),
+        }));
+    }
     let events = select(
-        store.session_tail(&p.agent, &p.session, p.window.max_events)?,
+        store.session_window(&p.agent, &p.session, after, through, p.window.max_events)?,
         p.window,
     );
     let has_text = events
@@ -179,11 +207,11 @@ where
             events,
         };
         match extractor.extract(&input) {
-            Ok(c) => store.add_candidates(&p.agent, &p.session, &c),
+            Ok(c) => store.add_candidates_through(&p.agent, &p.session, &c, through),
             Err(e) => return fail(p.session, e.to_string()),
         }
     } else {
-        Ok(0)
+        store.add_candidates_through(&p.agent, &p.session, &[], through)
     };
     match found {
         Ok(n) => {

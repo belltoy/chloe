@@ -240,6 +240,17 @@ pub trait CandidateStore {
         native_agent: &str,
         native_session_id: &str,
         candidates: &[Candidate],
+    ) -> Result<usize> {
+        self.add_candidates_through(native_agent, native_session_id, candidates, 0)
+    }
+    /// Like `add_candidates`, and in the same transaction records that the session's events up
+    /// to `through_seq` have been extracted (never lowers an earlier watermark).
+    fn add_candidates_through(
+        &self,
+        native_agent: &str,
+        native_session_id: &str,
+        candidates: &[Candidate],
+        through_seq: i64,
     ) -> Result<usize>;
     /// Newest first; `None` lists every state.
     fn candidates(

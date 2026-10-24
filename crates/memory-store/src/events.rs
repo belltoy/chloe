@@ -138,11 +138,9 @@ impl EventStore for SqliteStore {
     fn sessions(&self, limit: usize) -> Result<Vec<SessionInfo>> {
         let conn = self.conn();
         let mut stmt = conn
-            .prepare(
-                "SELECT s.id, s.agent, s.native_id, s.project_id, s.cwd, s.state, s.started_at, s.last_event_at,
-                        (SELECT count(*) FROM events e WHERE e.session_id = s.id)
-                 FROM sessions s ORDER BY s.last_event_at DESC, s.rowid DESC LIMIT ?1",
-            )
+            .prepare(&format!(
+                "SELECT {SESSION_COLS} FROM sessions s ORDER BY s.last_event_at DESC, s.rowid DESC LIMIT ?1"
+            ))
             .map_err(storage)?;
         let rows = stmt
             .query_map([limit.clamp(1, MAX_ROWS) as i64], to_session)
@@ -159,15 +157,65 @@ impl EventStore for SqliteStore {
         self.events_of(agent, native_session_id, limit, "ASC")
     }
 
-    fn session_tail(
+    fn session_window(
         &self,
         agent: &str,
         native_session_id: &str,
+        after_seq: i64,
+        through_seq: i64,
         limit: usize,
     ) -> Result<Vec<AgentEvent>> {
-        let mut events = self.events_of(agent, native_session_id, limit, "DESC")?;
+        let conn = self.conn();
+        let mut stmt = conn
+            .prepare(&format!(
+                "SELECT {EVENT_COLS}
+                 FROM events e JOIN sessions s ON s.id = e.session_id
+                 WHERE s.agent = ?1 AND s.native_id = ?2 AND e.seq > ?3 AND e.seq <= ?4
+                 ORDER BY e.seq DESC LIMIT ?5"
+            ))
+            .map_err(storage)?;
+        let rows = stmt
+            .query_map(
+                params![
+                    agent,
+                    native_session_id,
+                    after_seq,
+                    through_seq,
+                    limit.clamp(1, MAX_ROWS) as i64
+                ],
+                to_event,
+            )
+            .map_err(storage)?;
+        let mut events: Vec<AgentEvent> = rows.collect::<rusqlite::Result<_>>().map_err(storage)?;
         events.reverse();
         Ok(events)
+    }
+
+    fn session(&self, agent: &str, native_session_id: &str) -> Result<SessionInfo> {
+        let conn = self.conn();
+        conn.query_row(
+            &format!("SELECT {SESSION_COLS} FROM sessions s WHERE s.agent=?1 AND s.native_id=?2"),
+            params![agent, native_session_id],
+            to_session,
+        )
+        .optional()
+        .map_err(storage)?
+        .ok_or_else(|| memory_core::Error::NotFound(format!("session {native_session_id}")))
+    }
+
+    fn sessions_to_extract(&self, limit: usize) -> Result<Vec<SessionInfo>> {
+        let conn = self.conn();
+        let mut stmt = conn
+            .prepare(&format!(
+                "SELECT {SESSION_COLS} FROM sessions s
+                 WHERE (SELECT coalesce(max(e.seq), 0) FROM events e WHERE e.session_id = s.id) > s.extracted_seq
+                 ORDER BY s.last_event_at, s.rowid LIMIT ?1"
+            ))
+            .map_err(storage)?;
+        let rows = stmt
+            .query_map([limit.clamp(1, MAX_ROWS) as i64], to_session)
+            .map_err(storage)?;
+        rows.collect::<rusqlite::Result<_>>().map_err(storage)
     }
 }
 
@@ -199,6 +247,13 @@ impl SqliteStore {
     }
 }
 
+const SESSION_COLS: &str =
+    "s.id, s.agent, s.native_id, s.project_id, s.cwd, s.state, s.started_at, s.last_event_at,
+    (SELECT count(*) FROM events e WHERE e.session_id = s.id),
+    (SELECT coalesce(max(e.seq), 0) FROM events e WHERE e.session_id = s.id),
+    s.extracted_seq";
+const EVENT_COLS: &str = "s.agent, s.native_id, e.native_event_id, e.kind, e.occurred_at, s.cwd, e.tool_name, e.text, e.redactions, e.schema_version";
+
 fn to_session(r: &Row) -> rusqlite::Result<SessionInfo> {
     Ok(SessionInfo {
         id: r.get(0)?,
@@ -216,6 +271,8 @@ fn to_session(r: &Row) -> rusqlite::Result<SessionInfo> {
         started_at: conv(6, from_micros(r.get(6)?))?,
         last_event_at: conv(7, from_micros(r.get(7)?))?,
         events: r.get::<_, i64>(8)? as usize,
+        last_seq: r.get(9)?,
+        extracted_seq: r.get(10)?,
     })
 }
 

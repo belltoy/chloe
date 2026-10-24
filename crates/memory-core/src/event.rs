@@ -123,6 +123,10 @@ pub struct SessionInfo {
     #[serde(with = "time::serde::rfc3339")]
     pub last_event_at: OffsetDateTime,
     pub events: usize,
+    /// Highest event `seq` of the session (0 when it has none).
+    pub last_seq: i64,
+    /// Highest `seq` an extraction job has covered.
+    pub extracted_seq: i64,
 }
 
 /// Durable, idempotent storage of captured events (implemented in `memory-store`).
@@ -139,13 +143,20 @@ pub trait EventStore {
         native_session_id: &str,
         limit: usize,
     ) -> Result<Vec<AgentEvent>>;
-    /// The last `limit` events of a session, still in arrival order.
-    fn session_tail(
+    /// The last `limit` events of a session with `after_seq < seq <= through_seq`, in arrival
+    /// order. Fixing the range makes a retried extraction see exactly what the first try saw.
+    fn session_window(
         &self,
         agent: &str,
         native_session_id: &str,
+        after_seq: i64,
+        through_seq: i64,
         limit: usize,
     ) -> Result<Vec<AgentEvent>>;
+    /// One session, `NotFound` when it was never captured.
+    fn session(&self, agent: &str, native_session_id: &str) -> Result<SessionInfo>;
+    /// Sessions with events no extraction has covered, least recently active first.
+    fn sessions_to_extract(&self, limit: usize) -> Result<Vec<SessionInfo>>;
 }
 
 #[cfg(test)]

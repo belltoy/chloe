@@ -205,7 +205,7 @@ fn a_session_id_shared_by_two_agents_never_mixes_their_events() {
     ] {
         for events in [
             s.session_events(agent, "same", 10).unwrap(),
-            s.session_tail(agent, "same", 10).unwrap(),
+            s.session_window(agent, "same", 0, i64::MAX, 10).unwrap(),
         ] {
             assert_eq!(events.len(), 1, "{agent}");
             assert_eq!(events[0].text.as_deref(), Some(text));
