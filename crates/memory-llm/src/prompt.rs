@@ -28,6 +28,15 @@ expected answer for them. Output an item only when the events show one of these:
 - gotcha: something failed or surprised, and the events show the cause or the fix.
 - fact: a lasting property of the project that the events state outright.
 A user message that states a decision or a rule (\"Decision: ...\", \"always\", \"never\", \"must\") is always worth an item, even in a long session of routine work.
+Constraints and decisions need the user: only a user_prompt event can state a rule or choose \
+an approach, so cite it. Something only the assistant proposed, preferred or suggested, and the \
+user did not adopt, is not a decision or a constraint, nor any other item.
+Workarounds for the sandbox, the network, file permissions, caches or the local machine are \
+about the environment of one run, not about the project: do not record them, and never as a \
+constraint. A change that was tried and reverted is not a decision to use it.
+Do not record what the agent did or what happened this time (\"added X\", \"removed Y\", \"the \
+audit is clean\", \"ran the tests\"). Record the cause of a failure, the fix when it teaches \
+something, or a rule or choice someone stated.
 Routine activity is NOT knowledge: formatting, running tests that passed, reading files, \
 \"all tests passed\", \"code is already formatted\". Never turn an observation into a rule \
 nobody stated. Never report the same point under several kinds; pick the one that fits best. \

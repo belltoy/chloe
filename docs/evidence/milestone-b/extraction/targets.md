@@ -44,3 +44,24 @@ About 40 sessions, at least one more model, and a uniform review of the 12 label
 - The automatic step, `apply_policy`, can only merge into an existing memory (adds a source, no new Active memory) or flag a conflict; creating or superseding is never automatic (`memory-engine/tests/policy.rs`: `creating_a_memory_is_never_automatic`, `superseding_is_never_applied_automatically`, constraints and decisions never auto-merged).
 - New end-to-end assertion in `memory-cli/tests/consolidate.rs`: after a full `consolidate` that produces a decision candidate, the project and global memory lists are empty and the candidate is `pending`.
 - Limit: this shows nothing is promoted without a person. It does not make a wrong candidate less wrong when a person accepts it; that is the hard line above.
+
+## Phase 1, round 1 (prompt rules + "constraint/decision must cite a user prompt")
+
+Changes: `memory-llm/src/prompt.rs` (constraints/decisions need the user; environment workarounds and reverted attempts are not knowledge; do not record what the agent did or what happened this time) and `memory-llm/src/validate.rs` (reject a constraint or decision whose evidence has no `user_prompt` event, reason `unstated_rule`; test in `memory-llm/tests/validate.rs`).
+
+Before changing anything I added 4 fresh sessions (t06, t07, u11, u12; 24 in total) so the fix is not judged only on the sessions that motivated it. Same model, same set, before and after (`report-24-before.md`, `report-24-after.md`):
+
+| Measure | Before | After |
+|---|---|---|
+| Expected items found | 14 / 15 | 14 / 15 (same miss: u04, filed as decision) |
+| Candidates | 47 | 35 |
+| False (trap or in a no-knowledge session) | 14 (trap matches 7) | 8 (trap matches 5) |
+| No-knowledge sessions left empty | 4 / 10 | 7 / 10 |
+| Unlabelled extras (not reviewed by a person) | 18 | 13 |
+
+- Constraint false extraction: t01 (cache workaround) and t05 (assistant `anyhow` preference) are gone. Hard line on constraints: no constraint false extraction left in this set.
+- Hard line on decisions is still **not met**: two decisions come from a user prompt that only asked for an edit (n02 "rename tmp to buffer", t07 "add /health without versioning"). The structural rule cannot catch these because the user prompt really is cited.
+- The 2 remaining trap matches in t02 are the known false alarm of the label (a faithful record of a user-stated reason), so real false decisions are n02 and t07.
+- t06 still produces a gotcha and a procedure about the sandbox cache. They are not constraints or decisions, so they count under content noise, not under the hard line.
+- Not computed: content-valid rate and hallucination review for the new run. The 13 extras and the new candidates need the same person review as `review.md`.
+- Caveat: t01, t05 motivated the change, so their improvement is not independent evidence. t06 and t07 were written before the change and show the rule helps on constraints and some decisions, but t06/t07 outputs were seen at baseline before the fix was written.

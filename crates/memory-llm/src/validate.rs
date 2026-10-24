@@ -3,7 +3,7 @@
 //! at worst produce fewer candidates.
 
 use memory_core::extract::{Candidate, Evidence, ExtractionInput};
-use memory_core::{Error, Kind, Result};
+use memory_core::{Error, EventKind, Kind, Result};
 use memory_ingest::redact;
 use serde::Deserialize;
 use serde_json::Value;
@@ -33,7 +33,7 @@ pub struct Raw {
 pub struct Outcome {
     pub accepted: Vec<Candidate>,
     /// Reason codes of dropped candidates: `bad_title`, `bad_content`, `no_evidence`,
-    /// `secret`, `sensitive_path`, `too_many`.
+    /// `secret`, `sensitive_path`, `unstated_rule`, `too_many`.
     pub rejected: Vec<&'static str>,
 }
 
@@ -92,6 +92,18 @@ fn check(
     cited.dedup();
     if cited.is_empty() {
         return Err("no_evidence");
+    }
+    // A constraint or a decision is something a person stated or chose; one backed only by the
+    // agent's own messages and tool output is the agent's idea (or a workaround) taken for a rule.
+    if matches!(r.kind, Kind::Constraint | Kind::Decision)
+        && !cited.iter().any(|&i| {
+            input
+                .events
+                .get(i)
+                .is_some_and(|e| e.kind == EventKind::UserPrompt)
+        })
+    {
+        return Err("unstated_rule");
     }
     // Reject rather than redact: a model that reproduces a secret is not to be trusted
     // with the rest of the text either.

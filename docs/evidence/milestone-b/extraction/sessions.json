@@ -1100,6 +1100,206 @@
      ]
     }
    ]
+  },
+  {
+   "id": "t06-sandbox-permission",
+   "group": "trap",
+   "title": "Fresh: a permission workaround in a sandbox turned into a rule risk",
+   "events": [
+    {
+     "id": "p1",
+     "kind": "user_prompt",
+     "text": "build the docs site"
+    },
+    {
+     "id": "b1",
+     "kind": "tool_result_summary",
+     "tool": "Bash",
+     "text": "mkdocs build 2>&1 | tail -3: PermissionError writing /usr/local/lib/python3/site-packages/cache"
+    },
+    {
+     "id": "b2",
+     "kind": "tool_result_summary",
+     "tool": "Bash",
+     "text": "XDG_CACHE_HOME=/tmp/xdg mkdocs build 2>&1 | tail -3: Documentation built in 2.1 seconds"
+    },
+    {
+     "id": "a1",
+     "kind": "assistant_message",
+     "text": "The docs build now works. I had to point XDG_CACHE_HOME at /tmp because this sandbox cannot write to the default cache directory."
+    },
+    {
+     "id": "end",
+     "kind": "session_end"
+    }
+   ],
+   "expect": [],
+   "traps": [
+    {
+     "why": "a sandbox cache workaround is not a project rule",
+     "terms": [
+      [
+       "xdg_cache_home",
+       "/tmp",
+       "cache"
+      ],
+      [
+       "mkdocs",
+       "docs",
+       "build"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "t07-assistant-proposal-unanswered",
+   "group": "trap",
+   "title": "Fresh: the assistant suggests a convention the user never adopts",
+   "events": [
+    {
+     "id": "p1",
+     "kind": "user_prompt",
+     "text": "add a /health endpoint"
+    },
+    {
+     "id": "e1",
+     "kind": "tool_result_summary",
+     "tool": "Edit",
+     "text": "/repo/src/routes.rs\n+ .route(\"/health\", get(health))"
+    },
+    {
+     "id": "a1",
+     "kind": "assistant_message",
+     "text": "Added /health. For future endpoints I would suggest versioned paths such as /v1/..., but that is only a suggestion and I left the existing routes alone."
+    },
+    {
+     "id": "end",
+     "kind": "session_end"
+    }
+   ],
+   "expect": [],
+   "traps": [
+    {
+     "why": "an unadopted suggestion is not a decision or constraint",
+     "terms": [
+      [
+       "/v1",
+       "version"
+      ],
+      [
+       "path",
+       "endpoint",
+       "route"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "u11-agreed-proposal",
+   "group": "useful",
+   "title": "Fresh: the assistant proposes, the user agrees in a short reply",
+   "events": [
+    {
+     "id": "p1",
+     "kind": "user_prompt",
+     "text": "the list endpoint is slow for big tables, how should we page it?"
+    },
+    {
+     "id": "a1",
+     "kind": "assistant_message",
+     "text": "I suggest cursor pagination (keyset on id) instead of OFFSET: OFFSET scans and discards all skipped rows, so deep pages get slower and can skip or repeat rows when data changes."
+    },
+    {
+     "id": "p2",
+     "kind": "user_prompt",
+     "text": "yes, go with cursor pagination for all list endpoints"
+    },
+    {
+     "id": "e1",
+     "kind": "tool_result_summary",
+     "tool": "Edit",
+     "text": "/repo/src/list.rs\n- SELECT * FROM items ORDER BY id LIMIT ? OFFSET ?\n+ SELECT * FROM items WHERE id > ? ORDER BY id LIMIT ?"
+    },
+    {
+     "id": "end",
+     "kind": "session_end"
+    }
+   ],
+   "expect": [
+    {
+     "kind_any": [
+      "decision",
+      "constraint"
+     ],
+     "terms": [
+      [
+       "cursor",
+       "keyset"
+      ],
+      [
+       "offset",
+       "list",
+       "pagination"
+      ]
+     ],
+     "note": "cursor pagination for list endpoints, because OFFSET gets slower and unstable"
+    }
+   ],
+   "traps": []
+  },
+  {
+   "id": "u12-user-gotcha-statement",
+   "group": "useful",
+   "title": "Fresh: the user explains a pitfall",
+   "events": [
+    {
+     "id": "p1",
+     "kind": "user_prompt",
+     "text": "careful when you touch the billing job: it runs in UTC but the customer table stores local dates, so never compare them without converting, we double-billed people once because of that."
+    },
+    {
+     "id": "b1",
+     "kind": "tool_result_summary",
+     "tool": "Bash",
+     "text": "grep -n invoice_date src/billing.rs"
+    },
+    {
+     "id": "a1",
+     "kind": "assistant_message",
+     "text": "Understood, I will convert before comparing."
+    },
+    {
+     "id": "end",
+     "kind": "session_end"
+    }
+   ],
+   "expect": [
+    {
+     "kind_any": [
+      "gotcha",
+      "constraint",
+      "fact"
+     ],
+     "terms": [
+      [
+       "utc",
+       "time zone",
+       "timezone",
+       "convert"
+      ],
+      [
+       "billing",
+       "customer",
+       "local date",
+       "double"
+      ]
+     ],
+     "note": "billing job UTC vs local dates, convert before comparing"
+    }
+   ],
+   "traps": []
   }
  ]
 }
