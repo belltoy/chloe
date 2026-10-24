@@ -21,4 +21,4 @@ kill test, a separate process), and were repeated without a failure: the engine 
 - After a kill, the job is leased for 10 minutes and a `consolidate` in that time does nothing
   for it; then it backs off 30 s before the next try. Nothing is lost, but recovery is not
   immediate.
-- A session is extracted once; events added afterwards are not extracted.
+- Extraction keeps a per-session watermark (`sessions.extracted_seq`). Events added after a job ran get a new job that covers only them (`a_resumed_session_is_extracted_again_from_where_it_stopped`); a session with nothing new is not planned again. If more events arrive than the window holds, the oldest of them are skipped.

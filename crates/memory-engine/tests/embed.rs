@@ -419,3 +419,88 @@ fn a_one_word_keyword_match_does_not_join_fusion_unless_it_is_an_identifier() {
     let r = hybrid_search(&s, None, Some(p), q("network policy E1042")).unwrap();
     assert!(r.hits.iter().any(|h| h.hit.memory.id == common.id));
 }
+
+#[test]
+fn twenty_cross_project_queries_never_return_the_other_projects_memories_in_any_mode() {
+    use memory_engine::{SearchMode, context_pack, search};
+    let (d, s) = {
+        let (d, s) = store();
+        (d, s)
+    };
+    let (a, b) = (project(&d, "a", &s), project(&d, "b", &s));
+    // Near-identical memories in both projects, so vectors and keywords are equally close.
+    let mut theirs = std::collections::HashSet::new();
+    for i in 0..6 {
+        save_in(
+            &s,
+            Some(a),
+            &format!("A database {i}"),
+            "SQLite database notes",
+        );
+        theirs.insert(
+            save_in(
+                &s,
+                Some(b),
+                &format!("B database {i}"),
+                "SQLite database notes",
+            )
+            .id,
+        );
+        save_in(&s, Some(a), &format!("A network {i}"), "network port notes");
+        theirs.insert(save_in(&s, Some(b), &format!("B network {i}"), "network port notes").id);
+    }
+    embed_all(&s);
+    let queries = [
+        "database",
+        "SQLite",
+        "database notes",
+        "network",
+        "network port",
+        "port notes",
+        "B database 1",
+        "B network 2",
+        "theirs",
+        "SQLite database notes",
+        "database 3",
+        "network 4",
+        "B",
+        "notes",
+        "how do we store data",
+        "which port to open",
+        "数据库",
+        "网络",
+        "B database",
+        "B network",
+    ];
+    assert_eq!(queries.len(), 20);
+    for q in queries {
+        for mode in [SearchMode::Fts, SearchMode::Vector, SearchMode::Hybrid] {
+            let r = search(
+                &s,
+                mode,
+                Some(&Topics),
+                Some(a),
+                SearchQuery {
+                    limit: 50,
+                    include_global: true,
+                    ..self::q(q)
+                },
+            );
+            if let Ok(r) = r {
+                assert!(
+                    r.hits.iter().all(|h| !theirs.contains(&h.hit.memory.id)),
+                    "{q} / {mode:?} leaked"
+                );
+            }
+            let pack = context_pack(&s, mode, Some(&Topics), Some(a), q, true, 20_000);
+            if let Ok(p) = pack {
+                let leaked = p
+                    .groups
+                    .iter()
+                    .flat_map(|g| &g.items)
+                    .any(|i| theirs.contains(&i.id));
+                assert!(!leaked, "{q} / {mode:?} pack leaked");
+            }
+        }
+    }
+}

@@ -212,3 +212,27 @@ fn a_session_id_shared_by_two_agents_never_mixes_their_events() {
         }
     }
 }
+
+#[test]
+fn replaying_a_thousand_events_twice_stores_no_duplicates() {
+    let (_d, path) = db();
+    let s = SqliteStore::open(&path).unwrap();
+    let events: Vec<_> = (0..1000)
+        .map(|i| {
+            ev(
+                &format!("s{}", i % 10),
+                EventKind::ToolResultSummary,
+                Some(&format!("t{i}")),
+                i,
+            )
+        })
+        .collect();
+    let first = s.ingest(&events).unwrap();
+    let second = s.ingest(&events).unwrap();
+    assert_eq!(
+        (first.inserted, second.inserted, second.duplicates),
+        (1000, 0, 1000)
+    );
+    let stored: usize = s.sessions(100).unwrap().iter().map(|x| x.events).sum();
+    assert_eq!(stored, 1000);
+}

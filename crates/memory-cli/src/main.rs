@@ -186,7 +186,7 @@ enum MemoryCommand {
         /// Same as --mode hybrid
         #[arg(long)]
         hybrid: bool,
-        /// With vector or hybrid: show the paths taken, the filters applied and each hit's ranks
+        /// Show the paths taken, the filters applied and each hit's ranks
         #[arg(long)]
         explain: bool,
         #[command(flatten)]
@@ -509,12 +509,21 @@ fn run(cli: Cli) -> anyhow::Result<bool> {
                     include_global: global,
                     include_inactive: all,
                 };
-                if mode != memory_engine::SearchMode::Fts {
-                    let embedder = provider.open()?;
+                if mode != memory_engine::SearchMode::Fts || explain {
+                    let embedder = (mode != memory_engine::SearchMode::Fts)
+                        .then(|| provider.open())
+                        .transpose()?;
                     let (scope, include_global, include_inactive) =
                         (project()?, query.include_global, query.include_inactive);
-                    let r =
-                        memory_engine::search(&store, mode, Some(&embedder), Some(scope), query)?;
+                    let r = memory_engine::search(
+                        &store,
+                        mode,
+                        embedder
+                            .as_ref()
+                            .map(|e| e as &dyn memory_core::embed::Embedder),
+                        Some(scope),
+                        query,
+                    )?;
                     if let Some(why) = &r.degraded {
                         eprintln!("vector search skipped, full-text only: {why}");
                     }
@@ -549,6 +558,8 @@ fn run(cli: Cli) -> anyhow::Result<bool> {
                                 r.fts_returned,
                                 match &r.degraded {
                                     Some(why) => format!("skipped ({why})"),
+                                    None if r.mode == memory_engine::SearchMode::Fts =>
+                                        "not used (mode fts)".into(),
                                     None => format!("{} candidates", r.vector_returned),
                                 },
                                 fusion_note(r.mode),
