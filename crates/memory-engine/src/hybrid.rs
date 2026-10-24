@@ -57,14 +57,82 @@ pub struct HybridHit {
     pub vector_rank: Option<usize>,
 }
 
+/// Which retrieval paths a search uses.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum SearchMode {
+    Fts,
+    /// Vector only. Falls back to full-text, reporting why, when the vector path fails.
+    Vector,
+    Hybrid,
+}
+
+impl SearchMode {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Fts => "fts",
+            Self::Vector => "vector",
+            Self::Hybrid => "hybrid",
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct HybridResult {
+    /// The paths that produced `hits`: what was asked for, or `fts` after a fallback.
+    pub mode: SearchMode,
     pub hits: Vec<HybridHit>,
     /// How many candidates each path returned before fusion (0 when skipped).
     pub fts_returned: usize,
     pub vector_returned: usize,
     /// Why the vector path was skipped; the hits are then FTS only.
     pub degraded: Option<String>,
+}
+
+/// Runs a search in the requested mode. Full-text is also the fallback when the vector path is
+/// unavailable (`degraded` says why).
+pub fn search<S: MemoryService + EmbeddingStore>(
+    store: &S,
+    mode: SearchMode,
+    embedder: Option<&dyn Embedder>,
+    project: Option<ProjectId>,
+    query: SearchQuery,
+) -> Result<HybridResult> {
+    match mode {
+        SearchMode::Fts => Ok(HybridResult {
+            degraded: None,
+            ..hybrid_search(store, None, project, query)?
+        }),
+        SearchMode::Hybrid => hybrid_search(store, embedder, project, query),
+        SearchMode::Vector => {
+            let Some(e) = embedder else {
+                return hybrid_search(store, None, project, query);
+            };
+            match vector_hits(store, e, project, &query) {
+                Ok(v) => Ok(HybridResult {
+                    mode,
+                    fts_returned: 0,
+                    vector_returned: v.len(),
+                    degraded: None,
+                    hits: v
+                        .into_iter()
+                        .enumerate()
+                        .map(|(i, hit)| HybridHit {
+                            hit,
+                            matched_by: vec!["vector"],
+                            fts_rank: None,
+                            vector_rank: Some(i + 1),
+                        })
+                        .collect(),
+                }),
+                Err(err) => {
+                    let mut r = hybrid_search(store, None, project, query)?;
+                    r.degraded = Some(err.to_string());
+                    Ok(r)
+                }
+            }
+        }
+    }
 }
 
 pub fn hybrid_search<S: MemoryService + EmbeddingStore>(
@@ -142,6 +210,11 @@ pub fn hybrid_search<S: MemoryService + EmbeddingStore>(
     });
     hits.truncate(limit);
     Ok(HybridResult {
+        mode: if degraded.is_some() {
+            SearchMode::Fts
+        } else {
+            SearchMode::Hybrid
+        },
         hits,
         fts_returned,
         vector_returned,

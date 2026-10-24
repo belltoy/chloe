@@ -137,8 +137,11 @@ enum HookCommand {
 enum McpCommand {
     /// Serve MCP over stdio, scoped to the project of --dir / the current directory
     Serve {
-        /// Also use vector search (embeds each query with the local model; falls back to
-        /// full-text when it is down)
+        /// Retrieval paths (vector and hybrid embed each query with the local model and fall
+        /// back to full-text when it is down)
+        #[arg(long, value_enum, conflicts_with = "hybrid")]
+        mode: Option<Mode>,
+        /// Same as --mode hybrid
         #[arg(long)]
         hybrid: bool,
         #[command(flatten)]
@@ -176,11 +179,15 @@ enum MemoryCommand {
         /// Include non-active memories
         #[arg(long)]
         all: bool,
-        /// Fuse full-text and vector search (falls back to full-text when the model is down)
+        /// Retrieval paths: fts (default), vector, or hybrid (fused); the latter two fall back to
+        /// full-text when the model is down
+        #[arg(long, value_enum, conflicts_with = "hybrid")]
+        mode: Option<Mode>,
+        /// Same as --mode hybrid
         #[arg(long)]
         hybrid: bool,
-        /// With --hybrid: show the paths taken, the filters applied and each hit's ranks
-        #[arg(long, requires = "hybrid")]
+        /// With vector or hybrid: show the paths taken, the filters applied and each hit's ranks
+        #[arg(long)]
         explain: bool,
         #[command(flatten)]
         provider: llm::Provider,
@@ -349,14 +356,21 @@ fn run(cli: Cli) -> anyhow::Result<bool> {
             }
         }
         Command::Mcp {
-            command: McpCommand::Serve { hybrid, provider },
+            command:
+                McpCommand::Serve {
+                    mode,
+                    hybrid,
+                    provider,
+                },
         } => {
+            let mode = Mode::pick(mode, hybrid);
             // A short timeout: an agent waits on every search, so a stalled model must not.
-            let embedder = hybrid
+            let embedder = (mode != memory_engine::SearchMode::Fts)
                 .then(|| provider.open_with_timeout(MCP_EMBED_TIMEOUT))
                 .transpose()?;
             memory_mcp::serve_with(
                 &store,
+                mode,
                 embedder
                     .as_ref()
                     .map(|e| e as &dyn memory_core::embed::Embedder),
@@ -397,27 +411,30 @@ fn run(cli: Cli) -> anyhow::Result<bool> {
                 limit,
                 global,
                 all,
+                mode,
                 hybrid,
                 explain,
                 provider,
             } => {
+                let mode = Mode::pick(mode, hybrid);
                 let query = SearchQuery {
                     query,
                     limit,
                     include_global: global,
                     include_inactive: all,
                 };
-                if hybrid {
+                if mode != memory_engine::SearchMode::Fts {
                     let embedder = provider.open()?;
                     let (scope, include_global, include_inactive) =
                         (project()?, query.include_global, query.include_inactive);
                     let r =
-                        memory_engine::hybrid_search(&store, Some(&embedder), Some(scope), query)?;
+                        memory_engine::search(&store, mode, Some(&embedder), Some(scope), query)?;
                     if let Some(why) = &r.degraded {
                         eprintln!("vector search skipped, full-text only: {why}");
                     }
                     if json {
                         print_json(&serde_json::json!({
+                            "mode": r.mode,
                             "degraded": r.degraded,
                             "explain": explain.then(|| serde_json::json!({
                                 "scope": scope,
@@ -425,7 +442,7 @@ fn run(cli: Cli) -> anyhow::Result<bool> {
                                 "status_filter": if include_inactive { "any" } else { "active" },
                                 "fts_returned": r.fts_returned,
                                 "vector_returned": r.vector_returned,
-                                "fusion": "rrf, k=60, top-50 per path",
+                                "fusion": fusion_note(r.mode),
                             })),
                             "hits": r.hits,
                         }))?
@@ -441,12 +458,14 @@ fn run(cli: Cli) -> anyhow::Result<bool> {
                                 },
                             );
                             println!(
-                                "paths: fts {} candidates, vector {}; fused by RRF (k=60, top-50 per path)",
+                                "mode {}; paths: fts {} candidates, vector {}; {}",
+                                r.mode.as_str(),
                                 r.fts_returned,
                                 match &r.degraded {
                                     Some(why) => format!("skipped ({why})"),
                                     None => format!("{} candidates", r.vector_returned),
-                                }
+                                },
+                                fusion_note(r.mode),
                             );
                         }
                         for h in r.hits {
@@ -577,5 +596,32 @@ fn main() -> ExitCode {
             }
             ExitCode::FAILURE
         }
+    }
+}
+
+#[derive(Clone, Copy, clap::ValueEnum)]
+enum Mode {
+    Fts,
+    Vector,
+    Hybrid,
+}
+
+impl Mode {
+    /// `--hybrid` is kept as a shorthand; full-text is the default.
+    fn pick(mode: Option<Mode>, hybrid: bool) -> memory_engine::SearchMode {
+        use memory_engine::SearchMode as M;
+        match (mode, hybrid) {
+            (Some(Mode::Vector), _) => M::Vector,
+            (Some(Mode::Hybrid), _) | (None, true) => M::Hybrid,
+            _ => M::Fts,
+        }
+    }
+}
+
+fn fusion_note(mode: memory_engine::SearchMode) -> &'static str {
+    match mode {
+        memory_engine::SearchMode::Hybrid => "fused by RRF (k=60, top-50 per path)",
+        memory_engine::SearchMode::Vector => "ranked by cosine similarity",
+        memory_engine::SearchMode::Fts => "ranked by full-text only",
     }
 }

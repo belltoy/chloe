@@ -366,3 +366,31 @@ fn eval_scores_every_mode_per_language_and_rejects_bad_labels() {
         Err(Error::InvalidArgument(_))
     ));
 }
+
+#[test]
+fn each_mode_uses_only_its_paths_and_vector_falls_back_to_fts() {
+    use memory_engine::{SearchMode, search};
+    let (d, s) = store();
+    let p = project(&d, "p", &s);
+    let net = save_in(&s, Some(p), "Listener", "never open a network port");
+    embed_all(&s);
+    let run = |m, e: Option<&dyn Embedder>| search(&s, m, e, Some(p), q("network")).unwrap();
+    let r = run(SearchMode::Fts, None);
+    assert_eq!((r.mode, r.degraded.is_none()), (SearchMode::Fts, true));
+    assert_eq!(r.hits[0].matched_by, ["fts"]);
+    let r = run(SearchMode::Vector, Some(&Topics));
+    assert_eq!((r.mode, r.fts_returned), (SearchMode::Vector, 0));
+    assert_eq!(r.hits[0].hit.memory.id, net.id);
+    assert_eq!(r.hits[0].matched_by, ["vector"]);
+    assert_eq!(
+        run(SearchMode::Hybrid, Some(&Topics)).hits[0].matched_by,
+        ["fts", "vector"]
+    );
+    // Vector asked for, provider down: full-text answers and says why.
+    let down = fake("topics", 3);
+    down.down.set(true);
+    let r = run(SearchMode::Vector, Some(&down));
+    assert_eq!(r.mode, SearchMode::Fts);
+    assert!(r.degraded.is_some());
+    assert_eq!(r.hits[0].hit.memory.id, net.id);
+}

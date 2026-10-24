@@ -288,7 +288,19 @@ fn search_reports_its_mode_and_why_it_degraded() {
     let run = |embedder: Option<&dyn memory_core::embed::Embedder>| {
         let input: String = msgs.iter().map(|m| format!("{m}\n")).collect();
         let mut out = Vec::new();
-        memory_mcp::serve_with(&store, embedder, pid, input.as_bytes(), &mut out).unwrap();
+        memory_mcp::serve_with(
+            &store,
+            if embedder.is_some() {
+                memory_engine::SearchMode::Hybrid
+            } else {
+                memory_engine::SearchMode::Fts
+            },
+            embedder,
+            pid,
+            input.as_bytes(),
+            &mut out,
+        )
+        .unwrap();
         let last = String::from_utf8(out)
             .unwrap()
             .lines()
@@ -305,7 +317,10 @@ fn search_reports_its_mode_and_why_it_degraded() {
     );
     // Provider outage: hits still come back, with the reason.
     let p = run(Some(&Down));
-    assert_eq!(p["mode"], "fts");
+    assert_eq!(
+        (&p["mode"], &p["requested_mode"]),
+        (&json!("fts"), &json!("hybrid"))
+    );
     assert!(
         p["degraded"]
             .as_str()

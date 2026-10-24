@@ -7,6 +7,7 @@ use std::io::{self, BufRead, Write};
 use memory_core::embed::{Embedder, EmbeddingStore};
 use memory_core::service::{MemoryChanges, MemoryService, NewMemory, SearchQuery};
 use memory_core::{Error, Kind, MemoryId, ProjectId, Result, Source};
+use memory_engine::SearchMode;
 use serde::Deserialize;
 use serde::de::DeserializeOwned;
 use serde_json::{Value, json};
@@ -133,7 +134,7 @@ fn tools() -> Value {
         (
             "memory_search",
             schema(
-                "Search memories of the current project (active only by default). The result says how the search ran (mode: hybrid or fts; degraded: why vectors were skipped, else null) and how many candidates each path returned. Each hit says which retrieval paths found it (matched_by: fts, vector) and its rank in each. Bodies are cut to fit max_chars in total; memory_get returns one in full.",
+                "Search memories of the current project (active only by default). The result says how the search ran (mode: the paths used, fts, vector or hybrid; requested_mode: what the server is set to; degraded: why it fell back to fts, else null) and how many candidates each path returned. Each hit says which retrieval paths found it (matched_by: fts, vector) and its rank in each. Bodies are cut to fit max_chars in total; memory_get returns one in full.",
                 json!({
                     "query": {"type": "string"},
                     "limit": {"type": "integer", "minimum": 1, "maximum": MAX_LIMIT, "default": 10},
@@ -193,6 +194,7 @@ fn to_json(v: &impl serde::Serialize) -> Result<Value> {
 /// `None` means the tool name is unknown (a protocol error, not a tool error).
 fn call_tool<S: MemoryService + EmbeddingStore>(
     svc: &S,
+    mode: SearchMode,
     embedder: Option<&dyn Embedder>,
     project: ProjectId,
     name: &str,
@@ -213,8 +215,9 @@ fn call_tool<S: MemoryService + EmbeddingStore>(
             })?)
         }),
         "memory_search" => parse::<Search>(args).and_then(|a| {
-            let found = memory_engine::hybrid_search(
+            let found = memory_engine::search(
                 svc,
+                mode,
                 embedder,
                 p,
                 SearchQuery {
@@ -225,13 +228,6 @@ fn call_tool<S: MemoryService + EmbeddingStore>(
                 },
             )?;
             let mut budget = a.max_chars.unwrap_or(DEFAULT_MAX_CHARS).min(MAX_CHARS);
-            // Without a provider the server was set up for full-text only: not a degradation.
-            let degraded = found.degraded.filter(|_| embedder.is_some());
-            let mode = if embedder.is_some() && degraded.is_none() {
-                "hybrid"
-            } else {
-                "fts"
-            };
             let (fts_returned, vector_returned) = (found.fts_returned, found.vector_returned);
             let hits = found
                 .hits
@@ -249,8 +245,9 @@ fn call_tool<S: MemoryService + EmbeddingStore>(
                 })
                 .collect::<Result<Vec<_>>>()?;
             Ok(json!({
-                "mode": mode,
-                "degraded": degraded,
+                "mode": found.mode,
+                "requested_mode": mode,
+                "degraded": found.degraded,
                 "candidates": {"fts": fts_returned, "vector": vector_returned},
                 "hits": hits,
             }))
@@ -296,6 +293,7 @@ fn rpc_error(id: Value, code: i32, message: &str) -> Value {
 /// Returns the response, or `None` for notifications.
 fn handle<S: MemoryService + EmbeddingStore>(
     svc: &S,
+    mode: SearchMode,
     embedder: Option<&dyn Embedder>,
     project: ProjectId,
     msg: &Value,
@@ -321,7 +319,7 @@ fn handle<S: MemoryService + EmbeddingStore>(
                 .get("arguments")
                 .cloned()
                 .unwrap_or_else(|| json!({}));
-            match call_tool(svc, embedder, project, name, args) {
+            match call_tool(svc, mode, embedder, project, name, args) {
                 Some(r) => tool_result(r),
                 None => return Some(rpc_error(id, -32602, &format!("unknown tool: {name}"))),
             }
@@ -338,13 +336,15 @@ pub fn serve<S: MemoryService + EmbeddingStore>(
     input: impl BufRead,
     out: impl Write,
 ) -> io::Result<()> {
-    serve_with(svc, None, project, input, out)
+    serve_with(svc, SearchMode::Fts, None, project, input, out)
 }
 
 /// Serves requests until `input` closes. Only protocol messages are written to `out`. With an
-/// `embedder`, `memory_search` also uses vectors, and falls back to full-text when they fail.
+/// `mode`, `memory_search` uses full-text, vectors or both (the latter two need an `embedder`),
+/// and falls back to full-text when the vector path fails.
 pub fn serve_with<S: MemoryService + EmbeddingStore>(
     svc: &S,
+    mode: SearchMode,
     embedder: Option<&dyn Embedder>,
     project: ProjectId,
     input: impl BufRead,
@@ -356,7 +356,7 @@ pub fn serve_with<S: MemoryService + EmbeddingStore>(
             continue;
         }
         let reply = match serde_json::from_str::<Value>(&line) {
-            Ok(msg) => handle(svc, embedder, project, &msg),
+            Ok(msg) => handle(svc, mode, embedder, project, &msg),
             Err(_) => Some(rpc_error(Value::Null, -32700, "parse error")),
         };
         if let Some(r) = reply {
