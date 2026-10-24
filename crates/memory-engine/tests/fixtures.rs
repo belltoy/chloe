@@ -7,7 +7,9 @@
 use std::cell::RefCell;
 use std::path::Path;
 
-use memory_core::extract::{Candidate, CandidateStore, ExtractionInput, MemoryExtractor};
+use memory_core::extract::{
+    Candidate, CandidateState, CandidateStore, ExtractionInput, MemoryExtractor,
+};
 use memory_core::{AgentEvent, EVENT_SCHEMA_VERSION, EventStore, Result};
 use memory_engine::{Window, plan, run_next};
 use memory_llm::prompt;
@@ -122,7 +124,9 @@ fn fixtures_replay_to_the_expected_candidates() {
         assert!(done.result.is_ok(), "{}: {:?}", f.name, done.result);
 
         let want = &f.json["expect"];
-        let mut stored = store.pending_candidates(100).unwrap();
+        let mut stored = store
+            .candidates(Some(CandidateState::Pending), 100)
+            .unwrap();
         stored.reverse(); // oldest first = reply order
         let want_accepted = want["accepted"].as_array().unwrap();
         assert_eq!(stored.len(), want_accepted.len(), "{}: accepted", f.name);

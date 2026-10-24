@@ -22,6 +22,7 @@ const MIGRATIONS: &[&str] = &[
     include_str!("migrations/003_events.sql"),
     include_str!("migrations/004_jobs.sql"),
     include_str!("migrations/005_candidates.sql"),
+    include_str!("migrations/006_candidate_review.sql"),
 ];
 /// How long `open` keeps retrying a locked initialisation.
 const OPEN_RETRY: Duration = Duration::from_secs(5);
@@ -186,36 +187,7 @@ impl MemoryService for SqliteStore {
         };
         let mut conn = self.conn();
         let tx = begin(&mut conn)?;
-        if let Some(p) = m.project_id {
-            let found = tx
-                .query_row(
-                    "SELECT 1 FROM projects WHERE id=?1",
-                    [p.to_string()],
-                    |_| Ok(()),
-                )
-                .optional()
-                .map_err(storage)?;
-            if found.is_none() {
-                return Err(Error::NotFound(format!("project {p}")));
-            }
-        }
-        tx.execute(
-            &format!("INSERT INTO memories ({COLS}) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)"),
-            params![
-                m.id.to_string(),
-                m.project_id.map(|p| p.to_string()),
-                tag(&m.kind),
-                m.title,
-                m.content,
-                tag(&m.status),
-                tag(&m.source),
-                micros(m.created_at),
-                micros(m.updated_at),
-                m.revision
-            ],
-        )
-        .map_err(storage)?;
-        write_revision(&tx, &m, "create", &self.actor)?;
+        insert_memory(&tx, &m, "create", &self.actor)?;
         tx.commit().map_err(storage)?;
         Ok(m)
     }
@@ -421,6 +393,41 @@ fn fetch(conn: &Connection, project: Option<ProjectId>, id: MemoryId) -> Result<
     .ok_or_else(|| Error::NotFound(format!("memory {id}")))
 }
 
+/// Inserts a new memory and its first revision row inside the caller's transaction.
+pub(crate) fn insert_memory(tx: &Transaction, m: &Memory, cause: &str, actor: &str) -> Result<()> {
+    if let Some(p) = m.project_id {
+        let found = tx
+            .query_row(
+                "SELECT 1 FROM projects WHERE id=?1",
+                [p.to_string()],
+                |_| Ok(()),
+            )
+            .optional()
+            .map_err(storage)?;
+        if found.is_none() {
+            return Err(Error::NotFound(format!("project {p}")));
+        }
+    }
+    tx.execute(
+        &format!("INSERT INTO memories ({COLS}) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)"),
+        params![
+            m.id.to_string(),
+            m.project_id.map(|p| p.to_string()),
+            tag(&m.kind),
+            m.title,
+            m.content,
+            tag(&m.status),
+            tag(&m.source),
+            micros(m.created_at),
+            micros(m.updated_at),
+            m.revision
+        ],
+    )
+    .map_err(storage)?;
+    write_revision(tx, m, cause, actor)?;
+    Ok(())
+}
+
 fn write_revision(tx: &Transaction, m: &Memory, cause: &str, actor: &str) -> Result<()> {
     let snapshot = serde_json::to_string(m).map_err(|e| Error::Internal(e.to_string()))?;
     tx.execute(
@@ -431,7 +438,7 @@ fn write_revision(tx: &Transaction, m: &Memory, cause: &str, actor: &str) -> Res
     Ok(())
 }
 
-fn valid_title(t: String) -> Result<String> {
+pub(crate) fn valid_title(t: String) -> Result<String> {
     let t = t.trim().to_owned();
     if t.is_empty() || t.chars().count() > MAX_TITLE_CHARS {
         return Err(Error::InvalidArgument(format!(
@@ -441,7 +448,7 @@ fn valid_title(t: String) -> Result<String> {
     Ok(t)
 }
 
-fn valid_content(c: String) -> Result<String> {
+pub(crate) fn valid_content(c: String) -> Result<String> {
     if c.trim().is_empty() || c.len() > MAX_CONTENT_BYTES {
         return Err(Error::InvalidArgument(format!(
             "content must be non-empty and at most {MAX_CONTENT_BYTES} bytes"

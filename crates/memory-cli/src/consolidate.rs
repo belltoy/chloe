@@ -98,8 +98,8 @@ pub fn run(
 }
 
 pub fn list(store: &SqliteStore, limit: usize, json: bool) -> anyhow::Result<()> {
-    use memory_core::extract::CandidateStore;
-    let all = store.pending_candidates(limit)?;
+    use memory_core::extract::{CandidateState, CandidateStore};
+    let all = store.candidates(Some(CandidateState::Pending), limit)?;
     if json {
         return print_json(&all);
     }

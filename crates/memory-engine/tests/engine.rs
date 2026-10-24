@@ -1,6 +1,8 @@
 use std::cell::{Cell, RefCell};
 
-use memory_core::extract::{Candidate, CandidateStore, Evidence, ExtractionInput, MemoryExtractor};
+use memory_core::extract::{
+    Candidate, CandidateState, CandidateStore, Evidence, ExtractionInput, MemoryExtractor,
+};
 use memory_core::job::{DEFAULT_MAX_ATTEMPTS, JobQueue, JobState, backoff};
 use memory_core::{AgentEvent, EVENT_SCHEMA_VERSION, Error, EventKind, EventStore, Kind, Result};
 use memory_engine::{Window, plan, run_next, select};
@@ -112,7 +114,7 @@ fn run_stores_candidates_and_completes_the_job() {
     assert_eq!((done.session.as_str(), done.result), ("a", Ok(1)));
     assert!(run_next(&s, &x, "w", t(20)).unwrap().is_none());
     assert_eq!(s.counts().unwrap().succeeded, 1);
-    let c = s.pending_candidates(10).unwrap();
+    let c = s.candidates(Some(CandidateState::Pending), 10).unwrap();
     assert_eq!(c[0].candidate.title, "decision of a");
     // A repeated extraction of the same session adds nothing.
     assert_eq!(
@@ -132,7 +134,11 @@ fn provider_down_keeps_events_and_retries_later() {
     let done = run_next(&s, &x, "w", t(20)).unwrap().unwrap();
     let f = done.result.unwrap_err();
     assert!(f.error.contains("connection refused") && !f.dead_letter);
-    assert!(s.pending_candidates(10).unwrap().is_empty());
+    assert!(
+        s.candidates(Some(CandidateState::Pending), 10)
+            .unwrap()
+            .is_empty()
+    );
     assert_eq!(s.session_events("a", 10).unwrap().len(), 3);
     // Still backing off.
     assert!(run_next(&s, &x, "w", t(21)).unwrap().is_none());

@@ -4,7 +4,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::{AgentEvent, Kind, Result};
+use crate::{AgentEvent, Kind, MemoryId, ProjectId, Result};
 
 /// A session's events, already redacted by the adapter, in the order they happened.
 #[derive(Debug, Clone)]
@@ -46,15 +46,93 @@ pub trait MemoryExtractor {
     fn extract(&self, input: &ExtractionInput) -> Result<Vec<Candidate>>;
 }
 
-/// A candidate as stored, waiting for review.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CandidateState {
+    Pending,
+    Accepted,
+    Rejected,
+    /// Folded into an existing memory.
+    Merged,
+    /// Looks like it contradicts an existing memory; waits for a human.
+    Conflict,
+}
+
+impl CandidateState {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Pending => "pending",
+            Self::Accepted => "accepted",
+            Self::Rejected => "rejected",
+            Self::Merged => "merged",
+            Self::Conflict => "conflict",
+        }
+    }
+
+    /// Still waiting for a decision.
+    pub fn is_open(self) -> bool {
+        matches!(self, Self::Pending | Self::Conflict)
+    }
+}
+
+/// What a reviewer (or, later, a policy) decides about an open candidate. `reason` is kept
+/// with the decision so it can be explained afterwards.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Resolution {
+    /// Create a memory (source `Extracted`) from the candidate. A candidate whose session has
+    /// no registered project becomes a memory only with `global`.
+    Accept {
+        global: bool,
+    },
+    Reject {
+        reason: String,
+    },
+    /// Keep the existing memory and record the candidate as one more source of it.
+    Merge {
+        into: MemoryId,
+        reason: String,
+    },
+    /// Flag a contradiction with an existing memory; the candidate stays reviewable.
+    Conflict {
+        with: MemoryId,
+        reason: String,
+    },
+}
+
+/// A candidate as stored, with its review state.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct StoredCandidate {
     pub id: String,
-    pub project_id: Option<crate::ProjectId>,
+    pub project_id: Option<ProjectId>,
     #[serde(flatten)]
     pub candidate: Candidate,
+    pub state: CandidateState,
+    /// The memory it created, was merged into, or conflicts with.
+    pub memory_id: Option<MemoryId>,
+    pub reason: Option<String>,
     #[serde(with = "time::serde::rfc3339")]
     pub created_at: time::OffsetDateTime,
+    #[serde(with = "time::serde::rfc3339::option")]
+    pub decided_at: Option<time::OffsetDateTime>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SourceRelation {
+    /// The memory was created from this candidate.
+    Created,
+    /// The candidate was merged into the memory.
+    Merged,
+}
+
+/// Where a memory came from: the candidate and the session evidence behind it.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct MemorySource {
+    pub candidate_id: String,
+    pub relation: SourceRelation,
+    pub evidence: Evidence,
+    #[serde(with = "time::serde::rfc3339")]
+    pub recorded_at: time::OffsetDateTime,
 }
 
 pub trait CandidateStore {
@@ -67,6 +145,17 @@ pub trait CandidateStore {
         native_session_id: &str,
         candidates: &[Candidate],
     ) -> Result<usize>;
-    /// Pending candidates, newest first.
-    fn pending_candidates(&self, limit: usize) -> Result<Vec<StoredCandidate>>;
+    /// Newest first; `None` lists every state.
+    fn candidates(
+        &self,
+        state: Option<CandidateState>,
+        limit: usize,
+    ) -> Result<Vec<StoredCandidate>>;
+    fn candidate(&self, id: &str) -> Result<StoredCandidate>;
+    /// Applies a decision to a `pending` or `conflict` candidate in one transaction; any
+    /// other state is `InvalidArgument`. Merge and conflict targets must be visible from the
+    /// candidate's project (its own or global), otherwise `NotFound`.
+    fn resolve_candidate(&self, id: &str, resolution: Resolution) -> Result<StoredCandidate>;
+    /// The candidates a memory was created from or merged with, oldest first.
+    fn memory_sources(&self, memory: MemoryId) -> Result<Vec<MemorySource>>;
 }
