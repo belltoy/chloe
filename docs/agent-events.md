@@ -9,6 +9,7 @@ Adapters map each agent's native events onto `memory_core::AgentEvent` (schema v
 | `session_start` | A session began, resumed or was cleared | `cwd` |
 | `user_prompt` | The user submitted a prompt | `text` (redacted, truncated) |
 | `tool_result_summary` | A tool call finished | `tool_name`, `text` (summary only, never raw output) |
+| `assistant_message` | The agent finished a turn | `text` (its final reply, 1000 chars, redacted) |
 | `context_compacted` | The agent compacted its context | |
 | `session_end` | The session ended | |
 
@@ -27,7 +28,7 @@ Captured on 2026-10-23 with a probe command hook passed via `claude -p --setting
 | `PostToolUse` | `tool_result_summary` | `tool_name`, `tool_input`, `tool_response`, `tool_use_id`, `duration_ms` | `tool_use_id` |
 | `PostCompact` | `context_compacted` | docs: `trigger`, `compact_summary` | not captured |
 | `SessionEnd` | `session_end` | `reason` (`other` in a `-p` run) | none |
-| `Stop` | not mapped (turn end) | `last_assistant_message`, `stop_hook_active` | `prompt_id` |
+| `Stop` | `assistant_message` | `last_assistant_message`, `stop_hook_active` | `prompt_id` |
 
 Notes: `Stop` fires per turn, `SessionEnd` has a 1.5 s default budget (docs), so a missing `SessionEnd` must be tolerated; `PreToolUse`, `PreCompact`, `Notification`, subagent and many other events exist but are not needed. The documented transcript is JSONL at `~/.claude/projects/<project>/<session-id>.jsonl`, whose format the docs call internal and unstable. Hook timeout is in seconds (default 600 for commands); a non-zero exit other than 2 does not block the agent.
 
@@ -37,7 +38,7 @@ Notes: `Stop` fires per turn, `SessionEnd` has a 1.5 s default budget (docs), so
 
 `chloe hook claude` reads one payload on stdin and queues one event as its own file in `<db dir>/spool/pending/` (dirs `0700`, files `0600`). It never opens the database, prints nothing on stdout (Claude Code feeds some hook stdout back to the model) and always exits 0; problems go to stderr. `CHLOE_CAPTURE=off` turns capture off. Measured about 6 ms per call (debug build), and a 6 MB payload took 34 ms.
 
-What is stored per event: `prompt` (4000 chars), and for tool calls only a summary of the *input* (300 chars): the Bash command, a file path, a search pattern, a URL or a query. An `Edit`/`MultiEdit` also keeps the text it replaced and the text it wrote as `-`/`+` lines (1200 chars in all, redacted like everything else), since that is the only record of what a fix was; `Write` keeps the path only. `tool_response` is never read. Secrets are replaced by `[REDACTED]` before truncation; reason codes (`secret`, `truncated`, `sensitive_path`) are kept in `redactions`. A tool call that mentions a credential path (`.env`, `~/.ssh`, `*.pem`, …) keeps no text at all. Redaction is pattern based (known token prefixes, `NAME=VALUE` with a secret-ish name, `Bearer`, URL passwords, PEM private keys); an unknown secret format is not caught.
+What is stored per event: `prompt` (4000 chars), and for tool calls only a summary of the *input* (300 chars): the Bash command, a file path, a search pattern, a URL or a query. An `Edit`/`MultiEdit` also keeps the text it replaced and the text it wrote as `-`/`+` lines (1200 chars in all, redacted like everything else), since that is the only record of what a fix was; `Write` keeps the path only. The final reply of each turn (`Stop`'s `last_assistant_message`) is kept as an `assistant_message` event, cut to 1000 characters and redacted, because it usually holds the cause and the reasoning that commands cannot show; existing installs need `chloe hook install` again to add the `Stop` entry. `tool_response` is never read. Secrets are replaced by `[REDACTED]` before truncation; reason codes (`secret`, `truncated`, `sensitive_path`) are kept in `redactions`. A tool call that mentions a credential path (`.env`, `~/.ssh`, `*.pem`, …) keeps no text at all. Redaction is pattern based (known token prefixes, `NAME=VALUE` with a secret-ish name, `Bearer`, URL passwords, PEM private keys); an unknown secret format is not caught.
 
 Limits: a payload that cannot be parsed is only reported on stderr, because the hook must not touch the database; payloads over 8 MiB are dropped; `chloe doctor` does not check whether the hooks are installed or trusted yet.
 
@@ -83,7 +84,7 @@ Captured on 2026-10-23 by appending a probe command hook to `~/.codex/hooks.json
 | `PostToolUse` | `tool_result_summary` | `turn_id`, `tool_name` (`Bash`), `tool_input`, `tool_response` (plain string), `tool_use_id` (`exec-<uuid>`) | `tool_use_id` |
 | `PreCompact` / `PostCompact` | `context_compacted` | **not captured** (names exist in the binary) | unknown |
 | `SessionEnd` | `session_end` | `reason` (`other`) | none |
-| `Stop` | not mapped (turn end) | `turn_id`, `last_assistant_message`, `stop_hook_active` | `turn_id` |
+| `Stop` | `assistant_message` | `turn_id`, `last_assistant_message`, `stop_hook_active` | `turn_id` |
 
 Also present in the binary but not exercised: `PermissionRequest`, `SubagentStart`, `SubagentStop`, `Interrupt`.
 
@@ -95,7 +96,7 @@ Rollout transcript: `~/.codex/sessions/YYYY/MM/DD/rollout-<timestamp>-<id>.jsonl
 
 Path chosen: hooks, the only mechanism verified on 0.164.0. The rollout transcript is not read (undocumented format, and hooks already carry everything needed); a transcript reader stays a fallback if hooks change. The adapter is read-only toward Codex except for the one hooks file the user asks us to edit.
 
-`chloe hook install codex [--settings PATH]` adds `chloe hook codex` (timeout 3 s, the most Codex allows for `SessionEnd`) to `SessionStart`, `UserPromptSubmit`, `PostToolUse` and `SessionEnd` in `~/.codex/hooks.json` (`$CODEX_HOME/hooks.json` if set). `PostCompact` is not installed because its payload was never captured, and `Stop` is not mapped. Same rules as for Claude Code: other hooks are kept, repeat installs are no-ops, uninstall removes only ours, and `chloe hook codex` never fails, prints nothing and honours `CHLOE_CAPTURE=off`. Differences: the prompt id is `turn_id`, and `tool_response` is a string (still never read).
+`chloe hook install codex [--settings PATH]` adds `chloe hook codex` (timeout 3 s, the most Codex allows for `SessionEnd`) to `SessionStart`, `UserPromptSubmit`, `PostToolUse`, `Stop` and `SessionEnd` in `~/.codex/hooks.json` (`$CODEX_HOME/hooks.json` if set). `PostCompact` is not installed because its payload was never captured. Same rules as for Claude Code: other hooks are kept, repeat installs are no-ops, uninstall removes only ours, and `chloe hook codex` never fails, prints nothing and honours `CHLOE_CAPTURE=off`. Differences: the prompt id is `turn_id`, and `tool_response` is a string (still never read).
 
 **Trust.** Codex ignores a hook until the user approves it (`/hooks` in Codex; the approval is stored in `config.toml`, which we never write). After installing, approve the four `chloe hook codex` entries and start a new session. Changing an entry's command or timeout means approving it again. `doctor` does not yet report untrusted hooks.
 

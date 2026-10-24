@@ -15,6 +15,8 @@ pub enum EventKind {
     SessionStart,
     UserPrompt,
     ToolResultSummary,
+    /// The agent's final reply of a turn.
+    AssistantMessage,
     ContextCompacted,
     SessionEnd,
 }
@@ -25,6 +27,7 @@ impl EventKind {
             Self::SessionStart => "session_start",
             Self::UserPrompt => "user_prompt",
             Self::ToolResultSummary => "tool_result_summary",
+            Self::AssistantMessage => "assistant_message",
             Self::ContextCompacted => "context_compacted",
             Self::SessionEnd => "session_end",
         }

@@ -86,7 +86,7 @@ fn hook_never_fails_the_agent() {
         b"not json",
         b"{}",
         br#"{"session_id":"s"}"#,
-        br#"{"session_id":"s","hook_event_name":"Stop"}"#,
+        br#"{"session_id":"s","hook_event_name":"PreToolUse"}"#,
     ] {
         let out = run_hook(&db, bad, None);
         assert!(out.status.success(), "{}", String::from_utf8_lossy(bad));

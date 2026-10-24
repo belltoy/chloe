@@ -33,6 +33,7 @@ const MIGRATIONS: &[&str] = &[
     include_str!("migrations/010_fts_cjk.sql"),
     include_str!("migrations/011_fts_segmented.sql"),
     include_str!("migrations/012_extraction_watermark.sql"),
+    include_str!("migrations/013_assistant_message.sql"),
 ];
 /// How long `open` keeps retrying a locked initialisation.
 const OPEN_RETRY: Duration = Duration::from_secs(5);

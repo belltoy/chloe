@@ -38,6 +38,7 @@ Each item:
 - content: at most 1500 characters, self-contained, stating the why.
 - evidence: the event refs (like E3) that support it; at least one, only refs that appear below.
 - file / commit: only when an event literally shows that path or commit hash; otherwise omit.
+- An assistant_message event is the agent's own explanation of what it did and why: a good source for causes and fixes, but not a rule the user stated.
 - State only what the events say: do not add reasons, causes or details they do not give, and do not repeat one point as several items.
 - Write in the language the session uses.
 

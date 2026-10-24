@@ -31,6 +31,7 @@ pub const CLAUDE: Spec = Spec {
         "SessionStart",
         "UserPromptSubmit",
         "PostToolUse",
+        "Stop",
         "PostCompact",
         "SessionEnd",
     ],
@@ -46,6 +47,7 @@ pub const CODEX: Spec = Spec {
         "SessionStart",
         "UserPromptSubmit",
         "PostToolUse",
+        "Stop",
         "SessionEnd",
     ],
     prompt_id_field: "turn_id",
@@ -57,6 +59,8 @@ pub const PROMPT_CHARS: usize = 4000;
 pub const SUMMARY_CHARS: usize = 300;
 /// Room for the path plus what an edit replaced and what it wrote.
 pub const EDIT_CHARS: usize = 1200;
+/// The agent's final reply of a turn: enough for a root-cause sentence or two.
+pub const ASSISTANT_CHARS: usize = 1000;
 const NAME_CHARS: usize = 100;
 
 #[derive(Debug, thiserror::Error)]
@@ -109,6 +113,13 @@ pub fn parse_hook(
             ev.native_event_id = str_field(&v, spec.prompt_id_field).map(String::from);
             if let Some(p) = str_field(&v, "prompt") {
                 set_text(&mut ev, clean(p, PROMPT_CHARS));
+            }
+        }
+        "Stop" => {
+            ev.kind = EventKind::AssistantMessage;
+            ev.native_event_id = str_field(&v, spec.prompt_id_field).map(String::from);
+            if let Some(m) = str_field(&v, "last_assistant_message") {
+                set_text(&mut ev, clean(m, ASSISTANT_CHARS));
             }
         }
         "PostToolUse" => {
@@ -344,7 +355,7 @@ mod tests {
 
     #[test]
     fn ignores_other_events_and_rejects_bad_core_fields() {
-        assert!(parse(json!({"session_id":"s","hook_event_name":"Stop"})).is_none());
+        assert!(parse(json!({"session_id":"s","hook_event_name":"PreToolUse"})).is_none());
         assert!(parse(json!({"session_id":"s","hook_event_name":"FutureEvent","new":1})).is_none());
         for bad in [
             json!({"hook_event_name":"SessionStart"}),
@@ -412,7 +423,15 @@ mod tests {
             EventKind::SessionEnd
         );
         // Not captured for Codex: turn end, and compaction (payload never seen).
-        assert!(parse(json!({"session_id":"c1","turn_id":"t1","hook_event_name":"Stop","last_assistant_message":"done"})).is_none());
+        let stop = parse(json!({"session_id":"c1","turn_id":"t1","hook_event_name":"Stop","last_assistant_message":"done"})).unwrap();
+        assert_eq!(
+            (
+                stop.kind,
+                stop.native_event_id.as_deref(),
+                stop.text.as_deref()
+            ),
+            (EventKind::AssistantMessage, Some("t1"), Some("done"))
+        );
         assert!(parse(json!({"session_id":"c1","hook_event_name":"PostCompact"})).is_none());
     }
 
@@ -531,5 +550,36 @@ mod tests {
         let env = parse(json!({"session_id":"s","hook_event_name":"PostToolUse","tool_name":"Edit",
             "tool_input":{"file_path":"/p/.env","old_string":"A=1","new_string":"A=2"},"tool_use_id":"t"})).unwrap();
         assert!(env.text.is_none());
+    }
+
+    #[test]
+    fn the_final_reply_is_kept_redacted_and_cut() {
+        let long = format!(
+            "Root cause: floor division. key sk-abcdefghijklmnopqrstuvwxyz0123456789 {}",
+            "x".repeat(3000)
+        );
+        let e = parse(
+            json!({"session_id":"s","hook_event_name":"Stop","prompt_id":"p1",
+            "last_assistant_message":long,"stop_hook_active":false}),
+        )
+        .unwrap();
+        assert_eq!(
+            (e.kind, e.native_event_id.as_deref()),
+            (EventKind::AssistantMessage, Some("p1"))
+        );
+        let text = e.text.unwrap();
+        assert!(text.starts_with("Root cause: floor division."));
+        assert!(
+            !text.contains("sk-abc") && text.chars().count() <= ASSISTANT_CHARS + 20,
+            "{}",
+            text.len()
+        );
+        // A Stop without a message is still an event, with no text.
+        assert!(
+            parse(json!({"session_id":"s","hook_event_name":"Stop"}))
+                .unwrap()
+                .text
+                .is_none()
+        );
     }
 }
