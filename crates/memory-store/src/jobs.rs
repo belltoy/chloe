@@ -52,7 +52,8 @@ fn fetch(conn: &Connection, id: &str) -> Result<Job> {
 fn reclaim_expired(conn: &Connection, now: OffsetDateTime) -> Result<()> {
     let at = micros(now);
     let mut stmt = conn
-        .prepare("
+        .prepare(
+            "
             SELECT
                 id,
                 attempts,
@@ -60,7 +61,8 @@ fn reclaim_expired(conn: &Connection, now: OffsetDateTime) -> Result<()> {
             FROM jobs
             WHERE
                 state='leased' AND lease_expires_at <= ?1
-        ")
+        ",
+        )
         .map_err(storage)?;
     let expired: Vec<(String, u32, u32)> = stmt
         .query_map([at], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)))
@@ -136,7 +138,14 @@ impl JobQueue for SqliteStore {
                     updated_at
                 )
                 VALUES (?1,?2,?3,?4,'pending',?5,?6,?6,?6)",
-                params![id, kind, dedup_key, payload.to_string(), DEFAULT_MAX_ATTEMPTS, at],
+                params![
+                    id,
+                    kind,
+                    dedup_key,
+                    payload.to_string(),
+                    DEFAULT_MAX_ATTEMPTS,
+                    at
+                ],
             )
             .map_err(storage)?;
         let job = tx
@@ -185,7 +194,13 @@ impl JobQueue for SqliteStore {
                  lease_expires_at=?3,
                  updated_at=?4
              WHERE id=?5",
-            params![Uuid::new_v4().to_string(), worker, micros(now + lease_for), at, id],
+            params![
+                Uuid::new_v4().to_string(),
+                worker,
+                micros(now + lease_for),
+                at,
+                id
+            ],
         )
         .map_err(storage)?;
         let job = fetch(&tx, &id)?;
