@@ -11,7 +11,9 @@ use std::path::Path;
 use std::sync::{Mutex, MutexGuard};
 use std::time::Duration;
 
-use memory_core::service::{Hit, MemoryChanges, MemoryService, NewMemory, Revision, SearchQuery};
+use memory_core::service::{
+    Hit, MemoryChanges, MemoryService, NewMemory, Revision, SearchQuery, TermMatches,
+};
 use memory_core::{Error, Memory, MemoryId, ProjectId, Result, Status};
 use rusqlite::types::Type;
 use rusqlite::{Connection, OptionalExtension, Row, Transaction, TransactionBehavior, params};
@@ -329,6 +331,40 @@ impl MemoryService for SqliteStore {
             )
             .map_err(storage)?;
         rows.collect::<rusqlite::Result<_>>().map_err(storage)
+    }
+
+    fn matched_terms(&self, query: &str, ids: &[MemoryId]) -> Result<TermMatches> {
+        let (table, terms) = fts_plan(query);
+        let mut out = TermMatches {
+            terms: terms.clone(),
+            ..Default::default()
+        };
+        if ids.is_empty() {
+            return Ok(out);
+        }
+        let marks = vec!["?"; ids.len()].join(",");
+        let conn = self.conn();
+        // Table name is a constant; ids and the term are bound parameters.
+        let mut stmt = conn
+            .prepare(&format!(
+                "SELECT m.id FROM {table} JOIN memories m ON m.rowid = {table}.rowid \
+                 WHERE {table} MATCH ? AND m.id IN ({marks})"
+            ))
+            .map_err(storage)?;
+        for t in &terms {
+            let mut args = vec![or_query(std::slice::from_ref(t))];
+            args.extend(ids.iter().map(|i| i.to_string()));
+            let found: Vec<String> = stmt
+                .query_map(rusqlite::params_from_iter(args), |r| r.get(0))
+                .map_err(storage)?
+                .collect::<rusqlite::Result<_>>()
+                .map_err(storage)?;
+            for id in found {
+                let id = id.parse().map_err(storage)?;
+                out.matched.entry(id).or_default().push(t.clone());
+            }
+        }
+        Ok(out)
     }
 
     fn search(&self, project: Option<ProjectId>, q: SearchQuery) -> Result<Vec<Hit>> {

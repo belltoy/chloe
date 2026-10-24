@@ -46,6 +46,15 @@ pub struct MemoryChanges {
     pub content: Option<String>,
 }
 
+/// Which terms of a full-text query each memory matched (diagnostics and fusion).
+#[derive(Debug, Clone, Default)]
+pub struct TermMatches {
+    /// The terms the search ORs together.
+    pub terms: Vec<String>,
+    /// Per asked-about memory, the terms it contains.
+    pub matched: std::collections::HashMap<MemoryId, Vec<String>>,
+}
+
 /// Single business-logic entry point shared by CLI and MCP (implemented in `memory-store`).
 /// `project` is the caller's scope; reads of other projects' memories are `NotFound`.
 pub trait MemoryService {
@@ -71,5 +80,8 @@ pub trait MemoryService {
         limit: usize,
     ) -> Result<Vec<Memory>>;
     fn search(&self, project: Option<ProjectId>, query: SearchQuery) -> Result<Vec<Hit>>;
+    /// For each of `ids`, which of the query's terms it matches. No scope check: pass ids a
+    /// search already returned.
+    fn matched_terms(&self, query: &str, ids: &[MemoryId]) -> Result<TermMatches>;
     fn history(&self, project: Option<ProjectId>, id: MemoryId) -> Result<Vec<Revision>>;
 }

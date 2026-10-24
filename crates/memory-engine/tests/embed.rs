@@ -394,3 +394,28 @@ fn each_mode_uses_only_its_paths_and_vector_falls_back_to_fts() {
     assert!(r.degraded.is_some());
     assert_eq!(r.hits[0].hit.memory.id, net.id);
 }
+
+#[test]
+fn a_one_word_keyword_match_does_not_join_fusion_unless_it_is_an_identifier() {
+    let (d, s) = store();
+    let p = project(&d, "p", &s);
+    let common = save_in(&s, Some(p), "note", "policy only");
+    let two = save_in(&s, Some(p), "net", "network policy details");
+    let code = save_in(&s, Some(p), "code", "E1042 means retry");
+    embed_all(&s);
+    let r = hybrid_search(&s, Some(&Topics), Some(p), q("network policy E1042")).unwrap();
+    let rank = |id| {
+        r.hits
+            .iter()
+            .find(|h| h.hit.memory.id == id)
+            .map(|h| h.fts_rank)
+    };
+    // One shared common word: not an FTS candidate any more (the vector path may still list it).
+    assert_ne!(rank(common.id), Some(Some(1)));
+    assert!(rank(common.id).is_none_or(|r| r.is_none()));
+    assert!(rank(two.id).unwrap().is_some());
+    assert!(rank(code.id).unwrap().is_some());
+    // Without a vector path nothing is gated.
+    let r = hybrid_search(&s, None, Some(p), q("network policy E1042")).unwrap();
+    assert!(r.hits.iter().any(|h| h.hit.memory.id == common.id));
+}
