@@ -4,6 +4,7 @@
 
 use std::io::{self, BufRead, Write};
 
+use memory_core::embed::{Embedder, EmbeddingStore};
 use memory_core::service::{MemoryChanges, MemoryService, NewMemory, SearchQuery};
 use memory_core::{Error, Kind, MemoryId, ProjectId, Result, Source};
 use serde::Deserialize;
@@ -21,6 +22,9 @@ on a conflict error, re-read and retry. Search returns active memories of the cu
 (set include_global to add global ones).";
 /// Search results carry at most this many characters of each body; `memory_get` returns it all.
 const SNIPPET_CHARS: usize = 1000;
+/// Total body characters one search returns, so a broad query cannot flood the agent's context.
+const DEFAULT_MAX_CHARS: usize = 8000;
+const MAX_CHARS: usize = 50_000;
 const MAX_LIMIT: usize = 50;
 const LATEST: &str = "2025-06-18";
 const SUPPORTED: &[&str] = &["2025-06-18", "2025-03-26", "2024-11-05"];
@@ -52,6 +56,7 @@ struct Search {
     include_global: bool,
     #[serde(default)]
     include_inactive: bool,
+    max_chars: Option<usize>,
 }
 
 #[derive(Deserialize)]
@@ -128,12 +133,14 @@ fn tools() -> Value {
         (
             "memory_search",
             schema(
-                "Full-text search memories of the current project (active only by default).",
+                "Search memories of the current project (active only by default). Each hit says which retrieval paths found it (matched_by: fts, vector) and its rank in each. Bodies are cut to fit max_chars in total; memory_get returns one in full.",
                 json!({
                     "query": {"type": "string"},
                     "limit": {"type": "integer", "minimum": 1, "maximum": MAX_LIMIT, "default": 10},
                     "include_global": {"type": "boolean", "default": false},
-                    "include_inactive": {"type": "boolean", "default": false}
+                    "include_inactive": {"type": "boolean", "default": false},
+                    "max_chars": {"type": "integer", "minimum": 1, "maximum": MAX_CHARS, "default": DEFAULT_MAX_CHARS,
+                        "description": "Total characters of memory bodies across all hits"}
                 }),
                 &["query"],
             ),
@@ -184,8 +191,9 @@ fn to_json(v: &impl serde::Serialize) -> Result<Value> {
 }
 
 /// `None` means the tool name is unknown (a protocol error, not a tool error).
-fn call_tool<S: MemoryService>(
+fn call_tool<S: MemoryService + EmbeddingStore>(
     svc: &S,
+    embedder: Option<&dyn Embedder>,
     project: ProjectId,
     name: &str,
     args: Value,
@@ -205,7 +213,9 @@ fn call_tool<S: MemoryService>(
             })?)
         }),
         "memory_search" => parse::<Search>(args).and_then(|a| {
-            let hits = svc.search(
+            let found = memory_engine::hybrid_search(
+                svc,
+                embedder,
                 p,
                 SearchQuery {
                     query: a.query,
@@ -214,12 +224,17 @@ fn call_tool<S: MemoryService>(
                     include_inactive: a.include_inactive,
                 },
             )?;
-            hits.into_iter()
+            let mut budget = a.max_chars.unwrap_or(DEFAULT_MAX_CHARS).min(MAX_CHARS);
+            found
+                .hits
+                .into_iter()
                 .map(|mut h| {
-                    let cut = h.memory.content.chars().count() > SNIPPET_CHARS;
+                    let keep = SNIPPET_CHARS.min(budget);
+                    let cut = h.hit.memory.content.chars().count() > keep;
                     if cut {
-                        h.memory.content = h.memory.content.chars().take(SNIPPET_CHARS).collect();
+                        h.hit.memory.content = h.hit.memory.content.chars().take(keep).collect();
                     }
+                    budget -= h.hit.memory.content.chars().count();
                     let mut v = to_json(&h)?;
                     v["content_truncated"] = cut.into();
                     Ok(v)
@@ -266,7 +281,12 @@ fn rpc_error(id: Value, code: i32, message: &str) -> Value {
 }
 
 /// Returns the response, or `None` for notifications.
-fn handle<S: MemoryService>(svc: &S, project: ProjectId, msg: &Value) -> Option<Value> {
+fn handle<S: MemoryService + EmbeddingStore>(
+    svc: &S,
+    embedder: Option<&dyn Embedder>,
+    project: ProjectId,
+    msg: &Value,
+) -> Option<Value> {
     let id = msg.get("id")?.clone(); // no id => notification, never answered
     let params = msg.get("params").cloned().unwrap_or(Value::Null);
     let result = match msg.get("method").and_then(Value::as_str) {
@@ -288,7 +308,7 @@ fn handle<S: MemoryService>(svc: &S, project: ProjectId, msg: &Value) -> Option<
                 .get("arguments")
                 .cloned()
                 .unwrap_or_else(|| json!({}));
-            match call_tool(svc, project, name, args) {
+            match call_tool(svc, embedder, project, name, args) {
                 Some(r) => tool_result(r),
                 None => return Some(rpc_error(id, -32602, &format!("unknown tool: {name}"))),
             }
@@ -298,9 +318,21 @@ fn handle<S: MemoryService>(svc: &S, project: ProjectId, msg: &Value) -> Option<
     Some(json!({"jsonrpc": "2.0", "id": id, "result": result}))
 }
 
-/// Serves requests until `input` closes. Only protocol messages are written to `out`.
-pub fn serve<S: MemoryService>(
+/// Full-text search only.
+pub fn serve<S: MemoryService + EmbeddingStore>(
     svc: &S,
+    project: ProjectId,
+    input: impl BufRead,
+    out: impl Write,
+) -> io::Result<()> {
+    serve_with(svc, None, project, input, out)
+}
+
+/// Serves requests until `input` closes. Only protocol messages are written to `out`. With an
+/// `embedder`, `memory_search` also uses vectors, and falls back to full-text when they fail.
+pub fn serve_with<S: MemoryService + EmbeddingStore>(
+    svc: &S,
+    embedder: Option<&dyn Embedder>,
     project: ProjectId,
     input: impl BufRead,
     mut out: impl Write,
@@ -311,7 +343,7 @@ pub fn serve<S: MemoryService>(
             continue;
         }
         let reply = match serde_json::from_str::<Value>(&line) {
-            Ok(msg) => handle(svc, project, &msg),
+            Ok(msg) => handle(svc, embedder, project, &msg),
             Err(_) => Some(rpc_error(Value::Null, -32700, "parse error")),
         };
         if let Some(r) = reply {

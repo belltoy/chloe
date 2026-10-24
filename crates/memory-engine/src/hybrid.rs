@@ -8,16 +8,20 @@ use std::collections::HashMap;
 use memory_core::embed::{Embedder, EmbeddingStore};
 use memory_core::service::{Hit, MemoryService, SearchQuery};
 use memory_core::{MemoryId, ProjectId, Result};
+use serde::Serialize;
 
 /// Candidates taken from each path before fusion.
 const TOP_N: usize = 50;
 /// Standard RRF damping constant.
 const RRF_K: f64 = 60.0;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct HybridHit {
     /// `score` is the fused RRF score.
+    #[serde(flatten)]
     pub hit: Hit,
+    /// The paths that returned it: `fts`, `vector` or both.
+    pub matched_by: Vec<&'static str>,
     /// 1-based rank in each path, `None` when that path did not return the memory.
     pub fts_rank: Option<usize>,
     pub vector_rank: Option<usize>,
@@ -26,6 +30,9 @@ pub struct HybridHit {
 #[derive(Debug, Clone)]
 pub struct HybridResult {
     pub hits: Vec<HybridHit>,
+    /// How many candidates each path returned before fusion (0 when skipped).
+    pub fts_returned: usize,
+    pub vector_returned: usize,
     /// Why the vector path was skipped; the hits are then FTS only.
     pub degraded: Option<String>,
 }
@@ -50,6 +57,7 @@ pub fn hybrid_search<S: MemoryService + EmbeddingStore>(
         },
     };
 
+    let (fts_returned, vector_returned) = (fts.len(), vector.len());
     let mut fused: HashMap<MemoryId, HybridHit> = HashMap::new();
     for (rank, h) in fts.into_iter().enumerate() {
         let rank = rank + 1;
@@ -60,6 +68,7 @@ pub fn hybrid_search<S: MemoryService + EmbeddingStore>(
                     score: 1.0 / (RRF_K + rank as f64),
                     ..h
                 },
+                matched_by: vec![],
                 fts_rank: Some(rank),
                 vector_rank: None,
             },
@@ -76,11 +85,18 @@ pub fn hybrid_search<S: MemoryService + EmbeddingStore>(
             })
             .or_insert(HybridHit {
                 hit: Hit { score: add, ..h },
+                matched_by: vec![],
                 fts_rank: None,
                 vector_rank: Some(rank),
             });
     }
     let mut hits: Vec<_> = fused.into_values().collect();
+    for h in &mut hits {
+        h.matched_by = [("fts", h.fts_rank), ("vector", h.vector_rank)]
+            .into_iter()
+            .filter_map(|(n, r)| r.map(|_| n))
+            .collect();
+    }
     hits.sort_by(|a, b| {
         b.hit
             .score
@@ -89,7 +105,12 @@ pub fn hybrid_search<S: MemoryService + EmbeddingStore>(
             .then(a.hit.memory.id.0.cmp(&b.hit.memory.id.0))
     });
     hits.truncate(limit);
-    Ok(HybridResult { hits, degraded })
+    Ok(HybridResult {
+        hits,
+        fts_returned,
+        vector_returned,
+        degraded,
+    })
 }
 
 fn vector_hits<S: EmbeddingStore>(

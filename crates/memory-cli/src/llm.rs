@@ -34,12 +34,16 @@ pub struct Provider {
 
 impl Provider {
     pub fn open(self) -> memory_core::Result<Ollama> {
+        self.open_with_timeout(OllamaConfig::default().timeout)
+    }
+
+    pub fn open_with_timeout(self, timeout: std::time::Duration) -> memory_core::Result<Ollama> {
         Ollama::new(OllamaConfig {
+            timeout,
             base_url: self.url,
             model: self.model,
             embed_model: self.embed_model,
             allow_remote: self.allow_remote,
-            ..Default::default()
         })
     }
 }

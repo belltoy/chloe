@@ -221,3 +221,41 @@ fn search_results_are_bounded() {
         long.len()
     );
 }
+
+#[test]
+fn search_explains_hits_and_respects_the_total_budget() {
+    let dir = tempfile::tempdir().unwrap();
+    let store = SqliteStore::open(&dir.path().join("t.db")).unwrap();
+    let proj = dir.path().join("p");
+    std::fs::create_dir(&proj).unwrap();
+    let pid = store.resolve_project(&proj).unwrap();
+    let body = format!("needle {}", "x".repeat(800));
+    let mut msgs: Vec<Value> = (0..3)
+        .map(|i| {
+            call(
+                i,
+                "memory_save",
+                json!({"kind": "fact", "title": format!("T{i}"), "content": body}),
+            )
+        })
+        .collect();
+    msgs.push(call(
+        9,
+        "memory_search",
+        json!({"query": "needle", "max_chars": 1000}),
+    ));
+    let r = session(&store, pid, &msgs);
+    let hits = payload(&r[3]);
+    let hits = hits.as_array().unwrap();
+    assert_eq!(hits.len(), 3, "hits are kept, only bodies are cut");
+    let total: usize = hits
+        .iter()
+        .map(|h| h["memory"]["content"].as_str().unwrap().chars().count())
+        .sum();
+    assert!(total <= 1000, "{total}");
+    assert_eq!(hits[2]["content_truncated"], true);
+    assert_eq!(hits[0]["matched_by"], json!(["fts"]));
+    assert_eq!(hits[0]["fts_rank"], 1);
+    assert!(hits[0]["vector_rank"].is_null());
+    assert_eq!(hits[0]["memory"]["status"], "active");
+}

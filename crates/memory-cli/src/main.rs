@@ -19,6 +19,8 @@ use memory_store::SqliteStore;
 use serde::Serialize;
 use tracing_subscriber::EnvFilter;
 
+const MCP_EMBED_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(5);
+
 #[derive(Parser)]
 #[command(
     name = "chloe",
@@ -131,7 +133,14 @@ enum HookCommand {
 #[derive(Subcommand)]
 enum McpCommand {
     /// Serve MCP over stdio, scoped to the project of --dir / the current directory
-    Serve,
+    Serve {
+        /// Also use vector search (embeds each query with the local model; falls back to
+        /// full-text when it is down)
+        #[arg(long)]
+        hybrid: bool,
+        #[command(flatten)]
+        provider: llm::Provider,
+    },
 }
 
 #[derive(Subcommand)]
@@ -167,6 +176,9 @@ enum MemoryCommand {
         /// Fuse full-text and vector search (falls back to full-text when the model is down)
         #[arg(long)]
         hybrid: bool,
+        /// With --hybrid: show the paths taken, the filters applied and each hit's ranks
+        #[arg(long, requires = "hybrid")]
+        explain: bool,
         #[command(flatten)]
         provider: llm::Provider,
     },
@@ -329,13 +341,22 @@ fn run(cli: Cli) -> anyhow::Result<bool> {
             }
         }
         Command::Mcp {
-            command: McpCommand::Serve,
-        } => memory_mcp::serve(
-            &store,
-            project()?,
-            std::io::stdin().lock(),
-            std::io::stdout().lock(),
-        )?,
+            command: McpCommand::Serve { hybrid, provider },
+        } => {
+            // A short timeout: an agent waits on every search, so a stalled model must not.
+            let embedder = hybrid
+                .then(|| provider.open_with_timeout(MCP_EMBED_TIMEOUT))
+                .transpose()?;
+            memory_mcp::serve_with(
+                &store,
+                embedder
+                    .as_ref()
+                    .map(|e| e as &dyn memory_core::embed::Embedder),
+                project()?,
+                std::io::stdin().lock(),
+                std::io::stdout().lock(),
+            )?
+        }
         Command::Events { command } => events::run(&store, &config, command, json)?,
         Command::Consolidate(args) => consolidate::run(&store, &config, args, json)?,
         Command::Candidates { command } => candidates::run(&store, command, json)?,
@@ -369,6 +390,7 @@ fn run(cli: Cli) -> anyhow::Result<bool> {
                 global,
                 all,
                 hybrid,
+                explain,
                 provider,
             } => {
                 let query = SearchQuery {
@@ -379,28 +401,60 @@ fn run(cli: Cli) -> anyhow::Result<bool> {
                 };
                 if hybrid {
                     let embedder = provider.open()?;
-                    let r = memory_engine::hybrid_search(
-                        &store,
-                        Some(&embedder),
-                        Some(project()?),
-                        query,
-                    )?;
+                    let (scope, include_global, include_inactive) =
+                        (project()?, query.include_global, query.include_inactive);
+                    let r =
+                        memory_engine::hybrid_search(&store, Some(&embedder), Some(scope), query)?;
                     if let Some(why) = &r.degraded {
                         eprintln!("vector search skipped, full-text only: {why}");
                     }
                     if json {
                         print_json(&serde_json::json!({
                             "degraded": r.degraded,
-                            "hits": r.hits.iter().map(|h| serde_json::json!({
-                                "memory": h.hit.memory,
-                                "score": h.hit.score,
-                                "fts_rank": h.fts_rank,
-                                "vector_rank": h.vector_rank,
-                            })).collect::<Vec<_>>(),
+                            "explain": explain.then(|| serde_json::json!({
+                                "scope": scope,
+                                "include_global": include_global,
+                                "status_filter": if include_inactive { "any" } else { "active" },
+                                "fts_returned": r.fts_returned,
+                                "vector_returned": r.vector_returned,
+                                "fusion": "rrf, k=60, top-50 per path",
+                            })),
+                            "hits": r.hits,
                         }))?
                     } else {
+                        if explain {
+                            println!(
+                                "scope: project {scope}{}; status: {}",
+                                if include_global { " + global" } else { "" },
+                                if include_inactive {
+                                    "any"
+                                } else {
+                                    "active only"
+                                },
+                            );
+                            println!(
+                                "paths: fts {} candidates, vector {}; fused by RRF (k=60, top-50 per path)",
+                                r.fts_returned,
+                                match &r.degraded {
+                                    Some(why) => format!("skipped ({why})"),
+                                    None => format!("{} candidates", r.vector_returned),
+                                }
+                            );
+                        }
                         for h in r.hits {
-                            println!("{:.4}  {}", h.hit.score, line(&h.hit.memory));
+                            print!("{:.4}  {}", h.hit.score, line(&h.hit.memory));
+                            if explain {
+                                let rank =
+                                    |r: Option<usize>| r.map_or("-".into(), |r| r.to_string());
+                                print!(
+                                    "  [matched_by {}; fts #{}, vector #{}; source {:?}]",
+                                    h.matched_by.join("+"),
+                                    rank(h.fts_rank),
+                                    rank(h.vector_rank),
+                                    h.hit.memory.source,
+                                );
+                            }
+                            println!();
                         }
                     }
                 } else {
