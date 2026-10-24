@@ -8,7 +8,7 @@ These errors can pollute long-term memory, so the acceptance set must show none.
 
 | Measure | Definition | Now | Target | Status |
 |---|---|---|---|---|
-| Hallucination | Candidate content has no support in the session, or a number, negation or scope is altered. Judged by a person over all candidates, including TRAP and UNEXPECTED ones | 0 among the 17 reviewed extras; the other 21 candidates are not reviewed | 0 | **Review pending** (17 of 38 covered) |
+| Hallucination | Candidate content has no support in the session, or a number, negation or scope is altered. Judged by a person over all candidates, including TRAP and UNEXPECTED ones | first baseline (original prompt, 38 candidates, all reviewed): 8 partly unsupported (about 21%), 0 fully unfaithful; current prompt (28 sessions, 37 candidates): **not reviewed** | 0 | **Not met** on the first baseline; **unknown** for the current prompt |
 | Constraint/Decision false extraction | A constraint or decision that records an environment workaround, an assistant preference, or an abandoned approach | 2 (t01 cache workaround, t05 `anyhow` preference) | 0 | **Not met** |
 
 ## Soft goals
@@ -32,7 +32,7 @@ One item moves the number by: a candidate â‰ˆ 2.6 points (1/38), a recall item â
 
 ## Status
 
-Two measures are clearly not met (Constraint/Decision false extraction, content-valid rate), the hallucination line is pending a full review, recall is met.
+Reported per prompt version. First baseline: hallucination line not met (8/38 partly unsupported, see "Hallucination review of the first baseline, completed" below), Constraint/Decision false extraction not met, content-valid rate not met, recall met. Current prompt: Constraint false extraction 0, Decision false extraction 1 (accepted residue), recall 16/16 on the set the prompt was tuned on; hallucination and content-valid rate not yet reviewed.
 
 ## To turn goals into gates
 
