@@ -166,7 +166,7 @@ fn nothing_similar_proposes_create_without_asking_the_model() {
 }
 
 #[test]
-fn same_kind_and_title_is_a_rule_based_merge_proposal() {
+fn same_kind_title_and_body_is_a_rule_based_merge_proposal() {
     let w = world();
     let m = memory(
         &w,
@@ -179,7 +179,7 @@ fn same_kind_and_title_is_a_rule_based_merge_proposal() {
         &w,
         Kind::Decision,
         "Retry init() for five seconds",
-        "other words",
+        "details",
     );
     let j = Judge::new(Relation::Contradicts);
     propose_pending(&w.store, Some(&j)).unwrap();
@@ -370,7 +370,12 @@ fn only_active_memories_of_the_project_or_global_count() {
         "Switch the journal to WAL",
         "global",
     );
-    let id2 = candidate(&w, Kind::Decision, "Switch the journal to WAL now", "again");
+    let id2 = candidate(
+        &w,
+        Kind::Decision,
+        "Switch the journal to WAL now",
+        "global",
+    );
     propose_pending(&w.store, None).unwrap();
     let p = proposal(&w, &id2);
     assert_eq!(
@@ -405,4 +410,78 @@ fn a_decided_candidate_takes_no_proposal() {
         w.store.set_proposal(&id, &p),
         Err(Error::InvalidArgument(_))
     ));
+}
+
+#[test]
+fn a_similar_title_with_a_different_detail_is_not_a_rule_based_duplicate() {
+    // Same kind, almost the same title and body; only a number or a negation differs.
+    for (old, new) in [
+        (
+            "The default database connection pool size is 8 per upstream",
+            "The default database connection pool size is 16 per upstream",
+        ),
+        (
+            "The default database connection pool size is allowed per upstream",
+            "The default database connection pool size is not allowed per upstream",
+        ),
+    ] {
+        let w = world();
+        memory(
+            &w,
+            Some(w.project),
+            Kind::Fact,
+            "Default database pool size per upstream",
+            old,
+        );
+        let id = candidate(
+            &w,
+            Kind::Fact,
+            "Default database pool size per upstream",
+            new,
+        );
+        // No judge: the rules alone must not call it a duplicate.
+        propose_pending(&w.store, None).unwrap();
+        let p = proposal(&w, &id);
+        assert_eq!(p.action, ProposedAction::Create, "{old} / {new}");
+        // With a judge it is the judge's call, not the rules'.
+        let w = world();
+        memory(
+            &w,
+            Some(w.project),
+            Kind::Fact,
+            "Default database pool size per upstream",
+            old,
+        );
+        let id = candidate(
+            &w,
+            Kind::Fact,
+            "Default database pool size per upstream",
+            new,
+        );
+        let j = Judge::new(Relation::Contradicts);
+        propose_pending(&w.store, Some(&j)).unwrap();
+        assert_eq!(*j.calls.borrow(), 1);
+        assert_eq!(proposal(&w, &id).action, ProposedAction::Conflict);
+    }
+}
+
+#[test]
+fn more_pending_candidates_than_one_batch_are_all_proposed() {
+    let w = world();
+    let ids: Vec<_> = (0..230)
+        .map(|i| {
+            candidate(
+                &w,
+                Kind::Fact,
+                &format!("topic number {i} alpha{i}"),
+                "body",
+            )
+        })
+        .collect();
+    let r = propose_pending(&w.store, None).unwrap();
+    assert_eq!((r.proposed, r.deferred), (230, 0));
+    assert!(
+        ids.iter()
+            .all(|id| w.store.candidate(id).unwrap().proposal.is_some())
+    );
 }

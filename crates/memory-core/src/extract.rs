@@ -247,6 +247,12 @@ pub trait CandidateStore {
         state: Option<CandidateState>,
         limit: usize,
     ) -> Result<Vec<StoredCandidate>>;
+    /// Pending candidates that have no proposal yet, oldest first.
+    fn candidates_to_propose(&self, limit: usize) -> Result<Vec<StoredCandidate>>;
+    /// Pending candidates whose proposal asks for something (not `create`) and that the policy
+    /// has not yet sent to a person, oldest first. A candidate leaves this set once it is
+    /// resolved or marked `needs_review`, so it cannot be starved by newer ones.
+    fn candidates_to_apply(&self, limit: usize) -> Result<Vec<StoredCandidate>>;
     fn candidate(&self, id: &str) -> Result<StoredCandidate>;
     /// Stores (replaces) the proposal of an open candidate; any other state is
     /// `InvalidArgument`.

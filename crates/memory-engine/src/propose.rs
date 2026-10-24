@@ -3,10 +3,11 @@
 
 use std::collections::HashSet;
 
+use memory_core::Memory;
 use memory_core::Result;
 use memory_core::extract::{
-    CandidateState, CandidateStore, Proposal, ProposalMethod, ProposedAction, Relation,
-    RelationJudge, SimilarMemory, StoredCandidate,
+    CandidateStore, Proposal, ProposalMethod, ProposedAction, Relation, RelationJudge,
+    SimilarMemory, StoredCandidate,
 };
 use memory_core::service::{Hit, MemoryService, SearchQuery};
 
@@ -18,6 +19,8 @@ const BATCH: usize = 200;
 const CONTENT_WORDS: usize = 15;
 /// Title word overlap (Jaccard) at which two same-kind notes count as the same point.
 const SAME_TITLE: f64 = 0.8;
+/// Body word overlap needed on top of that before rules alone call it a duplicate.
+const SAME_BODY: f64 = 0.8;
 
 #[derive(Debug, Default, PartialEq, Eq)]
 pub struct ProposeReport {
@@ -43,6 +46,90 @@ fn overlap(a: &str, b: &str) -> f64 {
         return 0.0;
     }
     a.intersection(&b).count() as f64 / union as f64
+}
+
+/// Words for comparing notes: Latin words as they are, CJK text as character pairs, so that
+/// unsegmented Chinese is not one giant word.
+fn tokens(s: &str) -> HashSet<String> {
+    let mut out = HashSet::new();
+    for w in words(s) {
+        let chars: Vec<char> = w.chars().collect();
+        // Everything from U+2E80 up is CJK, kana, hangul or full-width forms.
+        if chars.iter().any(|c| (*c as u32) >= 0x2E80) {
+            if chars.len() == 1 {
+                out.insert(w);
+            }
+            out.extend(chars.windows(2).map(|p| p.iter().collect::<String>()));
+        } else {
+            out.insert(w);
+        }
+    }
+    out
+}
+
+fn similarity(a: &str, b: &str) -> f64 {
+    let (a, b) = (tokens(a), tokens(b));
+    let union = a.union(&b).count();
+    if union == 0 {
+        0.0
+    } else {
+        a.intersection(&b).count() as f64 / union as f64
+    }
+}
+
+/// Numbers and negations decide what a sentence claims, and barely move a similarity score:
+/// "pool size is 8" and "pool size is 16", "is allowed" and "is not allowed".
+fn claims(s: &str) -> (Vec<String>, bool) {
+    const NEGATIONS: &[&str] = &[
+        "not",
+        "no",
+        "never",
+        "without",
+        "cannot",
+        "dont",
+        "doesnt",
+        "isnt",
+        "arent",
+        "wont",
+        "disable",
+        "disabled",
+        "forbidden",
+        "不",
+        "没",
+        "无",
+        "别",
+        "禁止",
+        "不能",
+        "不要",
+        "不得",
+        "非",
+    ];
+    let mut numbers: Vec<String> = s
+        .split(|c: char| !c.is_alphanumeric() && c != '.')
+        .filter(|w| w.chars().any(|c| c.is_ascii_digit()))
+        .map(str::to_lowercase)
+        .collect();
+    numbers.sort();
+    numbers.dedup();
+    let lower = s.to_lowercase().replace('\'', "");
+    let negated = NEGATIONS.iter().any(|n| {
+        if n.is_ascii() {
+            words(&lower).iter().any(|w| w == n)
+        } else {
+            lower.contains(n)
+        }
+    });
+    (numbers, negated)
+}
+
+/// The same point: same kind is checked by the caller; here the title and the body must both be
+/// nearly the same words, with the same numbers and the same polarity.
+fn same_point(c: &StoredCandidate, m: &Memory) -> bool {
+    let (ct, mt) = (&c.candidate.title, &m.title);
+    let (cb, mb) = (&c.candidate.content, &m.content);
+    overlap(ct, mt) >= SAME_TITLE
+        && similarity(cb, mb) >= SAME_BODY
+        && claims(&format!("{ct} {cb}")) == claims(&format!("{mt} {mb}"))
 }
 
 fn query(c: &StoredCandidate) -> String {
@@ -109,19 +196,19 @@ fn propose_one<S: MemoryService>(
             similar,
         )));
     }
-    // Rule: the same kind with (nearly) the same title is the same point.
-    let t = &c.candidate.title;
+    // Rule: the same kind with nearly the same title and body, and the same numbers and
+    // polarity, is the same point. A similar title alone is not enough: the body may differ
+    // in the one detail that matters.
     if let Some(h) = hits
         .iter()
-        .find(|h| h.memory.kind == c.candidate.kind && overlap(t, &h.memory.title) >= SAME_TITLE)
+        .find(|h| h.memory.kind == c.candidate.kind && same_point(c, &h.memory))
     {
-        let pct = (overlap(t, &h.memory.title) * 100.0).round();
         return Ok(Some(proposal(
             ProposedAction::Merge,
             Some(h.memory.id),
             ProposalMethod::Rules,
             format!(
-                "same kind and {pct}% of the title words match memory \"{}\"",
+                "same kind, nearly the same title and body, same numbers and polarity as memory \"{}\"",
                 h.memory.title
             ),
             similar,
@@ -190,23 +277,34 @@ fn propose_one<S: MemoryService>(
     }))
 }
 
-/// Proposes for every pending candidate that has none yet.
+/// Proposes for every pending candidate that has none yet. Candidates the judge could not
+/// handle are skipped for the rest of this run so they cannot hold up the newer ones.
 pub fn propose_pending<S: MemoryService + CandidateStore>(
     store: &S,
     judge: Option<&dyn RelationJudge>,
 ) -> Result<ProposeReport> {
     let mut report = ProposeReport::default();
-    let mut todo = store.candidates(Some(CandidateState::Pending), BATCH)?;
-    todo.retain(|c| c.proposal.is_none());
-    todo.reverse(); // oldest first
-    for c in todo {
-        match propose_one(store, judge, &c)? {
-            Some(p) => {
-                store.set_proposal(&c.id, &p)?;
-                report.proposed += 1;
+    let mut deferred = HashSet::new();
+    loop {
+        let todo: Vec<_> = store
+            .candidates_to_propose(BATCH + deferred.len())?
+            .into_iter()
+            .filter(|c| !deferred.contains(&c.id))
+            .collect();
+        if todo.is_empty() {
+            return Ok(report);
+        }
+        for c in todo {
+            match propose_one(store, judge, &c)? {
+                Some(p) => {
+                    store.set_proposal(&c.id, &p)?;
+                    report.proposed += 1;
+                }
+                None => {
+                    deferred.insert(c.id);
+                    report.deferred += 1;
+                }
             }
-            None => report.deferred += 1,
         }
     }
-    Ok(report)
 }

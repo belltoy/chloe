@@ -17,6 +17,22 @@ const MAX_ROWS: usize = 1000;
 const MAX_REASON_CHARS: usize = 1000;
 const COLS: &str = "id, project_id, kind, title, content, evidence, state, memory_id, reason, created_at, decided_at, proposal";
 
+impl SqliteStore {
+    /// `filter` is one of the constants above, never user input. Oldest first.
+    fn candidates_where(&self, filter: &str, limit: usize) -> Result<Vec<StoredCandidate>> {
+        let conn = self.conn();
+        let mut stmt = conn
+            .prepare(&format!(
+                "SELECT {COLS} FROM candidates WHERE {filter} ORDER BY created_at, rowid LIMIT ?1"
+            ))
+            .map_err(storage)?;
+        let rows = stmt
+            .query_map([limit.clamp(1, MAX_ROWS) as i64], to_candidate)
+            .map_err(storage)?;
+        rows.collect::<rusqlite::Result<_>>().map_err(storage)
+    }
+}
+
 impl CandidateStore for SqliteStore {
     fn add_candidates(
         &self,
@@ -81,6 +97,19 @@ impl CandidateStore for SqliteStore {
             )
             .map_err(storage)?;
         rows.collect::<rusqlite::Result<_>>().map_err(storage)
+    }
+
+    fn candidates_to_propose(&self, limit: usize) -> Result<Vec<StoredCandidate>> {
+        self.candidates_where("state='pending' AND proposal IS NULL", limit)
+    }
+
+    fn candidates_to_apply(&self, limit: usize) -> Result<Vec<StoredCandidate>> {
+        self.candidates_where(
+            "state='pending' AND proposal IS NOT NULL
+             AND json_extract(proposal, '$.action') <> 'create'
+             AND json_extract(proposal, '$.needs_review') IS NULL",
+            limit,
+        )
     }
 
     fn candidate(&self, id: &str) -> Result<StoredCandidate> {

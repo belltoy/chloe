@@ -261,3 +261,26 @@ fn superseding_is_never_applied_automatically() {
         );
     }
 }
+
+#[test]
+fn candidates_waiting_for_a_person_do_not_hold_up_newer_ones() {
+    let w = world();
+    let old = memory(&w, Kind::Fact);
+    // More than one batch of proposals only a person can apply (supersede is never automatic).
+    for _ in 0..210 {
+        candidate(&w, Kind::Fact, ProposedAction::Supersede, Some(old.id));
+    }
+    let newest = candidate(&w, Kind::Fact, ProposedAction::Merge, Some(old.id));
+    let first = apply_policy(&w.store).unwrap();
+    let second = apply_policy(&w.store).unwrap();
+    assert_eq!(state(&w, &newest), CandidateState::Merged);
+    assert_eq!(
+        (
+            first.merged + second.merged,
+            first.needs_review + second.needs_review
+        ),
+        (1, 210)
+    );
+    // Everything is settled: a further run finds nothing to do.
+    assert_eq!(apply_policy(&w.store).unwrap(), PolicyReport::default());
+}

@@ -10,9 +10,7 @@
 //!   refuses to supersede a constraint or decision unless a person says so), nor anything
 //!   else touching a constraint or a decision.
 
-use memory_core::extract::{
-    CandidateState, CandidateStore, Proposal, ProposedAction, Resolution, StoredCandidate,
-};
+use memory_core::extract::{CandidateStore, Proposal, ProposedAction, Resolution, StoredCandidate};
 use memory_core::service::MemoryService;
 use memory_core::{Error, Kind, Memory, Result, Status};
 
@@ -79,7 +77,7 @@ pub struct PolicyReport {
 /// Applies what the policy allows to pending candidates that have a proposal.
 pub fn apply_policy<S: MemoryService + CandidateStore>(store: &S) -> Result<PolicyReport> {
     let mut report = PolicyReport::default();
-    for c in store.candidates(Some(CandidateState::Pending), BATCH)? {
+    for c in store.candidates_to_apply(BATCH)? {
         let Some(p) = &c.proposal else { continue };
         let target = match p.target {
             Some(id) => match store.get(c.project_id, id) {
