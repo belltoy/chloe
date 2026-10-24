@@ -4,11 +4,11 @@ Model: `qwen3:8b`, temperature from the default config, window = default.
 
 | measure | value |
 |---|---|
-| expected items found | 11 / 12 |
+| expected items found | 12 / 13 |
 | candidates produced | 38 |
 | false extractions (trap or any candidate in a session with no knowledge) | 9 (of which trap matches 3) |
 | sessions with no knowledge that produced nothing | 4 / 8 |
-| extra candidates not covered by a label (to be judged by a person) | 17 |
+| extra candidates not covered by a label (to be judged by a person) | 16 |
 
 ### u01-root-cause (useful) — Bug fix whose cause is only in the final reply
 - FOUND expected: floor division drops the last partial page
@@ -44,8 +44,9 @@ Model: `qwen3:8b`, temperature from the default config, window = default.
 
 ### u07-chinese-constraint (useful) — Rule stated in Chinese
 - FOUND expected: explicit timeouts, never defaults
+- FOUND expected: gRPC client: explicit 3 s timeout via context.WithTimeout and at most 2 retries (added after the manual review of extras; client-specific, not a rule for all calls)
   - [matches] constraint: 所有对外调用必须显式设置超时 — 用户明确要求所有对外调用必须显式设置超时，不允许依赖默认值，因为默认值在不同环境可能不一致。
-  - [extra (needs human check)] procedure: 为 gRPC 调用添加显式超时和重试 — 在 gRPC 客户端调用中，使用 context.WithTimeout 设置显式超时，并在调用前添加 defer cancel() 以确保超时生效。同时添加最多 2 次重试机制。
+  - [matches] procedure: 为 gRPC 调用添加显式超时和重试 — 在 gRPC 客户端调用中，使用 context.WithTimeout 设置显式超时，并在调用前添加 defer cancel() 以确保超时生效。同时添加最多 2 次重试机制。
 
 ### u08-dependency-swap (useful) — Dependency swap with a stated reason
 - FOUND expected: time instead of chrono because of the advisory
@@ -103,8 +104,8 @@ Model: `qwen3:8b`, temperature from the default config, window = default.
 
 ## Reading the numbers (written by hand after the run; labels were not changed after seeing results)
 
-- Recall 11/12. The miss (u04) is a kind mismatch: the model found the point (`make sign` before `make publish`) but filed it as a decision, my label wanted procedure/gotcha. Content-wise it is found.
-- Acceptance: of 38 candidates, 12 match a label, 17 are unlabelled extras, 9 are counted false (3 trap matches, 6 in sessions with no knowledge). An earlier version of this note said 15 matches; that was a miscount, corrected after the review in `review.md`. Most extras are restatements of the same change as a `procedure` or `fact` ("Redis dependency removed", "All tests passed", "Read module files") — noise a reviewer would reject. This is the main weakness: the model emits 2–5 candidates per useful session where 1 is wanted.
+- Recall 12/13 (11/12 before the u07 label below). The miss (u04) is a kind mismatch: the model found the point (`make sign` before `make publish`) but filed it as a decision, my label wanted procedure/gotcha. Content-wise it is found.
+- Acceptance: of 38 candidates, 13 match a label, 16 are unlabelled extras, 9 are counted false (3 trap matches, 6 in sessions with no knowledge). An earlier version of this note said 15 matches; that was a miscount, corrected after the review in `review.md`. Most extras are restatements of the same change as a `procedure` or `fact` ("Redis dependency removed", "All tests passed", "Read module files") — noise a reviewer would reject. This is the main weakness: the model emits 2–5 candidates per useful session where 1 is wanted.
 - Sessions with no knowledge: 4/8 produced nothing. Failures: n02 rename (2 candidates), n03 general Rust Q&A (1), n05 sandbox ping (1), t05 error-handling edit (2).
 - The 3 "trap" matches are not equal. t01 (cache workaround filed as a Constraint) is the real false extraction already seen in the e2e run. t05 (assistant's `anyhow` preference as a decision) is a real false extraction. t02 ("avoid global static for config") is arguably correct: the user did reject it with a reason, so my trap terms there are too broad and this one should not count against the model.
 - Not caught: no candidate contained the fake key (n05), nothing came from the unverified speculation (t04) or the TODO state (n04).
@@ -112,6 +113,7 @@ Model: `qwen3:8b`, temperature from the default config, window = default.
 
 ## After the manual review of the 17 extras (`review.md`)
 
-- 17 extras: 2 worth keeping (#7 right content but filed as decision instead of procedure; #9 gRPC timeout/retry procedure), 3 duplicates, 12 transient noise, 0 hallucinations.
+- The 17 extras of the first run: 2 worth keeping (#7 right content but filed as decision instead of procedure; #9 gRPC timeout/retry procedure), 3 duplicates, 12 transient noise, 0 hallucinations.
 - t02's "avoid global static" candidate is a faithful record of a user-stated reason and counts as valid, so the trap match there is a false alarm of my label, not a model error. The two real false extractions stay t01 and t05.
-- Candidate-level usable rate: strict (12 matches + t02 decision + 2 extras) = 15/38 = 39.5%; lenient (+3 duplicates) = 18/38 = 47.4%. Not a deduplicated knowledge precision; the 12 matches were not re-reviewed one by one.
+- Candidate-level usable rate: strict (13 matches + t02 decision + 1 extra, #7) = 15/38 = 39.5%; lenient (+3 duplicates) = 18/38 = 47.4%. Not a deduplicated knowledge precision; the 12 matches were not re-reviewed one by one.
+- Second run, after adding #9 as an expect on u07: output identical (temperature 0), found 12/13, 13 matches, 16 extras. The usable rates above are unchanged. Caveat: that label was written after reading the candidate, so it is a post-hoc label; recall 12/13 is slightly flattering and 11/12 on the original labels is the unbiased figure.

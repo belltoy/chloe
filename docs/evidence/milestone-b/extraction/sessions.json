@@ -364,6 +364,23 @@
       ]
      ],
      "note": "explicit timeouts, never defaults"
+    },
+    {
+     "kind_any": [
+      "procedure"
+     ],
+     "terms": [
+      [
+       "withtimeout",
+       "3 秒",
+       "3秒"
+      ],
+      [
+       "重试",
+       "retry"
+      ]
+     ],
+     "note": "gRPC client: explicit 3 s timeout via context.WithTimeout and at most 2 retries (added after the manual review of extras; client-specific, not a rule for all calls)"
     }
    ],
    "traps": []
