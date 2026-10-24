@@ -4,7 +4,10 @@ use memory_core::embed::{EmbeddingIndex, EmbeddingStore, PendingEmbedding};
 use memory_core::{Error, MemoryId, Result};
 use rusqlite::{Connection, OptionalExtension, params};
 
-use crate::{SqliteStore, begin, micros, now, storage};
+use memory_core::ProjectId;
+use memory_core::service::{Hit, SearchQuery};
+
+use crate::{COLS, SqliteStore, begin, clamp, micros, now, storage, to_memory};
 
 fn index(conn: &Connection) -> Result<Option<EmbeddingIndex>> {
     conn.query_row(
@@ -165,6 +168,75 @@ impl EmbeddingStore for SqliteStore {
         .map_err(storage)?;
         tx.commit().map_err(storage)?;
         Ok(true)
+    }
+
+    fn vector_search(
+        &self,
+        project: Option<ProjectId>,
+        model_id: &str,
+        query: &[f32],
+        q: &SearchQuery,
+    ) -> Result<Vec<Hit>> {
+        let conn = self.conn();
+        let Some(idx) = index(&conn)?.filter(|i| i.model_id == model_id) else {
+            return Err(Error::InvalidArgument(format!(
+                "the index is not pinned to model {model_id}"
+            )));
+        };
+        if idx.dimension != Some(query.len()) {
+            return Err(Error::InvalidArgument(
+                "query vector does not match the index dimension".into(),
+            ));
+        }
+        let norm = |v: &[f32]| v.iter().map(|x| x * x).sum::<f32>().sqrt();
+        let qn = norm(query);
+        if qn == 0.0 {
+            return Err(Error::InvalidArgument("query vector is all zeros".into()));
+        }
+        let mut stmt = conn
+            .prepare(&format!(
+                "SELECT {}, e.vector
+                 FROM embeddings e JOIN memories m ON m.id = e.memory_id
+                 WHERE e.revision = m.revision
+                   AND (m.project_id IS ?1 OR (?2 AND m.project_id IS NULL))
+                   AND (?3 OR m.status = 'active')",
+                COLS.split(", ")
+                    .map(|c| format!("m.{c}"))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ))
+            .map_err(storage)?;
+        // shortcut: scans every vector in scope in memory, upgrade to an ANN index past ~100k memories.
+        let mut hits = stmt
+            .query_map(
+                params![
+                    project.map(|p| p.to_string()),
+                    q.include_global,
+                    q.include_inactive
+                ],
+                |r| Ok((to_memory(r)?, r.get::<_, Vec<u8>>(10)?)),
+            )
+            .map_err(storage)?
+            .map(|r| {
+                let (memory, blob) = r.map_err(storage)?;
+                let v = decode(&blob);
+                let n = norm(&v);
+                let dot: f32 = v.iter().zip(query).map(|(a, b)| a * b).sum();
+                let score = if n == 0.0 {
+                    0.0
+                } else {
+                    f64::from(dot / (n * qn))
+                };
+                Ok(Hit { memory, score })
+            })
+            .collect::<Result<Vec<_>>>()?;
+        hits.sort_by(|a, b| {
+            b.score
+                .total_cmp(&a.score)
+                .then(b.memory.updated_at.cmp(&a.memory.updated_at))
+        });
+        hits.truncate(clamp(q.limit) as usize);
+        Ok(hits)
     }
 
     fn get_embedding(&self, id: MemoryId) -> Result<Option<Vec<f32>>> {

@@ -170,3 +170,154 @@ fn provider_outage_retries_and_extraction_leaves_embed_jobs_alone() {
     assert!(d.result.is_ok());
     assert!(s.get_embedding(m.id).unwrap().is_some());
 }
+
+// ---- B3-02 hybrid retrieval ----
+
+use memory_core::service::SearchQuery;
+use memory_core::{ProjectId, Status};
+use memory_engine::hybrid_search;
+
+/// Embeds by topic keyword so "semantic" matches need no shared words with the query.
+struct Topics;
+impl Embedder for Topics {
+    fn model_id(&self) -> String {
+        "topics".into()
+    }
+    fn embed(&self, texts: &[String]) -> Result<Vec<Vec<f32>>> {
+        let has = |t: &str, ws: &[&str]| ws.iter().any(|w| t.contains(w)) as u8 as f32;
+        Ok(texts
+            .iter()
+            .map(|t| {
+                vec![
+                    has(t, &["database", "数据库", "SQLite"]),
+                    has(t, &["network", "网络"]),
+                    0.01,
+                ]
+            })
+            .collect())
+    }
+}
+
+fn q(text: &str) -> SearchQuery {
+    SearchQuery {
+        query: text.into(),
+        limit: 10,
+        include_global: false,
+        include_inactive: false,
+    }
+}
+
+fn save_in(s: &SqliteStore, p: Option<ProjectId>, title: &str, content: &str) -> Memory {
+    s.save(NewMemory {
+        project_id: p,
+        kind: Kind::Fact,
+        title: title.into(),
+        content: content.into(),
+        source: Source::Manual,
+    })
+    .unwrap()
+}
+
+fn embed_all(s: &SqliteStore) {
+    let now = OffsetDateTime::now_utc();
+    plan_embeddings(s, &Topics, now).unwrap();
+    while run_next_embedding(s, &Topics, "w", now).unwrap().is_some() {}
+}
+
+fn project(dir: &tempfile::TempDir, name: &str, s: &SqliteStore) -> ProjectId {
+    let p = dir.path().join(name);
+    std::fs::create_dir(&p).unwrap();
+    s.resolve_project(&p).unwrap()
+}
+
+#[test]
+fn vector_path_finds_what_keywords_miss_and_both_paths_fuse() {
+    let (d, s) = store();
+    let p = project(&d, "p", &s);
+    let wal = save_in(&s, Some(p), "WAL", "SQLite 并发读写");
+    let net = save_in(&s, Some(p), "Listener", "never open a network port");
+    embed_all(&s);
+    // No shared token with either memory: FTS is empty, the vector path answers.
+    let r = hybrid_search(&s, Some(&Topics), Some(p), q("database")).unwrap();
+    assert!(r.degraded.is_none());
+    assert_eq!(r.hits[0].hit.memory.id, wal.id);
+    assert_eq!((r.hits[0].fts_rank, r.hits[0].vector_rank), (None, Some(1)));
+    // "network" matches `net` by keyword and by vector: it leads and carries both ranks.
+    let r = hybrid_search(&s, Some(&Topics), Some(p), q("network")).unwrap();
+    assert_eq!(r.hits[0].hit.memory.id, net.id);
+    assert_eq!(
+        (r.hits[0].fts_rank, r.hits[0].vector_rank),
+        (Some(1), Some(1))
+    );
+}
+
+#[test]
+fn scope_and_status_are_hard_filters_on_the_vector_path() {
+    let (d, s) = store();
+    let (a, b) = (project(&d, "a", &s), project(&d, "b", &s));
+    let mine = save_in(&s, Some(a), "mine", "database");
+    save_in(&s, Some(b), "theirs", "database");
+    let global = save_in(&s, None, "global", "database");
+    let old = save_in(&s, Some(a), "old", "database");
+    s.archive(Some(a), old.id, 1).unwrap();
+    embed_all(&s);
+    let ids = |query: SearchQuery| -> Vec<_> {
+        hybrid_search(&s, Some(&Topics), Some(a), query)
+            .unwrap()
+            .hits
+            .iter()
+            .map(|h| h.hit.memory.id)
+            .collect()
+    };
+    assert_eq!(ids(q("database")), [mine.id]);
+    let mut with_global = q("database");
+    with_global.include_global = true;
+    let got = ids(with_global);
+    assert!(got.contains(&mine.id) && got.contains(&global.id) && got.len() == 2);
+    let mut all = q("database");
+    all.include_inactive = true;
+    assert!(ids(all).contains(&old.id));
+    assert_eq!(s.get(Some(a), old.id).unwrap().status, Status::Archived);
+}
+
+#[test]
+fn degrades_to_fts_when_the_vector_path_is_unavailable() {
+    let (d, s) = store();
+    let p = project(&d, "p", &s);
+    let m = save_in(&s, Some(p), "WAL", "SQLite journal");
+    // Not embedded yet: the index is not pinned, so the vector path is skipped.
+    let r = hybrid_search(&s, Some(&Topics), Some(p), q("journal")).unwrap();
+    assert!(r.degraded.is_some());
+    assert_eq!(r.hits[0].hit.memory.id, m.id);
+    // Provider down, and no provider at all.
+    embed_all(&s);
+    let down = fake("topics", 3);
+    down.down.set(true);
+    for e in [Some(&down as &dyn Embedder), None] {
+        let r = hybrid_search(&s, e, Some(p), q("journal")).unwrap();
+        assert!(r.degraded.is_some());
+        assert_eq!(r.hits[0].hit.memory.id, m.id);
+    }
+    // A stale vector (memory edited since) is not served.
+    s.update(
+        Some(p),
+        m.id,
+        1,
+        MemoryChanges {
+            content: Some("changed".into()),
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let r = hybrid_search(&s, Some(&Topics), Some(p), q("database")).unwrap();
+    assert!(r.hits.is_empty());
+}
+
+#[test]
+fn fts_failure_is_not_degraded_away() {
+    let (_d, s) = store();
+    assert!(matches!(
+        hybrid_search(&s, Some(&Topics), None, q("   ")),
+        Err(Error::InvalidArgument(_))
+    ));
+}

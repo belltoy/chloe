@@ -164,6 +164,11 @@ enum MemoryCommand {
         /// Include non-active memories
         #[arg(long)]
         all: bool,
+        /// Fuse full-text and vector search (falls back to full-text when the model is down)
+        #[arg(long)]
+        hybrid: bool,
+        #[command(flatten)]
+        provider: llm::Provider,
     },
     List {
         /// List global memories instead of the project's
@@ -363,21 +368,49 @@ fn run(cli: Cli) -> anyhow::Result<bool> {
                 limit,
                 global,
                 all,
+                hybrid,
+                provider,
             } => {
-                let hits = store.search(
-                    Some(project()?),
-                    SearchQuery {
+                let query = SearchQuery {
+                    query,
+                    limit,
+                    include_global: global,
+                    include_inactive: all,
+                };
+                if hybrid {
+                    let embedder = provider.open()?;
+                    let r = memory_engine::hybrid_search(
+                        &store,
+                        Some(&embedder),
+                        Some(project()?),
                         query,
-                        limit,
-                        include_global: global,
-                        include_inactive: all,
-                    },
-                )?;
-                if json {
-                    print_json(&hits)?;
+                    )?;
+                    if let Some(why) = &r.degraded {
+                        eprintln!("vector search skipped, full-text only: {why}");
+                    }
+                    if json {
+                        print_json(&serde_json::json!({
+                            "degraded": r.degraded,
+                            "hits": r.hits.iter().map(|h| serde_json::json!({
+                                "memory": h.hit.memory,
+                                "score": h.hit.score,
+                                "fts_rank": h.fts_rank,
+                                "vector_rank": h.vector_rank,
+                            })).collect::<Vec<_>>(),
+                        }))?
+                    } else {
+                        for h in r.hits {
+                            println!("{:.4}  {}", h.hit.score, line(&h.hit.memory));
+                        }
+                    }
                 } else {
-                    for h in hits {
-                        println!("{:.3}  {}", h.score, line(&h.memory));
+                    let hits = store.search(Some(project()?), query)?;
+                    if json {
+                        print_json(&hits)?;
+                    } else {
+                        for h in hits {
+                            println!("{:.3}  {}", h.score, line(&h.memory));
+                        }
                     }
                 }
             }

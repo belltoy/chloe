@@ -4,7 +4,8 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::{MemoryId, Result};
+use crate::service::{Hit, SearchQuery};
+use crate::{MemoryId, ProjectId, Result};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct EmbeddingIndex {
@@ -49,5 +50,16 @@ pub trait EmbeddingStore {
         model_id: &str,
         vector: &[f32],
     ) -> Result<bool>;
+    /// Nearest memories to `query` by cosine similarity (`Hit::score`, higher is better), among
+    /// vectors of the current revision. Scope, `include_global` and `include_inactive` are hard
+    /// filters as in `MemoryService::search`; `q.query` is ignored. `InvalidArgument` when
+    /// `model_id` is not the pinned model or `query` has another dimension.
+    fn vector_search(
+        &self,
+        project: Option<ProjectId>,
+        model_id: &str,
+        query: &[f32],
+        q: &SearchQuery,
+    ) -> Result<Vec<Hit>>;
     fn get_embedding(&self, id: MemoryId) -> Result<Option<Vec<f32>>>;
 }
