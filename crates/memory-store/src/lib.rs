@@ -1,5 +1,6 @@
 //! SQLite implementation of `MemoryService`: migrations, transactions, FTS5, history, scope.
 
+mod candidates;
 mod events;
 mod jobs;
 mod project;
@@ -20,6 +21,7 @@ const MIGRATIONS: &[&str] = &[
     include_str!("migrations/002_audit.sql"),
     include_str!("migrations/003_events.sql"),
     include_str!("migrations/004_jobs.sql"),
+    include_str!("migrations/005_candidates.sql"),
 ];
 /// How long `open` keeps retrying a locked initialisation.
 const OPEN_RETRY: Duration = Duration::from_secs(5);

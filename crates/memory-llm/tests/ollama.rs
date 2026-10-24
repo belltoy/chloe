@@ -6,6 +6,32 @@ use memory_core::extract::{ExtractionInput, MemoryExtractor};
 use memory_core::{Error, Kind};
 use memory_llm::{Ollama, OllamaConfig};
 
+/// Read one whole HTTP request (headers and body) so closing the socket never resets a
+/// client that is still sending.
+fn read_request(s: &mut std::net::TcpStream) {
+    let mut data = Vec::new();
+    let mut buf = [0u8; 4096];
+    loop {
+        let n = s.read(&mut buf).unwrap_or(0);
+        if n == 0 {
+            return;
+        }
+        data.extend_from_slice(&buf[..n]);
+        let Some(end) = data.windows(4).position(|w| w == b"\r\n\r\n") else {
+            continue;
+        };
+        let head = String::from_utf8_lossy(&data[..end]).to_ascii_lowercase();
+        let len = head
+            .lines()
+            .find_map(|l| l.strip_prefix("content-length:"))
+            .and_then(|v| v.trim().parse::<usize>().ok())
+            .unwrap_or(0);
+        if data.len() >= end + 4 + len {
+            return;
+        }
+    }
+}
+
 /// Serves `replies` (status line, body) one connection each, then stops.
 fn server(replies: Vec<(&'static str, String)>) -> String {
     let l = TcpListener::bind("127.0.0.1:0").unwrap();
@@ -13,8 +39,7 @@ fn server(replies: Vec<(&'static str, String)>) -> String {
     std::thread::spawn(move || {
         for (status, body) in replies {
             let (mut s, _) = l.accept().unwrap();
-            let mut buf = [0u8; 65536];
-            let _ = s.read(&mut buf);
+            read_request(&mut s);
             let _ = write!(
                 s,
                 "HTTP/1.1 {status}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",

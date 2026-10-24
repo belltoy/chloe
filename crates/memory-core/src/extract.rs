@@ -45,3 +45,28 @@ pub trait MemoryExtractor {
     /// events and retry later instead of treating it as a bad session.
     fn extract(&self, input: &ExtractionInput) -> Result<Vec<Candidate>>;
 }
+
+/// A candidate as stored, waiting for review.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct StoredCandidate {
+    pub id: String,
+    pub project_id: Option<crate::ProjectId>,
+    #[serde(flatten)]
+    pub candidate: Candidate,
+    #[serde(with = "time::serde::rfc3339")]
+    pub created_at: time::OffsetDateTime,
+}
+
+pub trait CandidateStore {
+    /// Stores the candidates of one captured session as `pending`; one with the same kind and
+    /// title as an earlier one is skipped. Returns how many were new. `NotFound` when the
+    /// session was never captured.
+    fn add_candidates(
+        &self,
+        native_agent: &str,
+        native_session_id: &str,
+        candidates: &[Candidate],
+    ) -> Result<usize>;
+    /// Pending candidates, newest first.
+    fn pending_candidates(&self, limit: usize) -> Result<Vec<StoredCandidate>>;
+}

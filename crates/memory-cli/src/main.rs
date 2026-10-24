@@ -1,3 +1,4 @@
+mod consolidate;
 mod doctor;
 mod events;
 mod hook;
@@ -68,6 +69,13 @@ enum Command {
         #[command(subcommand)]
         command: events::EventsCommand,
     },
+    /// Extract memory candidates from captured sessions (imports the capture queue first)
+    Consolidate(consolidate::Consolidate),
+    /// Memory candidates waiting for review
+    Candidates {
+        #[command(subcommand)]
+        command: CandidatesCommand,
+    },
     /// Background jobs: list the queue, inspect failures, retry them
     Jobs {
         #[command(subcommand)]
@@ -109,6 +117,14 @@ enum HookCommand {
         agent: hook::Agent,
         #[arg(long)]
         settings: Option<PathBuf>,
+    },
+}
+
+#[derive(Subcommand)]
+enum CandidatesCommand {
+    List {
+        #[arg(long, default_value_t = 50)]
+        limit: usize,
     },
 }
 
@@ -308,6 +324,10 @@ fn run(cli: Cli) -> anyhow::Result<bool> {
             std::io::stdout().lock(),
         )?,
         Command::Events { command } => events::run(&store, &config, command, json)?,
+        Command::Consolidate(args) => consolidate::run(&store, &config, args, json)?,
+        Command::Candidates {
+            command: CandidatesCommand::List { limit },
+        } => consolidate::list(&store, limit, json)?,
         Command::Llm { command } => llm::run(&store, command, json)?,
         Command::Jobs { command } => jobs::run(&store, command, json)?,
         Command::Doctor { .. } | Command::Hook { .. } => unreachable!(),

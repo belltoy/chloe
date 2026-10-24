@@ -24,6 +24,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 uuid = { version = "1", features = ["v4", "serde"] }
 
 memory-core = { path = "crates/memory-core" }
+memory-engine = { path = "crates/memory-engine" }
 memory-ingest = { path = "crates/memory-ingest" }
 memory-llm = { path = "crates/memory-llm" }
 memory-mcp = { path = "crates/memory-mcp" }

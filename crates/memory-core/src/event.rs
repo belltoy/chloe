@@ -133,6 +133,8 @@ pub trait EventStore {
     fn sessions(&self, limit: usize) -> Result<Vec<SessionInfo>>;
     /// Events of one session in arrival order.
     fn session_events(&self, native_session_id: &str, limit: usize) -> Result<Vec<AgentEvent>>;
+    /// The last `limit` events of a session, still in arrival order.
+    fn session_tail(&self, native_session_id: &str, limit: usize) -> Result<Vec<AgentEvent>>;
 }
 
 #[cfg(test)]
