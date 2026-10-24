@@ -107,6 +107,60 @@ fn check_lease(conn: &Connection, id: &str, lease_id: &str) -> Result<Job> {
     }
 }
 
+impl SqliteStore {
+    fn lease_inner(
+        &self,
+        kind: Option<&str>,
+        worker: &str,
+        lease_for: Duration,
+        now: OffsetDateTime,
+    ) -> Result<Option<Job>> {
+        let mut conn = self.conn();
+        let tx = begin(&mut conn)?;
+        reclaim_expired(&tx, now)?;
+        let at = micros(now);
+        let due: Option<String> = tx
+            .query_row(
+                "SELECT id
+                FROM jobs
+                WHERE
+                    state='pending' AND next_run_at <= ?1 AND (?2 IS NULL OR kind=?2)
+                ORDER BY next_run_at, created_at, rowid
+                LIMIT 1",
+                params![at, kind],
+                |r| r.get(0),
+            )
+            .optional()
+            .map_err(storage)?;
+        let Some(id) = due else {
+            tx.commit().map_err(storage)?;
+            return Ok(None);
+        };
+        tx.execute(
+            "UPDATE jobs
+             SET
+                 state='leased',
+                 attempts=attempts+1,
+                 lease_id=?1,
+                 leased_by=?2,
+                 lease_expires_at=?3,
+                 updated_at=?4
+             WHERE id=?5",
+            params![
+                Uuid::new_v4().to_string(),
+                worker,
+                micros(now + lease_for),
+                at,
+                id
+            ],
+        )
+        .map_err(storage)?;
+        let job = fetch(&tx, &id)?;
+        tx.commit().map_err(storage)?;
+        Ok(Some(job))
+    }
+}
+
 impl JobQueue for SqliteStore {
     fn enqueue(
         &self,
@@ -163,49 +217,17 @@ impl JobQueue for SqliteStore {
     }
 
     fn lease(&self, worker: &str, lease_for: Duration, now: OffsetDateTime) -> Result<Option<Job>> {
-        let mut conn = self.conn();
-        let tx = begin(&mut conn)?;
-        reclaim_expired(&tx, now)?;
-        let at = micros(now);
-        let due: Option<String> = tx
-            .query_row(
-                "SELECT id
-                FROM jobs
-                WHERE
-                    state='pending' AND next_run_at <= ?1
-                ORDER BY next_run_at, created_at, rowid
-                LIMIT 1",
-                [at],
-                |r| r.get(0),
-            )
-            .optional()
-            .map_err(storage)?;
-        let Some(id) = due else {
-            tx.commit().map_err(storage)?;
-            return Ok(None);
-        };
-        tx.execute(
-            "UPDATE jobs
-             SET
-                 state='leased',
-                 attempts=attempts+1,
-                 lease_id=?1,
-                 leased_by=?2,
-                 lease_expires_at=?3,
-                 updated_at=?4
-             WHERE id=?5",
-            params![
-                Uuid::new_v4().to_string(),
-                worker,
-                micros(now + lease_for),
-                at,
-                id
-            ],
-        )
-        .map_err(storage)?;
-        let job = fetch(&tx, &id)?;
-        tx.commit().map_err(storage)?;
-        Ok(Some(job))
+        self.lease_inner(None, worker, lease_for, now)
+    }
+
+    fn lease_kind(
+        &self,
+        kind: &str,
+        worker: &str,
+        lease_for: Duration,
+        now: OffsetDateTime,
+    ) -> Result<Option<Job>> {
+        self.lease_inner(Some(kind), worker, lease_for, now)
     }
 
     fn complete(&self, id: &str, lease_id: &str, now: OffsetDateTime) -> Result<Job> {

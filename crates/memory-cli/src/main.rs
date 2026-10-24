@@ -1,6 +1,7 @@
 mod candidates;
 mod consolidate;
 mod doctor;
+mod embeddings;
 mod events;
 mod hook;
 mod jobs;
@@ -87,6 +88,11 @@ enum Command {
     Llm {
         #[command(subcommand)]
         command: llm::LlmCommand,
+    },
+    /// Embedding index: which model it is pinned to, backfill missing vectors
+    Embeddings {
+        #[command(subcommand)]
+        command: embeddings::EmbeddingsCommand,
     },
     /// Agent hook capture (Claude Code, Codex)
     Hook {
@@ -329,6 +335,7 @@ fn run(cli: Cli) -> anyhow::Result<bool> {
         Command::Consolidate(args) => consolidate::run(&store, &config, args, json)?,
         Command::Candidates { command } => candidates::run(&store, command, json)?,
         Command::Llm { command } => llm::run(&store, command, json)?,
+        Command::Embeddings { command } => embeddings::run(&store, command, json)?,
         Command::Jobs { command } => jobs::run(&store, command, json)?,
         Command::Doctor { .. } | Command::Hook { .. } => unreachable!(),
         Command::Memory { command } => match command {

@@ -20,6 +20,13 @@ pub struct Provider {
     url: String,
     #[arg(long, env = "CHLOE_LLM_MODEL", default_value = "qwen3:8b")]
     model: String,
+    /// Embedding model; must cover English and Chinese
+    #[arg(
+        long,
+        env = "CHLOE_EMBED_MODEL",
+        default_value = "qwen3-embedding:0.6b"
+    )]
+    embed_model: String,
     /// Allow a server that is not on this machine (session text is sent to it)
     #[arg(long)]
     allow_remote: bool,
@@ -30,6 +37,7 @@ impl Provider {
         Ollama::new(OllamaConfig {
             base_url: self.url,
             model: self.model,
+            embed_model: self.embed_model,
             allow_remote: self.allow_remote,
             ..Default::default()
         })

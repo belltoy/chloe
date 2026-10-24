@@ -3,9 +3,11 @@
 //! one job. Nothing here knows about a database or a model: stores and the extractor come in
 //! through the core traits, and there is no daemon — the caller loops.
 
+mod embed;
 mod policy;
 mod propose;
 
+pub use embed::{EMBED_JOB_KIND, EmbedDone, EmbedPlan, plan_embeddings, run_next_embedding};
 pub use policy::{Outcome, PolicyReport, apply_policy, evaluate};
 pub use propose::{ProposeReport, propose_pending};
 
@@ -141,7 +143,7 @@ pub fn run_next<S>(
 where
     S: EventStore + JobQueue + CandidateStore,
 {
-    let Some(job) = store.lease(worker, LEASE, now)? else {
+    let Some(job) = store.lease_kind(JOB_KIND, worker, LEASE, now)? else {
         return Ok(None);
     };
     let lease = job.lease_id.clone().unwrap_or_default();

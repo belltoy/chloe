@@ -95,6 +95,14 @@ pub trait JobQueue {
     /// Reclaims expired leases (back to `pending` with backoff, or to `dead_letter` once the
     /// attempts are used up), then hands the oldest due job to `worker` for `lease_for`.
     fn lease(&self, worker: &str, lease_for: Duration, now: OffsetDateTime) -> Result<Option<Job>>;
+    /// Like `lease`, but only jobs of `kind`: workers of one kind never take another's work.
+    fn lease_kind(
+        &self,
+        kind: &str,
+        worker: &str,
+        lease_for: Duration,
+        now: OffsetDateTime,
+    ) -> Result<Option<Job>>;
     /// `Error::Conflict` if the lease is no longer this one (expired and reclaimed, or already
     /// finished); a late, valid result is still accepted while nobody has reclaimed the job.
     fn complete(&self, id: &str, lease_id: &str, now: OffsetDateTime) -> Result<Job>;

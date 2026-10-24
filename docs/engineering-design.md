@@ -123,7 +123,8 @@ Memory {
 | `candidates` (B) | id, session_id, content, proposal_state, evidence | Knowledge awaiting confirmation |
 | `memory_sources` (B) | memory_id, source_kind, source_ref, details | Provenance |
 | `memory_links` (B) | from_id, to_id, relation (`supersedes` / `conflicts_with`), created_at | Supersession and conflict relations |
-| `embeddings` (B) | memory_id, model_id, dimension, vector, updated_at | Semantic retrieval |
+| `embedding_index` (B) | model_id, dimension, generation | The one model the index is pinned to |
+| `embeddings` (B) | memory_id, revision, vector, updated_at | Semantic retrieval |
 
 Enable SQLite `foreign_keys=ON`, WAL and `busy_timeout`; use migration scripts and transactions. FTS5 external-content must have INSERT/UPDATE/DELETE triggers, plus `rebuild` and consistency-check commands. Full-text search must never interpolate unescaped strings into hand-built SQL.
 
@@ -219,6 +220,7 @@ As built (B2-06): supersession is a fifth outcome next to create, merge and conf
 - The embedding model must cover English and Chinese (memories and queries are often mixed, and code docs are mostly English). Keyword search for CJK text is a separate FTS-tokenizer question deferred to B (B3-07); Milestone A documents it as a known limitation.
 - Strictly validate `model_id + dimension`; changing models requires rebuilding the vector index, and different dimensions are never mixed.
 - Take FTS and Vector top-N each, fuse by RRF, then hard-filter by project scope and status, and rerank moderately; results report retrieval source and latency.
+- As built (B3-01): `memory_core::embed::Embedder` / `EmbeddingStore`; `memory-llm` implements `Embedder` for Ollama (`/api/embed`, default model `qwen3-embedding:0.6b`, 1024 dimensions, config `CHLOE_EMBED_MODEL` / `--embed-model`). `embedding_index` pins one model; the first vector fixes the dimension and a vector of another model or size is refused. `chloe embeddings backfill` queues one `embed_memory` job per memory revision without a vector (an edited memory is embedded again) and runs them; jobs are leased per kind so extraction workers never take them. Choosing another model drops all vectors and bumps `generation`, which is part of the job key, so the rebuild is queued even for a model used before. `chloe embeddings status` shows the pinned model, dimension and missing count. Memories are not embedded on save yet; run `backfill`.
 - When embeddings are temporarily unavailable, fall back to FTS; MCP must not become wholly unavailable due to model-service failure.
 - Query-vector caching and ingest-time vector updates may come later; first ensure consistency and baseline evaluation.
 

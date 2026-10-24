@@ -1,6 +1,7 @@
 //! Domain types, errors, config and service traits. No SQL, no agent-specific code.
 
 pub mod config;
+pub mod embed;
 pub mod error;
 pub mod event;
 pub mod extract;

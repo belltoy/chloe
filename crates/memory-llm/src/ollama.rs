@@ -4,6 +4,7 @@
 
 use std::time::Duration;
 
+use memory_core::embed::Embedder;
 use memory_core::extract::{Candidate, ExtractionInput, MemoryExtractor};
 use memory_core::{Error, Result};
 
@@ -13,6 +14,8 @@ use serde_json::{Value, json};
 
 pub const DEFAULT_URL: &str = "http://127.0.0.1:11434";
 pub const DEFAULT_MODEL: &str = "qwen3:8b";
+/// Multilingual (English and Chinese); 1024 dimensions.
+pub const DEFAULT_EMBED_MODEL: &str = "qwen3-embedding:0.6b";
 /// A local 8B model on a long session is slow; extraction runs in the background.
 const DEFAULT_TIMEOUT_SECS: u64 = 120;
 
@@ -20,6 +23,7 @@ const DEFAULT_TIMEOUT_SECS: u64 = 120;
 pub struct OllamaConfig {
     pub base_url: String,
     pub model: String,
+    pub embed_model: String,
     pub timeout: Duration,
     /// Explicit opt-in to a server that is not on this machine.
     pub allow_remote: bool,
@@ -30,6 +34,7 @@ impl Default for OllamaConfig {
         Self {
             base_url: DEFAULT_URL.into(),
             model: DEFAULT_MODEL.into(),
+            embed_model: DEFAULT_EMBED_MODEL.into(),
             timeout: Duration::from_secs(DEFAULT_TIMEOUT_SECS),
             allow_remote: false,
         }
@@ -129,6 +134,49 @@ impl Ollama {
             .ok_or_else(|| Error::InvalidArgument("model reply has no response field".into()))?;
         serde_json::from_str(text)
             .map_err(|_| Error::InvalidArgument("model output is not valid JSON".into()))
+    }
+}
+
+impl Embedder for Ollama {
+    fn model_id(&self) -> String {
+        format!("ollama:{}", self.config.embed_model)
+    }
+
+    fn embed(&self, texts: &[String]) -> Result<Vec<Vec<f32>>> {
+        if texts.is_empty() {
+            return Ok(vec![]);
+        }
+        let body = json!({"model": self.config.embed_model, "input": texts});
+        let mut resp = self
+            .agent
+            .post(&self.url("/api/embed"))
+            .send_json(&body)
+            .map_err(unavailable)?;
+        if !resp.status().is_success() {
+            return Err(Error::Unavailable(format!(
+                "HTTP {} (is model {} pulled?)",
+                resp.status(),
+                self.config.embed_model
+            )));
+        }
+        let v: Value = resp.body_mut().read_json().map_err(unavailable)?;
+        let bad = || Error::InvalidArgument("embedding reply is malformed".into());
+        let out = v["embeddings"]
+            .as_array()
+            .ok_or_else(bad)?
+            .iter()
+            .map(|e| {
+                e.as_array()
+                    .ok_or_else(bad)?
+                    .iter()
+                    .map(|f| f.as_f64().map(|f| f as f32).ok_or_else(bad))
+                    .collect::<Result<Vec<f32>>>()
+            })
+            .collect::<Result<Vec<_>>>()?;
+        if out.len() != texts.len() || out.iter().any(|e| e.len() != out[0].len()) {
+            return Err(bad());
+        }
+        Ok(out)
     }
 }
 

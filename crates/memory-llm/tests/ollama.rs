@@ -153,3 +153,24 @@ fn remote_needs_opt_in() {
     });
     assert!(https.is_err());
 }
+
+#[test]
+fn embeds_a_batch_and_rejects_malformed_replies() {
+    use memory_core::embed::Embedder;
+    let texts = vec!["一".to_string(), "two".to_string()];
+    let ok = server(vec![(
+        "200 OK",
+        r#"{"embeddings":[[1.0,0.5],[0.0,2.0]]}"#.into(),
+    )]);
+    let c = client(ok);
+    assert_eq!(c.model_id(), "ollama:qwen3-embedding:0.6b");
+    assert_eq!(c.embed(&texts).unwrap(), [[1.0, 0.5], [0.0, 2.0]]);
+    for bad in [
+        r#"{"embeddings":[[1.0]]}"#,
+        r#"{"embeddings":[[1.0],[1.0,2.0]]}"#,
+        r#"{"nope":1}"#,
+    ] {
+        let e = client(server(vec![("200 OK", bad.into())])).embed(&texts);
+        assert!(matches!(e, Err(Error::InvalidArgument(_))), "{bad}");
+    }
+}
