@@ -299,6 +299,306 @@
    "kind": "gotcha",
    "title": "Tokio 阻塞调用",
    "content": "在 tokio 的异步任务里调用阻塞的文件 IO 会卡住 executor，应放到 spawn_blocking。"
+  },
+  {
+   "key": "e21",
+   "kind": "fact",
+   "title": "HTTP client retries",
+   "content": "Calls to the model server retry twice with a short delay; longer outages are left to the job queue backoff."
+  },
+  {
+   "key": "e22",
+   "kind": "procedure",
+   "title": "Vacuum after bulk deletes",
+   "content": "Run VACUUM after deleting many rows; it needs free disk space about the size of the database."
+  },
+  {
+   "key": "e23",
+   "kind": "fact",
+   "title": "Schema version numbering",
+   "content": "schema_version is a single integer in PRAGMA user_version and is never reused or decreased."
+  },
+  {
+   "key": "e24",
+   "kind": "procedure",
+   "title": "Naming feature branches",
+   "content": "Feature branches are named feature/<ticket>-<slug> and deleted after merge."
+  },
+  {
+   "key": "e25",
+   "kind": "gotcha",
+   "title": "Time zone in logs",
+   "content": "Log timestamps are RFC 3339 in UTC; do not format them in local time."
+  },
+  {
+   "key": "e26",
+   "kind": "fact",
+   "title": "Docs site hosting",
+   "content": "The documentation site is built from the docs directory and published by CI on every tag."
+  },
+  {
+   "key": "e27",
+   "kind": "gotcha",
+   "title": "Large pasted prompts",
+   "content": "Prompts over 64 KiB are truncated before capture to keep events small."
+  },
+  {
+   "key": "e28",
+   "kind": "decision",
+   "title": "Rust edition",
+   "content": "The workspace uses Rust edition 2024 and shares dependency versions in the root manifest."
+  },
+  {
+   "key": "e29",
+   "kind": "constraint",
+   "title": "No unsafe code",
+   "content": "unsafe is forbidden in every crate through a workspace lint."
+  },
+  {
+   "key": "e30",
+   "kind": "fact",
+   "title": "Embedding request size",
+   "content": "Embeddings are requested one memory per call to keep error handling simple."
+  },
+  {
+   "key": "e31",
+   "kind": "fact",
+   "title": "Status values",
+   "content": "A memory is active, disputed, superseded or archived; search returns only active by default."
+  },
+  {
+   "key": "e32",
+   "kind": "procedure",
+   "title": "Inspect a failing job",
+   "content": "Use jobs show with the job id to read its last error and next run time."
+  },
+  {
+   "key": "e33",
+   "kind": "gotcha",
+   "title": "Stdout is for results",
+   "content": "Anything printed to stdout in MCP mode corrupts the protocol; use stderr."
+  },
+  {
+   "key": "e34",
+   "kind": "fact",
+   "title": "Hook payload size",
+   "content": "Hook payloads are capped at 1 MiB; larger ones are dropped and counted."
+  },
+  {
+   "key": "e35",
+   "kind": "decision",
+   "title": "Local-first defaults",
+   "content": "No telemetry and no cloud calls by default; remote providers need an explicit flag."
+  },
+  {
+   "key": "e36",
+   "kind": "procedure",
+   "title": "Run a single test",
+   "content": "Use cargo test -p memory-store with a test name filter to run one test."
+  },
+  {
+   "key": "e37",
+   "kind": "gotcha",
+   "title": "Windows line endings",
+   "content": "Normalize CRLF to LF in captured text before hashing for idempotency keys."
+  },
+  {
+   "key": "e38",
+   "kind": "fact",
+   "title": "Candidate states",
+   "content": "A candidate is pending, accepted, rejected or merged."
+  },
+  {
+   "key": "e39",
+   "kind": "decision",
+   "title": "Evidence on every candidate",
+   "content": "Each candidate keeps the event ids it came from so a reviewer can check the source."
+  },
+  {
+   "key": "e40",
+   "kind": "gotcha",
+   "title": "Clock skew",
+   "content": "Lease expiry uses the caller's clock; a machine with a wrong clock can reclaim jobs early."
+  },
+  {
+   "key": "e41",
+   "kind": "fact",
+   "title": "Snippet limit",
+   "content": "Search results cut each body to 1000 characters; memory_get returns the whole text."
+  },
+  {
+   "key": "e42",
+   "kind": "constraint",
+   "title": "Memory size limits",
+   "content": "Titles are at most 200 characters and bodies at most 64 KiB."
+  },
+  {
+   "key": "e43",
+   "kind": "procedure",
+   "title": "Rebuild the full-text index",
+   "content": "Run doctor --reindex to rebuild the FTS index when the consistency check fails."
+  },
+  {
+   "key": "e44",
+   "kind": "decision",
+   "title": "Idempotent import",
+   "content": "Importing the hook spool twice yields the same events because each has a stable key."
+  },
+  {
+   "key": "e45",
+   "kind": "fact",
+   "title": "Supported agents",
+   "content": "Claude Code and Codex are supported through hooks; other agents can use MCP only."
+  },
+  {
+   "key": "z19",
+   "kind": "fact",
+   "title": "构建产物目录",
+   "content": "编译产物放在 target 目录，已加入 gitignore，不要提交。"
+  },
+  {
+   "key": "z20",
+   "kind": "procedure",
+   "title": "分析慢查询",
+   "content": "分析慢查询时先用 EXPLAIN QUERY PLAN 看是否走了索引，再决定是否加索引。"
+  },
+  {
+   "key": "z21",
+   "kind": "decision",
+   "title": "接口兼容",
+   "content": "MCP 工具的参数只增不删，新增字段必须有默认值，旧客户端不受影响。"
+  },
+  {
+   "key": "z22",
+   "kind": "fact",
+   "title": "文档站点",
+   "content": "文档站点由 CI 在每次打标签时构建并发布。"
+  },
+  {
+   "key": "z23",
+   "kind": "fact",
+   "title": "重试上限",
+   "content": "任务最多尝试五次，之后进入死信队列。"
+  },
+  {
+   "key": "z24",
+   "kind": "fact",
+   "title": "命名规范",
+   "content": "Rust 代码使用蛇形命名，类型使用大驼峰，常量全大写。"
+  },
+  {
+   "key": "z25",
+   "kind": "fact",
+   "title": "代码覆盖率",
+   "content": "核心 crate 的行覆盖率目标是百分之八十，低于目标不阻塞合并。"
+  },
+  {
+   "key": "z26",
+   "kind": "gotcha",
+   "title": "字符串截断",
+   "content": "按字节截断中文会产生乱码，必须按字符边界截断。"
+  },
+  {
+   "key": "z27",
+   "kind": "decision",
+   "title": "审计记录",
+   "content": "每次修改记忆都会追加一条修订记录，修订表不允许更新或删除。"
+  },
+  {
+   "key": "z28",
+   "kind": "fact",
+   "title": "超时设置",
+   "content": "调用本地模型的超时默认是两分钟，嵌入查询是五秒。"
+  },
+  {
+   "key": "z29",
+   "kind": "decision",
+   "title": "合并去重",
+   "content": "相似度很高的重复候选会被自动合并，冲突的候选标记为待人工处理。"
+  },
+  {
+   "key": "z30",
+   "kind": "fact",
+   "title": "提示词语言",
+   "content": "抽取提示词使用英文，输出字段保持英文枚举。"
+  },
+  {
+   "key": "z31",
+   "kind": "fact",
+   "title": "状态取值",
+   "content": "记忆状态有四种：活跃、争议、被取代和已归档。"
+  },
+  {
+   "key": "z32",
+   "kind": "fact",
+   "title": "JSON 输出格式",
+   "content": "命令行的 --json 输出使用蛇形字段名，时间为 RFC 3339。"
+  },
+  {
+   "key": "z33",
+   "kind": "procedure",
+   "title": "安装方式",
+   "content": "用 cargo install --path crates/memory-cli 安装 chloe 命令。"
+  },
+  {
+   "key": "x13",
+   "kind": "procedure",
+   "title": "MCP 客户端配置",
+   "content": "在 Claude Code 里用 claude mcp add 注册 chloe，Codex 则写入 config.toml。"
+  },
+  {
+   "key": "x14",
+   "kind": "fact",
+   "title": "Ollama 默认地址",
+   "content": "Ollama 默认监听 127.0.0.1:11434，非本机地址必须加 --allow-remote。"
+  },
+  {
+   "key": "x15",
+   "kind": "decision",
+   "title": "RRF 融合参数",
+   "content": "混合检索用 RRF 融合 FTS 和向量两路 top-50，k 取 60。"
+  },
+  {
+   "key": "x16",
+   "kind": "gotcha",
+   "title": "Unicode 规范化",
+   "content": "全角和半角字符在 FTS 里是不同的 token，查询前不会自动归一化。"
+  },
+  {
+   "key": "x17",
+   "kind": "fact",
+   "title": "UUID 主键",
+   "content": "memories 表用 UUID 字符串做主键，外键开启 foreign_keys=ON。"
+  },
+  {
+   "key": "x18",
+   "kind": "fact",
+   "title": "CI 超时",
+   "content": "GitHub Actions 的单个 job 超时设为 20 分钟，超时按失败处理。"
+  },
+  {
+   "key": "x19",
+   "kind": "fact",
+   "title": "SQLite 页缓存",
+   "content": "SQLite 的 cache_size 保持默认值，目前没有测出需要调大。"
+  },
+  {
+   "key": "x20",
+   "kind": "procedure",
+   "title": "Homebrew 安装 Ollama",
+   "content": "macOS 上用 brew install ollama，然后 ollama pull 需要的模型。"
+  },
+  {
+   "key": "x21",
+   "kind": "decision",
+   "title": "LLM 温度",
+   "content": "抽取任务的 temperature 固定为 0，保证同一输入输出可复现。"
+  },
+  {
+   "key": "x22",
+   "kind": "fact",
+   "title": "stdio 传输",
+   "content": "MCP 通过 stdio 传输 JSON-RPC，每条消息占一行。"
   }
  ],
  "queries": [
@@ -502,6 +802,47 @@
    "text": "how do we release a new version",
    "relevant": [
     "z04"
+   ]
+  },
+  {
+   "id": "q26",
+   "lang": "en",
+   "text": "what happens if two writers collide on the same record",
+   "relevant": [
+    "e05"
+   ]
+  },
+  {
+   "id": "q27",
+   "lang": "cross",
+   "text": "怎样防止别人通过编号猜出别的项目里有没有某条记忆",
+   "relevant": [
+    "e07"
+   ]
+  },
+  {
+   "id": "q28",
+   "lang": "mixed",
+   "text": "agent 启动时 DB 被锁了怎么办",
+   "relevant": [
+    "z13",
+    "x01"
+   ]
+  },
+  {
+   "id": "q29",
+   "lang": "cross",
+   "text": "which parts of a session do we keep",
+   "relevant": [
+    "z17"
+   ]
+  },
+  {
+   "id": "q30",
+   "lang": "zh",
+   "text": "线上加索引怎么不影响写入",
+   "relevant": [
+    "x11"
    ]
   }
  ]
