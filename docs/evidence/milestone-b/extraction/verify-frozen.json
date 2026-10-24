@@ -1,0 +1,639 @@
+[
+ {
+  "n": "1",
+  "sid": "g01-rule-with-incident",
+  "kind": "decision",
+  "title": "Use repo package for database queries",
+  "body": "Handlers must not touch sql.DB directly; all queries go through the repo package. This rule was established after a previous outage caused by leaking connections from handlers.",
+  "final": "部分忠实",
+  "dev": "推断未出现事实",
+  "model": {
+   "verdict": "faithful",
+   "unsupported": []
+  }
+ },
+ {
+  "n": "2",
+  "sid": "g01-rule-with-incident",
+  "kind": "procedure",
+  "title": "Implement GET /orders/:id endpoint",
+  "body": "Added the endpoint by calling h.repo.GetOrder in the handler file. The change was verified with tests that passed without issues.",
+  "final": "忠实",
+  "dev": "引用错误",
+  "model": {
+   "verdict": "faithful",
+   "unsupported": []
+  }
+ },
+ {
+  "n": "3",
+  "sid": "g01-rule-with-incident",
+  "kind": "constraint",
+  "title": "Handlers must use repo package for database queries",
+  "body": "The user explicitly stated that handlers never touch sql.DB directly; every query must go through the repo package. This rule was established to prevent connection leaks and outages, as seen in past incidents.",
+  "final": "忠实",
+  "dev": "无",
+  "model": {
+   "verdict": "partial",
+   "unsupported": [
+    {
+     "claim": "This rule was established to prevent connection leaks and outages",
+     "type": "inferred_cause"
+    },
+    {
+     "claim": "as seen in past incidents",
+     "type": "wrong_detail"
+    }
+   ]
+  }
+ },
+ {
+  "n": "4",
+  "sid": "g01-rule-with-incident",
+  "kind": "procedure",
+  "title": "Implementing a GET /orders/:id endpoint",
+  "body": "To implement the GET /orders/:id endpoint, the handler was updated to call repo.GetOrder through the repo package. This ensures compliance with the rule that handlers never touch sql.DB directly, avoiding potential connection leaks.",
+  "final": "部分忠实",
+  "dev": "补动机/收益",
+  "model": {
+   "verdict": "faithful",
+   "unsupported": []
+  }
+ },
+ {
+  "n": "5",
+  "sid": "g02-naive-aware-datetime",
+  "kind": "gotcha",
+  "title": "Naive vs Aware Datetime Comparison",
+  "body": "Using datetime.utcnow() leads to a TypeError when comparing with timezone-aware datetimes from the database. The error occurs because one datetime is naive (no timezone) and the other is aware (has timezone).",
+  "final": "忠实",
+  "dev": "无",
+  "model": {
+   "verdict": "faithful",
+   "unsupported": []
+  }
+ },
+ {
+  "n": "6",
+  "sid": "g02-naive-aware-datetime",
+  "kind": "gotcha",
+  "title": "Naive vs Aware Datetime Comparison",
+  "body": "The expiry check raises a TypeError in production due to comparing naive and timezone-aware datetimes. The local tests passed because the fixture used naive dates, but the production environment uses timezone-aware timestamps from the database.",
+  "final": "忠实",
+  "dev": "无",
+  "model": {
+   "verdict": "faithful",
+   "unsupported": []
+  }
+ },
+ {
+  "n": "7",
+  "sid": "g03-decision-env-flags",
+  "kind": "decision",
+  "title": "Use environment variables for feature flags",
+  "body": "The user decided to read feature flags from environment variables instead of using a config service.",
+  "final": "忠实",
+  "dev": "无",
+  "model": {
+   "verdict": "faithful",
+   "unsupported": []
+  }
+ },
+ {
+  "n": "8",
+  "sid": "g03-decision-env-flags",
+  "kind": "procedure",
+  "title": "Implement flag check using environment variables",
+  "body": "A function 'enabled' was added to check if a flag is active by reading the corresponding environment variable.",
+  "final": "忠实",
+  "dev": "无",
+  "model": {
+   "verdict": "faithful",
+   "unsupported": []
+  }
+ },
+ {
+  "n": "9",
+  "sid": "g03-decision-env-flags",
+  "kind": "fact",
+  "title": "Flags are retrieved from environment variables",
+  "body": "The assistant confirmed that flags are read from environment variables in the format FLAG_<NAME>.",
+  "final": "忠实",
+  "dev": "无",
+  "model": {
+   "verdict": "faithful",
+   "unsupported": []
+  }
+ },
+ {
+  "n": "10",
+  "sid": "g03-decision-env-flags",
+  "kind": "decision",
+  "title": "Use environment variables for feature flags",
+  "body": "The user decided to read feature flags from environment variables instead of using a config service. The reason given was that the team consists of three developers and the user does not want to run and monitor an additional service.",
+  "final": "忠实",
+  "dev": "无",
+  "model": {
+   "verdict": "faithful",
+   "unsupported": []
+  }
+ },
+ {
+  "n": "11",
+  "sid": "g03-decision-env-flags",
+  "kind": "procedure",
+  "title": "Implement flag check function",
+  "body": "A function named 'enabled' was added to the flags module. It checks if an environment variable named FLAG_<NAME> is set to '1'. This provides a simple and direct way to determine if a feature is enabled.",
+  "final": "忠实",
+  "dev": "无",
+  "model": {
+   "verdict": "partial",
+   "unsupported": [
+    {
+     "claim": "This provides a simple and direct way to determine if a feature is enabled.",
+     "type": "inferred_cause"
+    }
+   ]
+  }
+ },
+ {
+  "n": "12",
+  "sid": "g03-decision-env-flags",
+  "kind": "fact",
+  "title": "Flags are retrieved from environment variables",
+  "body": "The assistant confirmed that flags are read from environment variables in the format FLAG_<NAME>. This is the method that was implemented and agreed upon.",
+  "final": "忠实",
+  "dev": "引用错误",
+  "model": {
+   "verdict": "partial",
+   "unsupported": [
+    {
+     "claim": "The environment-variable method was agreed upon.",
+     "type": "wrong_attribution"
+    }
+   ]
+  }
+ },
+ {
+  "n": "13",
+  "sid": "g04-procedure-db-reset",
+  "kind": "gotcha",
+  "title": "db-reset must precede seed to avoid schema conflicts",
+  "body": "Running 'make seed' without 'make db-reset' first causes an error because the 'users' table already exists. The seed script assumes an empty schema.",
+  "final": "忠实",
+  "dev": "无",
+  "model": {
+   "verdict": "faithful",
+   "unsupported": []
+  }
+ },
+ {
+  "n": "14",
+  "sid": "g04-procedure-db-reset",
+  "kind": "gotcha",
+  "title": "db-reset must precede seed to avoid schema conflicts",
+  "body": "Running 'make seed' without first executing 'make db-reset' causes errors because the seed script assumes an empty schema. The 'users' table already exists, leading to the 'relation already exists' error. The correct order is to reset the database first, then seed it.",
+  "final": "忠实",
+  "dev": "无",
+  "model": {
+   "verdict": "faithful",
+   "unsupported": []
+  }
+ },
+ {
+  "n": "15",
+  "sid": "g05-fact-region",
+  "kind": "constraint",
+  "title": "Deploy script must use eu-west-1 region",
+  "body": "The user specified that all deployments are in eu-west-1. The deploy script was updated to set AWS_REGION=eu-west-1 to ensure compliance with this rule.",
+  "final": "忠实",
+  "dev": "无",
+  "model": {
+   "verdict": "partial",
+   "unsupported": [
+    {
+     "claim": "The deploy script was updated to set AWS_REGION=eu-west-1 to ensure compliance with this rule",
+     "type": "inferred_cause"
+    }
+   ]
+  }
+ },
+ {
+  "n": "16",
+  "sid": "g05-fact-region",
+  "kind": "fact",
+  "title": "Deploy script sets AWS_REGION",
+  "body": "The deploy script sets the AWS_REGION environment variable to eu-west-1 as per the user's instruction.",
+  "final": "忠实",
+  "dev": "引用错误",
+  "model": {
+   "verdict": "faithful",
+   "unsupported": []
+  }
+ },
+ {
+  "n": "17",
+  "sid": "g05-fact-region",
+  "kind": "constraint",
+  "title": "Deploy only in eu-west-1 region",
+  "body": "The user explicitly stated that all deployments must be in the eu-west-1 region. This is a hard constraint to follow in future work.",
+  "final": "忠实",
+  "dev": "无",
+  "model": {
+   "verdict": "faithful",
+   "unsupported": []
+  }
+ },
+ {
+  "n": "18",
+  "sid": "g06-jest-esm",
+  "kind": "gotcha",
+  "title": "ESM module import error in Jest",
+  "body": "Jest 默认不转换 node_modules 中的文件，当使用 ESM 模块（如 lodash-es）时，会报 SyntaxError: Cannot use import statement outside a module 错误。",
+  "final": "忠实",
+  "dev": "引用错误",
+  "model": {
+   "verdict": "partial",
+   "unsupported": [
+    {
+     "claim": "当使用 ESM 模块（如 lodash-es）时，会报 SyntaxError: Cannot use import statement outside a module 错误",
+     "type": "generalisation"
+    }
+   ]
+  }
+ },
+ {
+  "n": "19",
+  "sid": "g06-jest-esm",
+  "kind": "procedure",
+  "title": "Allow ESM module in Jest",
+  "body": "在 jest.config.js 中配置 transformIgnorePatterns，放行特定的 ESM 模块，如 lodash-es，以避免 import 语法错误。",
+  "final": "忠实",
+  "dev": "无",
+  "model": {
+   "verdict": "faithful",
+   "unsupported": []
+  }
+ },
+ {
+  "n": "20",
+  "sid": "g06-jest-esm",
+  "kind": "fact",
+  "title": "lodash-es is ESM only",
+  "body": "lodash-es 是一个仅发布为 ESM 模块的库，不兼容 CommonJS 模块格式，因此在 Jest 中需要特殊处理。",
+  "final": "部分忠实",
+  "dev": "范围扩大、推断未出现事实",
+  "model": {
+   "verdict": "partial",
+   "unsupported": [
+    {
+     "claim": "不兼容 CommonJS 模块格式",
+     "type": "inferred_cause"
+    },
+    {
+     "claim": "在 Jest 中需要特殊处理",
+     "type": "generalisation"
+    }
+   ]
+  }
+ },
+ {
+  "n": "21",
+  "sid": "g06-jest-esm",
+  "kind": "gotcha",
+  "title": "ESM模块在Jest中需特殊处理",
+  "body": "lodash-es 是一个ES模块（ESM），而 Jest 默认不会转换 node_modules 中的文件。当尝试在非模块环境中使用 import 语句时会报错。通过在 jest.config.js 中配置 transformIgnorePatterns，可以排除对 lodash-es 的转换限制，从而解决该问题。",
+  "final": "忠实",
+  "dev": "无",
+  "model": {
+   "verdict": "faithful",
+   "unsupported": []
+  }
+ },
+ {
+  "n": "22",
+  "sid": "g06-jest-esm",
+  "kind": "procedure",
+  "title": "解决Jest中ESM模块导入错误",
+  "body": "当使用ESM模块（如 lodash-es）时，Jest 默认不会处理 node_modules 中的文件，导致 import 语句报错。解决方法是在 jest.config.js 中配置 transformIgnorePatterns，将 lodash-es 添加到忽略转换的列表中，以允许 Jest 正常解析该模块。",
+  "final": "部分忠实",
+  "dev": "命令/数字/否定错",
+  "model": {
+   "verdict": "partial",
+   "unsupported": [
+    {
+     "claim": "将 lodash-es 添加到忽略转换的列表中",
+     "type": "wrong_detail"
+    }
+   ]
+  }
+ },
+ {
+  "n": "23",
+  "sid": "g07-never-amend-pushed",
+  "kind": "decision",
+  "title": "Never amend or force-push existing commits",
+  "body": "The user instructed to never amend or force-push commits that are already pushed. Instead, a new commit should be made to preserve reviewers' diff context.",
+  "final": "部分忠实",
+  "dev": "范围扩大",
+  "model": {
+   "verdict": "partial",
+   "unsupported": [
+    {
+     "claim": "Never amend or force-push existing commits, without limiting the rule to commits that are already pushed",
+     "type": "widened_scope"
+    }
+   ]
+  }
+ },
+ {
+  "n": "24",
+  "sid": "g07-never-amend-pushed",
+  "kind": "procedure",
+  "title": "Fix typo and commit",
+  "body": "The user asked to fix a typo in the README and commit it. The assistant ran `git commit -am 'fix typo'` to accomplish this.",
+  "final": "忠实",
+  "dev": "无",
+  "model": {
+   "verdict": "faithful",
+   "unsupported": []
+  }
+ },
+ {
+  "n": "25",
+  "sid": "g07-never-amend-pushed",
+  "kind": "decision",
+  "title": "Never amend or force-push existing commits",
+  "body": "The user explicitly stated that future work must avoid amending or force-pushing commits that are already pushed. This ensures reviewers retain their place in the diff and prevents confusion in the commit history.",
+  "final": "部分忠实",
+  "dev": "补动机/收益、范围扩大",
+  "model": {
+   "verdict": "partial",
+   "unsupported": [
+    {
+     "claim": "Never amend or force-push existing commits",
+     "type": "widened_scope"
+    },
+    {
+     "claim": "prevents confusion in the commit history",
+     "type": "inferred_cause"
+    }
+   ]
+  }
+ },
+ {
+  "n": "26",
+  "sid": "g07-never-amend-pushed",
+  "kind": "procedure",
+  "title": "Fix typo and commit as a new commit",
+  "body": "The user fixed a typo in the README and committed it as a new commit, avoiding any amendment or force-push of existing commits. This approach maintains a clean and traceable commit history.",
+  "final": "部分忠实",
+  "dev": "错误归因、补动机/收益",
+  "model": {
+   "verdict": "unfaithful",
+   "unsupported": [
+    {
+     "claim": "The user fixed a typo in the README and committed it as a new commit",
+     "type": "wrong_attribution"
+    },
+    {
+     "claim": "avoiding any amendment or force-push of existing commits",
+     "type": "wrong_attribution"
+    },
+    {
+     "claim": "This approach maintains a clean and traceable commit history",
+     "type": "invented_motive"
+    }
+   ]
+  }
+ },
+ {
+  "n": "27",
+  "sid": "g08-flaky-port",
+  "kind": "gotcha",
+  "title": "Flaky test due to port collision",
+  "body": "The test 'server_starts' was flaky because multiple tests bound to the fixed port 8080, causing collisions when run in parallel. Binding to port 0 allows the OS to select a free port automatically.",
+  "final": "忠实",
+  "dev": "无",
+  "model": {
+   "verdict": "faithful",
+   "unsupported": []
+  }
+ },
+ {
+  "n": "28",
+  "sid": "g08-flaky-port",
+  "kind": "procedure",
+  "title": "Fix flaky test by using dynamic port",
+  "body": "To fix the flaky 'server_starts' test, change the port binding from '127.0.0.1:8080' to '127.0.0.1:0'. This allows the OS to assign a free port, preventing port collision during parallel test runs.",
+  "final": "忠实",
+  "dev": "无",
+  "model": {
+   "verdict": "faithful",
+   "unsupported": []
+  }
+ },
+ {
+  "n": "29",
+  "sid": "g08-flaky-port",
+  "kind": "gotcha",
+  "title": "Flaky test due to port collision",
+  "body": "The test 'server_starts' was flaky because multiple tests bound to the fixed port 8080, causing collisions when run in parallel. The solution was to bind to port 0, allowing the OS to assign a free port automatically.",
+  "final": "忠实",
+  "dev": "无",
+  "model": {
+   "verdict": "faithful",
+   "unsupported": []
+  }
+ },
+ {
+  "n": "30",
+  "sid": "g08-flaky-port",
+  "kind": "procedure",
+  "title": "Fix flaky test by using dynamic port binding",
+  "body": "To resolve flaky tests caused by port collisions, modify the test code to bind to port 0. This allows the operating system to assign a free port, preventing conflicts when multiple tests run in parallel.",
+  "final": "忠实",
+  "dev": "无",
+  "model": {
+   "verdict": "partial",
+   "unsupported": [
+    {
+     "claim": "Binding to port 0 is presented as a general fix for flaky tests caused by port collisions, preventing conflicts whenever multiple tests run in parallel.",
+     "type": "widened_scope"
+    }
+   ]
+  }
+ },
+ {
+  "n": "31",
+  "sid": "g09-deploy-freeze",
+  "kind": "constraint",
+  "title": "Release planning must avoid Thursday 14:00-18:00 CET",
+  "body": "Deploys are frozen every Thursday from 14:00 to 18:00 CET due to the weekly batch job.",
+  "final": "忠实",
+  "dev": "无",
+  "model": {
+   "verdict": "faithful",
+   "unsupported": []
+  }
+ },
+ {
+  "n": "32",
+  "sid": "g09-deploy-freeze",
+  "kind": "constraint",
+  "title": "Release planning must avoid Thursday deployments",
+  "body": "Deployments are frozen every Thursday from 14:00 to 18:00 CET due to the weekly batch job. This is a hard constraint to follow.",
+  "final": "部分忠实",
+  "dev": "范围扩大",
+  "model": {
+   "verdict": "partial",
+   "unsupported": [
+    {
+     "claim": "Release planning must avoid Thursday deployments",
+     "type": "widened_scope"
+    }
+   ]
+  }
+ },
+ {
+  "n": "33",
+  "sid": "h05-fix-without-cause",
+  "kind": "gotcha",
+  "title": "Empty string returns empty list",
+  "body": "The test failed because the function did not handle empty input. The fix was to add a check for an empty string and return an empty list.",
+  "final": "部分忠实",
+  "dev": "推断未出现事实",
+  "model": {
+   "verdict": "partial",
+   "unsupported": [
+    {
+     "claim": "The test failed because the function did not handle empty input.",
+     "type": "inferred_cause"
+    }
+   ]
+  }
+ },
+ {
+  "n": "34",
+  "sid": "h06-offline-go-test",
+  "kind": "gotcha",
+  "title": "GOPROXY=off required for tests in sandbox",
+  "body": "The tests failed initially due to network restrictions in the sandbox environment, which prevented access to the Go module proxy. Setting GOPROXY=off bypasses this issue by disabling the proxy lookup.",
+  "final": "部分忠实",
+  "dev": "范围扩大、泛化",
+  "model": {
+   "verdict": "partial",
+   "unsupported": [
+    {
+     "claim": "GOPROXY=off is required for tests in the sandbox",
+     "type": "widened_scope"
+    },
+    {
+     "claim": "GOPROXY=off bypasses the issue by disabling the proxy lookup",
+     "type": "inferred_cause"
+    }
+   ]
+  }
+ },
+ {
+  "n": "35",
+  "sid": "h06-offline-go-test",
+  "kind": "gotcha",
+  "title": "GOPROXY must be disabled in sandboxed environments",
+  "body": "When running Go tests in a sandboxed environment with no network access, the GOPROXY must be set to 'off' to avoid failures due to unreachable module proxies. The default proxy lookup fails in such environments.",
+  "final": "部分忠实",
+  "dev": "范围扩大、泛化",
+  "model": {
+   "verdict": "partial",
+   "unsupported": [
+    {
+     "claim": "GOPROXY must be set to 'off' in sandboxed environments (a requirement/general rule)",
+     "type": "generalisation"
+    },
+    {
+     "claim": "The default proxy lookup fails in such environments (generalised to all sandboxed/no-network environments)",
+     "type": "widened_scope"
+    }
+   ]
+  }
+ },
+ {
+  "n": "36",
+  "sid": "h06-offline-go-test",
+  "kind": "procedure",
+  "title": "Run Go tests with GOPROXY=off in sandbox",
+  "body": "To successfully run Go tests in a sandboxed environment with no network access, use the flag GOPROXY=off. This prevents the test runner from attempting to connect to external module proxies, which are not accessible in the sandbox.",
+  "final": "部分忠实",
+  "dev": "范围扩大、泛化",
+  "model": {
+   "verdict": "partial",
+   "unsupported": [
+    {
+     "claim": "GOPROXY=off is a flag",
+     "type": "wrong_detail"
+    },
+    {
+     "claim": "GOPROXY=off prevents the test runner from attempting to connect to external module proxies",
+     "type": "inferred_cause"
+    },
+    {
+     "claim": "In any sandboxed environment with no network access, using GOPROXY=off is sufficient to successfully run Go tests",
+     "type": "generalisation"
+    }
+   ]
+  }
+ },
+ {
+  "n": "37",
+  "sid": "h08-unadopted-suggestion",
+  "kind": "decision",
+  "title": "Add retries to fetch_report()",
+  "body": "The user requested to add a retry mechanism to the fetch_report() function. Three retries were implemented using a loop with a Timeout exception handler.",
+  "final": "部分忠实",
+  "dev": "命令/数字/否定错",
+  "model": {
+   "verdict": "partial",
+   "unsupported": [
+    {
+     "claim": "Three retries were implemented",
+     "type": "wrong_detail"
+    }
+   ]
+  }
+ },
+ {
+  "n": "38",
+  "sid": "h08-unadopted-suggestion",
+  "kind": "decision",
+  "title": "Add retries for fetch_report()",
+  "body": "The user decided to add retries to the fetch_report() function to handle potential timeout issues. Three retries were implemented in the code.",
+  "final": "部分忠实",
+  "dev": "补动机/收益、命令/数字/否定错",
+  "model": {
+   "verdict": "partial",
+   "unsupported": [
+    {
+     "claim": "to handle potential timeout issues",
+     "type": "inferred_cause"
+    },
+    {
+     "claim": "Three retries were implemented in the code",
+     "type": "wrong_detail"
+    }
+   ]
+  }
+ },
+ {
+  "n": "39",
+  "sid": "h08-unadopted-suggestion",
+  "kind": "procedure",
+  "title": "Implement retries with a loop",
+  "body": "A loop with a range of 3 was used to implement retries for the fetch_report() function. Each attempt is wrapped in a try-except block to catch Timeout errors and continue to the next attempt.",
+  "final": "忠实",
+  "dev": "无",
+  "model": {
+   "verdict": "faithful",
+   "unsupported": []
+  }
+ }
+]
