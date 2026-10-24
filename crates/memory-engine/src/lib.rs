@@ -3,12 +3,16 @@
 //! one job. Nothing here knows about a database or a model: stores and the extractor come in
 //! through the core traits, and there is no daemon — the caller loops.
 
+mod context;
 mod embed;
 mod eval;
 mod hybrid;
 mod policy;
 mod propose;
 
+pub use context::{
+    ContextPack, DEFAULT_BUDGET, MAX_BUDGET, MIN_BUDGET, PackGroup, PackItem, context_pack,
+};
 pub use embed::{EMBED_JOB_KIND, EmbedDone, EmbedPlan, plan_embeddings, run_next_embedding};
 pub use eval::{Dataset, EvalMemory, EvalQuery, MODES, Report, Row, run_eval};
 pub use hybrid::{HybridHit, HybridResult, SearchMode, fts_text, hybrid_search, search};

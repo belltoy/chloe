@@ -19,7 +19,7 @@ When a durable decision, constraint, gotcha or procedure is made or learned, sav
 right away, without waiting to be asked (kind: decision, constraint, gotcha, procedure or fact); \
 never save transient task state or secrets. Use scope=global only for knowledge that applies to every project. \
 To change a memory, memory_get it, then memory_update or memory_archive with its current expected_revision; \
-on a conflict error, re-read and retry. Search returns active memories of the current project only \
+on a conflict error, re-read and retry. memory_context gives a compact briefing for a broad task. Search returns active memories of the current project only \
 (set include_global to add global ones).";
 /// Search results carry at most this many characters of each body; `memory_get` returns it all.
 const SNIPPET_CHARS: usize = 1000;
@@ -58,6 +58,15 @@ struct Search {
     #[serde(default)]
     include_inactive: bool,
     max_chars: Option<usize>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct Context {
+    task: String,
+    budget_chars: Option<usize>,
+    #[serde(default)]
+    include_global: bool,
 }
 
 #[derive(Deserialize)]
@@ -144,6 +153,19 @@ fn tools() -> Value {
                         "description": "Total characters of memory bodies across all hits"}
                 }),
                 &["query"],
+            ),
+        ),
+        (
+            "memory_context",
+            schema(
+                "Compact briefing for a task: the relevant memories of the current project as short summaries grouped by kind (constraints, decisions, gotchas, procedures, facts), each with its id and source, within budget_chars in total. `omitted` counts relevant memories that did not fit; memory_get expands one by id. Prefer this over memory_search when starting a broad task.",
+                json!({
+                    "task": {"type": "string", "description": "What you are about to do, in a sentence or two"},
+                    "budget_chars": {"type": "integer", "minimum": memory_engine::MIN_BUDGET, "maximum": memory_engine::MAX_BUDGET,
+                        "default": memory_engine::DEFAULT_BUDGET},
+                    "include_global": {"type": "boolean", "default": false}
+                }),
+                &["task"],
             ),
         ),
         (
@@ -251,6 +273,17 @@ fn call_tool<S: MemoryService + EmbeddingStore>(
                 "candidates": {"fts": fts_returned, "vector": vector_returned},
                 "hits": hits,
             }))
+        }),
+        "memory_context" => parse::<Context>(args).and_then(|a| {
+            to_json(&memory_engine::context_pack(
+                svc,
+                mode,
+                embedder,
+                p,
+                &a.task,
+                a.include_global,
+                a.budget_chars.unwrap_or(memory_engine::DEFAULT_BUDGET),
+            )?)
         }),
         "memory_get" => parse::<Get>(args).and_then(|a| to_json(&svc.get(p, a.id)?)),
         "memory_update" => parse::<Update>(args).and_then(|a| {

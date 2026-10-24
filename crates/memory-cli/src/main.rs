@@ -192,6 +192,25 @@ enum MemoryCommand {
         #[command(flatten)]
         provider: llm::Provider,
     },
+    /// A compact, source-linked briefing for a task, grouped by kind and bounded in size
+    Context {
+        /// What you are about to do
+        task: String,
+        /// Total characters of titles and summaries
+        #[arg(long, default_value_t = memory_engine::DEFAULT_BUDGET)]
+        budget: usize,
+        /// Include global memories
+        #[arg(long)]
+        global: bool,
+        /// Retrieval paths, as for `memory search`
+        #[arg(long, value_enum, conflicts_with = "hybrid")]
+        mode: Option<Mode>,
+        /// Same as --mode hybrid
+        #[arg(long)]
+        hybrid: bool,
+        #[command(flatten)]
+        provider: llm::Provider,
+    },
     List {
         /// List global memories instead of the project's
         #[arg(long)]
@@ -412,6 +431,65 @@ fn run(cli: Cli) -> anyhow::Result<bool> {
                     print_json(&m)?
                 } else {
                     println!("{}", line(&m))
+                }
+            }
+            MemoryCommand::Context {
+                task,
+                budget,
+                global,
+                mode,
+                hybrid,
+                provider,
+            } => {
+                let mode = Mode::pick(mode, hybrid);
+                let embedder = (mode != memory_engine::SearchMode::Fts)
+                    .then(|| provider.open())
+                    .transpose()?;
+                let pack = memory_engine::context_pack(
+                    &store,
+                    mode,
+                    embedder
+                        .as_ref()
+                        .map(|e| e as &dyn memory_core::embed::Embedder),
+                    Some(project()?),
+                    &task,
+                    global,
+                    budget,
+                )?;
+                if let Some(why) = &pack.degraded {
+                    eprintln!("vector search skipped, full-text only: {why}");
+                }
+                if json {
+                    print_json(&pack)?
+                } else {
+                    for g in &pack.groups {
+                        println!("{:?}", g.kind);
+                        for i in &g.items {
+                            println!(
+                                "  {}  {}  [{:?}, r{}]\n    {}{}",
+                                i.id,
+                                i.title,
+                                i.source,
+                                i.revision,
+                                i.summary,
+                                if i.summary_truncated {
+                                    "  (cut: `chloe memory show` for all)"
+                                } else {
+                                    ""
+                                }
+                            );
+                        }
+                    }
+                    println!(
+                        "{} of {} characters used{}",
+                        pack.used,
+                        pack.budget,
+                        if pack.omitted > 0 {
+                            format!(", {} more relevant memories did not fit", pack.omitted)
+                        } else {
+                            String::new()
+                        }
+                    );
                 }
             }
             MemoryCommand::Search {

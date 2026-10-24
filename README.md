@@ -31,7 +31,7 @@ chloe mcp serve --mode hybrid            # full-text + vector search (recommende
 chloe eval                               # score FTS / Vector / Hybrid on a labelled set
 ```
 
-Manage memories yourself with the CLI (`--json` on everything): `chloe memory add|search|list|show|update|archive|history`.
+Manage memories yourself with the CLI (`--json` on everything): `chloe memory add|search|context|list|show|update|archive|history`.
 
 ## How it works
 

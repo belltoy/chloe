@@ -52,7 +52,7 @@ fn protocol_and_tool_lifecycle() {
             .unwrap()
             .contains("memory_search")
     );
-    assert_eq!(r[1]["result"]["tools"].as_array().unwrap().len(), 5);
+    assert_eq!(r[1]["result"]["tools"].as_array().unwrap().len(), 6);
     assert_eq!(r[2]["error"]["code"], -32601);
     let saved = payload(&r[3]);
     let id = saved["id"].as_str().unwrap();
@@ -330,4 +330,63 @@ fn search_reports_its_mode_and_why_it_degraded() {
     assert_eq!(p["candidates"], json!({"fts": 2, "vector": 0}));
     // (each run saves the memory once more)
     assert_eq!(p["hits"].as_array().unwrap().len(), 2);
+}
+
+#[test]
+fn context_pack_is_grouped_bounded_and_scoped() {
+    let dir = tempfile::tempdir().unwrap();
+    let store = SqliteStore::open(&dir.path().join("t.db")).unwrap();
+    let mk = |n: &str| {
+        let p = dir.path().join(n);
+        std::fs::create_dir(&p).unwrap();
+        store.resolve_project(&p).unwrap()
+    };
+    let (a, b) = (mk("a"), mk("b"));
+    let save = |i, kind: &str, title: &str| {
+        call(
+            i,
+            "memory_save",
+            json!({"kind": kind, "title": title, "content": format!("database {}", "x ".repeat(300))}),
+        )
+    };
+    // Project b saves one; project a never sees it.
+    let r = session(&store, b, &[save(1, "fact", "Theirs")]);
+    let theirs = payload(&r[0])["id"].as_str().unwrap().to_string();
+    let msgs = [
+        save(1, "gotcha", "Mine gotcha"),
+        save(2, "constraint", "Mine rule"),
+        call(
+            3,
+            "memory_context",
+            json!({"task": "database work", "budget_chars": 400}),
+        ),
+        call(4, "memory_context", json!({"task": "database work"})),
+        call(
+            5,
+            "memory_context",
+            json!({"task": "database work", "budget_chars": 5}),
+        ),
+        call(6, "memory_get", json!({"id": theirs})),
+    ];
+    let r = session(&store, a, &msgs);
+    let small = payload(&r[2]);
+    assert!(small["used"].as_u64().unwrap() <= 400, "{small}");
+    assert_eq!(small["mode"], "fts");
+    let full = payload(&r[3]);
+    let kinds: Vec<_> = full["groups"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|g| g["kind"].as_str().unwrap())
+        .collect();
+    assert_eq!(kinds, ["constraint", "gotcha"]);
+    assert_eq!(full["omitted"], 0);
+    let item = &full["groups"][0]["items"][0];
+    assert!(
+        item["id"].is_string() && item["source"] == "agent" && item["summary_truncated"] == true
+    );
+    assert!(!full.to_string().contains("Theirs"));
+    // Bad budget is an error result; another project's id cannot be expanded.
+    assert_eq!(payload(&r[4])["code"], "invalid_argument");
+    assert_eq!(payload(&r[5])["code"], "not_found");
 }

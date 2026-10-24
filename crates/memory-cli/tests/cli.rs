@@ -115,3 +115,32 @@ fn doctor_reports_unusable_database() {
         .collect();
     assert_eq!(failed, ["database_open"]);
 }
+
+#[test]
+fn memory_context_prints_a_bounded_grouped_pack() {
+    let e = Env {
+        dir: tempfile::tempdir().unwrap(),
+    };
+    assert!(e.run(&["init"]).0);
+    for (kind, title) in [("constraint", "Pool rule"), ("gotcha", "Pool trap")] {
+        let (ok, _) = e.run(&[
+            "memory",
+            "add",
+            "--title",
+            title,
+            "--content",
+            "pool sizing notes",
+            "--kind",
+            kind,
+        ]);
+        assert!(ok);
+    }
+    let (ok, pack) = e.run(&["memory", "context", "pool", "--budget", "1000"]);
+    assert!(ok);
+    assert_eq!(pack["mode"], "fts");
+    assert_eq!(pack["groups"][0]["kind"], "constraint");
+    assert_eq!(pack["groups"][1]["kind"], "gotcha");
+    assert!(pack["used"].as_u64().unwrap() <= 1000);
+    // A budget outside the allowed range fails.
+    assert!(!e.run(&["memory", "context", "pool", "--budget", "5"]).0);
+}

@@ -2,7 +2,7 @@
 
 `chloe mcp serve` is a stdio MCP server. Memories are scoped to the project of its working directory (or `--dir`), so agents must launch it from the project root — both clients below do this by default. Point every agent at the same database (`--db-path` / `CHLOE_DB`, default: platform data dir) to share memories.
 
-Tools: `memory_save`, `memory_search`, `memory_get`, `memory_update`, `memory_archive`.
+Tools: `memory_save`, `memory_search`, `memory_context` (a compact briefing for a task), `memory_get`, `memory_update`, `memory_archive`.
 
 Recommended: add `--mode hybrid` to every `chloe mcp serve` below (also in the TOML `args`). It needs a local Ollama embedding model and `chloe embeddings backfill`; if Ollama is down the search falls back to full-text and reports `degraded`. The default `--mode fts` has no stemming ("page" misses "pages") and no cross-language matching.
 

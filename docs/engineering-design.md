@@ -237,7 +237,7 @@ As built (B1-01): table `jobs`, unique on `(kind, dedup_key)`, so enqueueing the
 ### 6.6 Explain and Context Pack
 
 - **Explain**: a diagnostic mode returns, per hit, the retrieval paths that matched (FTS / Vector), their ranks, the scope, status and the main ranking factors, plus whether a path was skipped or degraded. Hard filters (scope, status) are applied before ranking and are reported.
-- **Context Pack**: given a task description and a token/character budget, returns memories grouped by kind, each as a short summary with its memory ID and source, in a bounded size; the agent expands a single memory with `memory_get`. It reuses the same retrieval and filters as search, so isolation guarantees are identical, and it never injects automatically.
+- **Context Pack** (as built, B3-06: `memory_engine::context_pack`, MCP tool `memory_context`, `chloe memory context`; the budget is in characters, 200 to 20000, default 4000; titles and summaries of up to 30 search results are packed in relevance order, each costing its title, its summary and a fixed 60 for id and metadata; summaries start at 300 characters and shrink to fit, items that still do not fit are counted in `omitted`; groups come out as constraint, decision, gotcha, procedure, fact; same search modes and `degraded` reporting as `memory_search`): given a task description and a token/character budget, returns memories grouped by kind, each as a short summary with its memory ID and source, in a bounded size; the agent expands a single memory with `memory_get`. It reuses the same retrieval and filters as search, so isolation guarantees are identical, and it never injects automatically.
 
 ## 7. Security, Privacy and Reliability
 
