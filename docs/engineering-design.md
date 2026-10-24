@@ -210,6 +210,8 @@ Triggers: SessionEnd (if available), manual `consolidate`, idle timeout (for age
 
 A job goes `pending → leased → succeeded / retry / dead_letter`. Each job stores `attempts`, error, next retry time and lease deadline; expired leases are reclaimed after a crash. Extraction is deduplicated by session ID; repeating any step must be idempotent. Exponential backoff has an upper bound, and users can inspect the failure queue and retry via the CLI.
 
+As built (B1-01): table `jobs`, unique on `(kind, dedup_key)`, so enqueueing the same work twice returns the existing job. `retry` is not a stored state: it is a `pending` job with `attempts > 0` waiting for its backoff (30 s, doubling, capped at 1 h; 5 attempts by default). A lease carries a `lease_id` that `complete`/`fail` must present; a worker whose lease expired and was reclaimed gets `stale_lease` and its late result is dropped. A job whose workers keep crashing dead-letters after its attempts are used up. There is no worker yet; `chloe jobs list|show|retry` inspects the queue and `doctor` reports its counts.
+
 ### 6.6 Explain and Context Pack
 
 - **Explain**: a diagnostic mode returns, per hit, the retrieval paths that matched (FTS / Vector), their ranks, the scope, status and the main ranking factors, plus whether a path was skipped or degraded. Hard filters (scope, status) are applied before ranking and are reported.

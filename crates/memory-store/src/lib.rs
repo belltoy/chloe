@@ -1,6 +1,7 @@
 //! SQLite implementation of `MemoryService`: migrations, transactions, FTS5, history, scope.
 
 mod events;
+mod jobs;
 mod project;
 
 use std::path::Path;
@@ -18,6 +19,7 @@ const MIGRATIONS: &[&str] = &[
     include_str!("migrations/001_init.sql"),
     include_str!("migrations/002_audit.sql"),
     include_str!("migrations/003_events.sql"),
+    include_str!("migrations/004_jobs.sql"),
 ];
 /// How long `open` keeps retrying a locked initialisation.
 const OPEN_RETRY: Duration = Duration::from_secs(5);

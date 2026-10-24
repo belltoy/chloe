@@ -5,6 +5,7 @@ use std::path::Path;
 use std::process::{Child, ChildStdin, ChildStdout, Command, Stdio};
 
 use anyhow::{Context, bail};
+use memory_core::job::JobQueue;
 use memory_ingest::spool;
 use memory_store::SqliteStore;
 use serde::Serialize;
@@ -54,6 +55,18 @@ pub fn run(db_path: &Path, reindex: bool) -> Vec<Check> {
                     .map(|(pending, rejected)| {
                         format!(
                             "{pending} waiting for `chloe events import`, {rejected} quarantined"
+                        )
+                    })
+                    .map_err(Into::into),
+            );
+            add(
+                "jobs",
+                store
+                    .counts()
+                    .map(|c| {
+                        format!(
+                            "{} pending, {} running, {} dead-lettered",
+                            c.pending, c.leased, c.dead_letter
                         )
                     })
                     .map_err(Into::into),

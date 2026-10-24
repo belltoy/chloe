@@ -1,6 +1,7 @@
 mod doctor;
 mod events;
 mod hook;
+mod jobs;
 
 use std::io::Read;
 use std::path::PathBuf;
@@ -65,6 +66,11 @@ enum Command {
     Events {
         #[command(subcommand)]
         command: events::EventsCommand,
+    },
+    /// Background jobs: list the queue, inspect failures, retry them
+    Jobs {
+        #[command(subcommand)]
+        command: jobs::JobsCommand,
     },
     /// Agent hook capture (Claude Code, Codex)
     Hook {
@@ -296,6 +302,7 @@ fn run(cli: Cli) -> anyhow::Result<bool> {
             std::io::stdout().lock(),
         )?,
         Command::Events { command } => events::run(&store, &config, command, json)?,
+        Command::Jobs { command } => jobs::run(&store, command, json)?,
         Command::Doctor { .. } | Command::Hook { .. } => unreachable!(),
         Command::Memory { command } => match command {
             MemoryCommand::Add {
