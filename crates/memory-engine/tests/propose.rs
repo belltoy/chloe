@@ -398,6 +398,7 @@ fn a_decided_candidate_takes_no_proposal() {
         method: ProposalMethod::Rules,
         reason: "r".into(),
         similar: vec![],
+        needs_review: None,
     };
     assert!(matches!(
         w.store.set_proposal(&id, &p),

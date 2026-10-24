@@ -136,6 +136,10 @@ pub struct Proposal {
     /// Plain-language explanation.
     pub reason: String,
     pub similar: Vec<SimilarMemory>,
+    /// Set by the safety policy when it will not apply this proposal on its own: why a person
+    /// has to decide.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub needs_review: Option<String>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

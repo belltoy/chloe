@@ -5,7 +5,7 @@
 use clap::Args;
 use memory_core::Config;
 use memory_core::job::JobQueue;
-use memory_engine::{Window, plan, propose_pending, run_next};
+use memory_engine::{Window, apply_policy, plan, propose_pending, run_next};
 use memory_ingest::spool;
 use memory_store::SqliteStore;
 use serde_json::json;
@@ -27,6 +27,9 @@ pub struct Consolidate {
     /// Rough character budget of those events
     #[arg(long, default_value_t = Window::default().max_chars)]
     max_chars: usize,
+    /// Only suggest: do not auto-merge low-risk duplicates or flag conflicts
+    #[arg(long)]
+    no_auto_apply: bool,
     #[command(flatten)]
     provider: Provider,
 }
@@ -66,6 +69,11 @@ pub fn run(
     // The same model compares new candidates with similar memories; when it is down those
     // candidates stay without a proposal and the next run tries again.
     let proposals = propose_pending(store, Some(&extractor))?;
+    let applied = if args.no_auto_apply {
+        Default::default()
+    } else {
+        apply_policy(store)?
+    };
     let counts = store.counts()?;
     if json {
         return print_json(&json!({
@@ -75,6 +83,9 @@ pub fn run(
             "new_candidates": candidates,
             "proposed": proposals.proposed,
             "proposals_deferred": proposals.deferred,
+            "auto_merged": applied.merged,
+            "flagged_conflicts": applied.flagged,
+            "needs_review": applied.needs_review,
             "failed": failed.iter().map(|(s, f)| json!({
                 "session": s, "error": f.error, "dead_letter": f.dead_letter,
             })).collect::<Vec<_>>(),
@@ -102,6 +113,12 @@ pub fn run(
             proposals.proposed, proposals.deferred
         );
     }
+    if applied.merged + applied.flagged + applied.needs_review > 0 {
+        println!(
+            "policy: {} duplicates auto-merged, {} conflicts flagged, {} need a person",
+            applied.merged, applied.flagged, applied.needs_review
+        );
+    }
     if candidates > 0 {
         println!("review them with `chloe candidates list`");
     }
@@ -110,15 +127,24 @@ pub fn run(
 
 pub fn list(store: &SqliteStore, limit: usize, json: bool) -> anyhow::Result<()> {
     use memory_core::extract::{CandidateState, CandidateStore};
-    let all = store.candidates(Some(CandidateState::Pending), limit)?;
+    // Open = waiting for a decision: pending, or flagged as a conflict.
+    let mut all = store.candidates(Some(CandidateState::Pending), limit)?;
+    all.extend(store.candidates(Some(CandidateState::Conflict), limit)?);
+    all.sort_by_key(|c| std::cmp::Reverse(c.created_at));
+    all.truncate(limit);
     if json {
         return print_json(&all);
     }
     for c in &all {
         println!(
-            "{}  {:?}  {}  ({} event(s), session {})",
+            "{}  {:?}{}  {}  ({} event(s), session {})",
             c.id,
             c.candidate.kind,
+            if c.state == CandidateState::Conflict {
+                " [conflict]"
+            } else {
+                ""
+            },
             c.candidate.title,
             c.candidate.evidence.events.len(),
             c.candidate.evidence.native_session_id
@@ -131,6 +157,9 @@ pub fn list(store: &SqliteStore, limit: usize, json: bool) -> anyhow::Result<()>
                 p.reason,
                 p.method
             );
+            if let Some(why) = &p.needs_review {
+                println!("    needs a person: {why}");
+            }
         }
     }
     if all.is_empty() {

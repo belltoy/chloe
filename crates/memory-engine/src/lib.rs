@@ -3,8 +3,10 @@
 //! one job. Nothing here knows about a database or a model: stores and the extractor come in
 //! through the core traits, and there is no daemon — the caller loops.
 
+mod policy;
 mod propose;
 
+pub use policy::{Outcome, PolicyReport, apply_policy, evaluate};
 pub use propose::{ProposeReport, propose_pending};
 
 use memory_core::extract::{CandidateStore, ExtractionInput, MemoryExtractor};
