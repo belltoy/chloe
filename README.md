@@ -2,7 +2,7 @@
 
 Local-first long-term memory for coding agents (Claude Code, Codex, ...). Agents save, search, update and archive project knowledge through MCP; data lives in a local SQLite file.
 
-> **Status: v0.1.0 candidate (Milestone A).** Manual memory over MCP and CLI is complete; automatic capture and hybrid retrieval (Milestone B) are not started. See `docs/implementation-plan.md`.
+> **Status: Milestone A complete; Milestone B in progress.** Manual memory over MCP and CLI works. Built from Milestone B: hook capture, extraction into reviewable candidates with a local model, an embedding index, hybrid retrieval and an evaluation harness. Not done: the real end-to-end acceptance run (Claude capture, extract, review, Codex retrieval) and the context pack (B3-06). See `docs/implementation-plan.md`.
 
 ## Quickstart (about 5 minutes)
 
@@ -18,6 +18,17 @@ codex mcp add chloe -- chloe mcp serve   # Codex (add default_tools_approval_mod
 
 **Required:** paste the snippet from [`docs/agents/memory-instructions.md`](docs/agents/memory-instructions.md) into your `CLAUDE.md` / `AGENTS.md`. Without it, Claude Code and Codex did not search or save on their own in our control run, even though the server sends the same text as MCP `instructions`. Both agents share one database, so what one saves the other can search. Details, verified versions and a runnable two-way demo: [`docs/mcp-clients.md`](docs/mcp-clients.md).
 
+Optional, all local (needs [Ollama](https://ollama.com) on this machine; nothing is sent elsewhere unless you pass `--allow-remote`):
+
+```sh
+chloe hook install claude                # capture sessions (also: codex); events are redacted and queued
+chloe consolidate                        # extract memory candidates from captured sessions
+chloe candidates list                    # review them; nothing becomes a memory without you
+chloe embeddings backfill                # embed memories (default model qwen3-embedding:0.6b)
+chloe mcp serve --mode hybrid            # full-text + vector search (fts is the default; vector also exists)
+chloe eval                               # score FTS / Vector / Hybrid on a labelled set
+```
+
 Manage memories yourself with the CLI (`--json` on everything): `chloe memory add|search|list|show|update|archive|history`.
 
 ## How it works
@@ -31,18 +42,22 @@ CLI ───────────────────────┘    
 
 - One database file shared by every `chloe` process; each MCP server is scoped to the project of its working directory (a Git worktree resolves to its main checkout).
 - Updates use optimistic concurrency (`expected_revision`); every change appends to an audit trail (`chloe memory history`).
-- Search is SQLite FTS5 over title and body, active memories of the current project only by default. Global memories are explicit (`scope: global`, `include_global`).
+- Search defaults to SQLite FTS5 over title and body (Chinese is cut into words with jieba), active memories of the current project only. `--mode vector|hybrid` adds embeddings; when the model server is down the search falls back to full-text and says why (`degraded`). Global memories are explicit (`scope: global`, `include_global`).
+- Architecture and evaluation: [`docs/architecture.md`](docs/architecture.md), `docs/evidence/milestone-b/eval/`.
 
 ## Privacy
 
-- Everything is local: no network listeners, no remote services, no LLM calls. stdout carries only command output and MCP messages; logs go to stderr and never contain memory bodies.
+- Everything is local: no network listeners and no remote services. The optional model features talk only to a local Ollama unless you opt in to a remote one. stdout carries only command output and MCP messages; logs go to stderr and never contain memory bodies.
 - The database directory is created `0700` and the file `0600` (Unix).
 - Memories are plain text in SQLite: do not save secrets. Memory text retrieved by an agent is untrusted data, not instructions.
 
 ## Design trade-offs and known limitations
 
 - SQLite shared by several processes (WAL + 5 s busy timeout) instead of a daemon: simple and robust, but a write blocked longer than the timeout returns a storage error.
-- FTS5 `unicode61` tokenizer: unsegmented Chinese/Japanese text matches whole runs only, so short CJK queries often miss. Deferred to Milestone B (task B3-07); memories saved now are re-indexed by that migration, nothing is lost.
+- Chinese keyword search uses jieba's default dictionary (about 3 MB in the binary, ~70 ms to load on first use). Japanese and Korean are not segmented.
+- Hybrid trails Vector on cross-language queries (see `docs/evidence/milestone-b/eval/fusion-gate.md`); the held-out set is AI-written and has not been reviewed by a person.
+- Hooks write to `$CHLOE_DB` or the default database; `--db-path` given at `hook install` is not recorded.
+- Extraction keeps only the newest events that fit its window; a very long burst of new events is partly skipped.
 - A moved or renamed project directory becomes a new project; there is no alias-linking command yet.
 - Search snippets are cut to 1000 characters (`memory_get` returns the full body); search returns at most 50 hits.
 - Global memories can be edited from any project.

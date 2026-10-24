@@ -61,6 +61,7 @@ pub fn run(args: Eval, json: bool) -> anyhow::Result<()> {
             "arch": std::env::consts::ARCH,
             "cpus": std::thread::available_parallelism().map_or(0, |n| n.get()),
             "report": report,
+            "diagnosis": diagnosis,
         }));
     }
     println!("# Retrieval evaluation\n");

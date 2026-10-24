@@ -16,7 +16,13 @@ pub enum EmbeddingsCommand {
     /// The pinned model and dimension, and how many memories still lack a vector
     Status,
     /// Embed every memory without a vector (rebuilds everything after a model switch)
-    Backfill(Provider),
+    Backfill {
+        /// Embed at most this many memories in one run; run again for the rest
+        #[arg(long, default_value_t = 500)]
+        limit: usize,
+        #[command(flatten)]
+        provider: Provider,
+    },
 }
 
 pub fn run(store: &SqliteStore, command: EmbeddingsCommand, json: bool) -> anyhow::Result<()> {
@@ -36,21 +42,24 @@ pub fn run(store: &SqliteStore, command: EmbeddingsCommand, json: bool) -> anyho
                 None => println!("no embedding model chosen yet\nmissing = {missing}"),
             }
         }
-        EmbeddingsCommand::Backfill(provider) => {
+        EmbeddingsCommand::Backfill { limit, provider } => {
             let embedder = provider.open()?;
             let plan = plan_embeddings(store, &embedder, OffsetDateTime::now_utc())?;
             let worker = format!("cli-{}", std::process::id());
             let (mut done, mut failed) = (0, vec![]);
-            while let Some(d) =
-                run_next_embedding(store, &embedder, &worker, OffsetDateTime::now_utc())?
+            while done + failed.len() < limit
+                && let Some(d) =
+                    run_next_embedding(store, &embedder, &worker, OffsetDateTime::now_utc())?
             {
                 match d.result {
                     Ok(()) => done += 1,
                     Err(e) => failed.push((d.memory, e)),
                 }
             }
+            let remaining = store.missing_embeddings(usize::MAX >> 1)?.len();
             if json {
                 return print_json(&json!({
+                    "remaining": remaining,
                     "queued": plan.enqueued,
                     "already_queued": plan.already_queued,
                     "rebuilt": plan.rebuilt,
@@ -62,7 +71,13 @@ pub fn run(store: &SqliteStore, command: EmbeddingsCommand, json: bool) -> anyho
             if plan.rebuilt {
                 println!("model changed: old vectors dropped, rebuilding");
             }
-            println!("queued {}, embedded {done}", plan.enqueued);
+            println!(
+                "queued {}, embedded {done}, {remaining} still without a vector",
+                plan.enqueued
+            );
+            if remaining > 0 && done + failed.len() >= limit {
+                println!("limit {limit} reached: run `chloe embeddings backfill` again");
+            }
             for (m, e) in &failed {
                 println!("  {m}: {e} (will retry, or `chloe jobs list`)");
             }

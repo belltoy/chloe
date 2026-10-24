@@ -275,7 +275,7 @@ fn line(m: &Memory) -> String {
 }
 
 fn run(cli: Cli) -> anyhow::Result<bool> {
-    let config = Config::resolve(cli.db_path, cli.log_level)?;
+    let config = Config::resolve(cli.db_path.clone(), cli.log_level)?;
     // Logs go to stderr so stdout stays clean for JSON and MCP stdio.
     tracing_subscriber::fmt()
         .with_env_filter(
@@ -303,7 +303,15 @@ fn run(cli: Cli) -> anyhow::Result<bool> {
     if let Command::Hook { command } = cli.command {
         match command {
             HookCommand::Claude | HookCommand::Codex => unreachable!("handled in main"),
-            HookCommand::Install { agent, settings } => hook::edit(agent, settings, true)?,
+            HookCommand::Install { agent, settings } => {
+                hook::edit(agent, settings, true)?;
+                if cli.db_path.is_some() {
+                    // The hook command line carries no database path.
+                    eprintln!(
+                        "note: --db-path is not recorded in the hook; hooks write to $CHLOE_DB or the default database. Set CHLOE_DB in the agent's environment to use this one."
+                    );
+                }
+            }
             HookCommand::Uninstall { agent, settings } => hook::edit(agent, settings, false)?,
         }
         return Ok(true);
