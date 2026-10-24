@@ -409,3 +409,71 @@ fn busy_database_fails_with_storage_error_then_recovers() {
     other.execute_batch("ROLLBACK").unwrap();
     s.save(new(None, "t", "c")).unwrap();
 }
+
+#[test]
+fn chinese_keywords_match_through_the_trigram_index() {
+    let (dir, path) = db();
+    let store = SqliteStore::open(&path).unwrap();
+    let p = project(&store, &dir, "p");
+    let wal = store
+        .save(new(Some(p), "并发写入", "数据库使用 WAL 模式支持并发读写"))
+        .unwrap();
+    store
+        .save(new(Some(p), "Other", "nothing about that"))
+        .unwrap();
+    // A whole sentence: shares 3-character runs with the body, not a substring of it.
+    let hits = store.search(Some(p), q("怎样支持并发读写？")).unwrap();
+    assert_eq!(hits.len(), 1);
+    assert_eq!(hits[0].memory.id, wal.id);
+    // Title matches, mixed script, and an English word inside Chinese text.
+    assert_eq!(store.search(Some(p), q("并发写入")).unwrap().len(), 1);
+    assert_eq!(store.search(Some(p), q("WAL模式")).unwrap().len(), 1);
+    // Quotes and FTS syntax in the query stay data.
+    assert!(store.search(Some(p), q("\"并发读写\" OR * NEAR(")).is_ok());
+    // A one- or two-character CJK query has no trigram; it falls back to the regular index
+    // instead of failing.
+    assert!(store.search(Some(p), q("并发")).is_ok());
+
+    // Edits and archives keep the index in step, and a rebuild leaves it consistent.
+    let m = store
+        .update(
+            Some(p),
+            wal.id,
+            1,
+            MemoryChanges {
+                content: Some("改成了别的内容".into()),
+                ..Default::default()
+            },
+        )
+        .unwrap();
+    assert!(store.search(Some(p), q("支持并发读写")).unwrap().is_empty());
+    assert_eq!(store.search(Some(p), q("改成了别的")).unwrap().len(), 1);
+    store.reindex().unwrap();
+    assert!(store.doctor().unwrap().fts_ok);
+    store.archive(Some(p), m.id, m.revision).unwrap();
+    assert!(store.search(Some(p), q("改成了别的")).unwrap().is_empty());
+}
+
+#[test]
+fn memories_saved_before_the_cjk_index_are_searchable_after_upgrade() {
+    let (dir, path) = db();
+    let p;
+    {
+        let store = SqliteStore::open(&path).unwrap();
+        p = project(&store, &dir, "p");
+        store
+            .save(new(Some(p), "旧记忆", "升级之前保存的中文内容"))
+            .unwrap();
+    }
+    // Simulate a database from before migration 010: drop the index and roll the version back.
+    {
+        let conn = rusqlite::Connection::open(&path).unwrap();
+        conn.execute_batch(
+            "DROP TRIGGER memories_cjk_ai; DROP TRIGGER memories_cjk_ad; DROP TRIGGER memories_cjk_au;
+             DROP TABLE memory_fts_cjk; PRAGMA user_version = 9;",
+        )
+        .unwrap();
+    }
+    let store = SqliteStore::open(&path).unwrap();
+    assert_eq!(store.search(Some(p), q("升级之前保存")).unwrap().len(), 1);
+}

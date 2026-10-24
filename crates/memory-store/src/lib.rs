@@ -27,6 +27,7 @@ const MIGRATIONS: &[&str] = &[
     include_str!("migrations/007_candidate_proposal.sql"),
     include_str!("migrations/008_memory_links.sql"),
     include_str!("migrations/009_embeddings.sql"),
+    include_str!("migrations/010_fts_cjk.sql"),
 ];
 /// How long `open` keeps retrying a locked initialisation.
 const OPEN_RETRY: Duration = Duration::from_secs(5);
@@ -54,6 +55,60 @@ fn create_private(path: &Path) -> Result<()> {
     }
     file.open(path).map_err(storage)?;
     Ok(())
+}
+
+fn is_cjk(c: char) -> bool {
+    matches!(c,
+        '\u{3040}'..='\u{30FF}' | '\u{3400}'..='\u{4DBF}' | '\u{4E00}'..='\u{9FFF}'
+        | '\u{AC00}'..='\u{D7AF}' | '\u{F900}'..='\u{FAFF}')
+}
+
+/// Terms the trigram index can match: every 3 consecutive CJK characters of each run, and each
+/// run of letters or digits of 3+ characters. Shorter pieces cannot match a trigram index and
+/// are dropped. `None` when the query has no CJK text, or nothing usable is left (the caller
+/// then uses the regular index).
+// shortcut: CJK words of one or two characters are not searchable by keyword, upgrade with a LIKE scan if that matters.
+fn cjk_query(query: &str) -> Option<String> {
+    const MAX_TERMS: usize = 64;
+    if !query.chars().any(is_cjk) {
+        return None;
+    }
+    let mut terms: Vec<String> = vec![];
+    let mut run: Vec<char> = vec![];
+    let mut flush = |run: &mut Vec<char>, cjk: bool| {
+        if cjk {
+            terms.extend(run.windows(3).map(|w| w.iter().collect()));
+        } else if run.len() >= 3 {
+            terms.push(run.iter().collect());
+        }
+        run.clear();
+    };
+    let class = |c: char| match c {
+        c if is_cjk(c) => 2,
+        c if c.is_alphanumeric() || c == '_' => 1,
+        _ => 0,
+    };
+    let mut current = 0;
+    for c in query.chars() {
+        if class(c) != current {
+            flush(&mut run, current == 2);
+            current = class(c);
+        }
+        if current != 0 {
+            run.push(c);
+        }
+    }
+    flush(&mut run, current == 2);
+    let mut seen = std::collections::HashSet::new();
+    terms.retain(|t| seen.insert(t.clone()));
+    terms.truncate(MAX_TERMS);
+    (!terms.is_empty()).then(|| {
+        terms
+            .iter()
+            .map(|t| format!("\"{}\"", t.replace('"', "\"\"")))
+            .collect::<Vec<_>>()
+            .join(" OR ")
+    })
 }
 
 fn storage(e: impl std::fmt::Display) -> Error {
@@ -121,21 +176,24 @@ impl SqliteStore {
             schema_version: schema_version(&conn)?,
             sqlite_ok: integrity == "ok",
             // The command errors out when the index disagrees with `memories`.
-            fts_ok: conn
-                .execute(
-                    "INSERT INTO memory_fts(memory_fts, rank) VALUES ('integrity-check', 1)",
+            fts_ok: ["memory_fts", "memory_fts_cjk"].iter().all(|t| {
+                conn.execute(
+                    &format!("INSERT INTO {t}({t}, rank) VALUES ('integrity-check', 1)"),
                     [],
                 )
-                .is_ok(),
+                .is_ok()
+            }),
             foreign_keys_ok: fk_violation.is_none(),
         })
     }
 
     /// Rebuilds the FTS index from `memories`.
     pub fn reindex(&self) -> Result<()> {
-        self.conn()
-            .execute("INSERT INTO memory_fts(memory_fts) VALUES ('rebuild')", [])
-            .map_err(storage)?;
+        let conn = self.conn();
+        for t in ["memory_fts", "memory_fts_cjk"] {
+            conn.execute(&format!("INSERT INTO {t}({t}) VALUES ('rebuild')"), [])
+                .map_err(storage)?;
+        }
         Ok(())
     }
 
@@ -267,26 +325,32 @@ impl MemoryService for SqliteStore {
     fn search(&self, project: Option<ProjectId>, q: SearchQuery) -> Result<Vec<Hit>> {
         // Quote every token so user input can never be parsed as FTS5 syntax. Tokens are OR-ed:
         // agents send long natural-language queries, and AND returns nothing if one word is absent.
-        let fts_query = q
-            .query
-            .split_whitespace()
-            .map(|t| format!("\"{}\"", t.replace('"', "\"\"")))
-            .collect::<Vec<_>>()
-            .join(" OR ");
+        // Queries with CJK text go to the trigram index; the table name is a constant.
+        let (table, fts_query) = match cjk_query(&q.query) {
+            Some(fts) => ("memory_fts_cjk", fts),
+            None => (
+                "memory_fts",
+                q.query
+                    .split_whitespace()
+                    .map(|t| format!("\"{}\"", t.replace('"', "\"\"")))
+                    .collect::<Vec<_>>()
+                    .join(" OR "),
+            ),
+        };
         if fts_query.is_empty() {
             return Err(Error::InvalidArgument("empty query".into()));
         }
         let conn = self.conn();
         let mut stmt = conn
-            .prepare(
+            .prepare(&format!(
                 "SELECT m.id, m.project_id, m.kind, m.title, m.content, m.status, m.source, \
-                        m.created_at, m.updated_at, m.revision, bm25(memory_fts, 5.0, 1.0) \
-                 FROM memory_fts JOIN memories m ON m.rowid = memory_fts.rowid \
-                 WHERE memory_fts MATCH ?1 \
+                        m.created_at, m.updated_at, m.revision, bm25({table}, 5.0, 1.0) \
+                 FROM {table} JOIN memories m ON m.rowid = {table}.rowid \
+                 WHERE {table} MATCH ?1 \
                    AND (m.project_id IS ?2 OR (?3 AND m.project_id IS NULL)) \
                    AND (?4 OR m.status = 'active') \
-                 ORDER BY bm25(memory_fts, 5.0, 1.0), m.updated_at DESC LIMIT ?5",
-            )
+                 ORDER BY bm25({table}, 5.0, 1.0), m.updated_at DESC LIMIT ?5"
+            ))
             .map_err(storage)?;
         let rows = stmt
             .query_map(

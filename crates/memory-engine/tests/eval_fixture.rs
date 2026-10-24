@@ -87,10 +87,9 @@ fn fts_baseline_has_not_drifted() {
             .unwrap()
             .recall_at_5
     };
-    // Known limitation (B3-07): unicode61 does not segment Chinese, so Chinese-only queries
-    // find nothing. When B3-07 lands this assertion should be replaced by a real floor.
-    assert_eq!(fts("zh"), 0.0);
+    // Chinese keyword search is the trigram index (B3-07); it was 0.00 before.
+    assert!(fts("zh") >= 0.6, "{}", fts("zh"));
     assert!(fts("en") >= 0.6, "{}", fts("en"));
-    assert!(fts("all") >= 0.3, "{}", fts("all"));
+    assert!(fts("all") >= 0.45, "{}", fts("all"));
     assert_eq!(report.rows.len(), 15);
 }
