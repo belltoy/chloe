@@ -65,3 +65,29 @@ Before changing anything I added 4 fresh sessions (t06, t07, u11, u12; 24 in tot
 - t06 still produces a gotcha and a procedure about the sandbox cache. They are not constraints or decisions, so they count under content noise, not under the hard line.
 - Not computed: content-valid rate and hallucination review for the new run. The 13 extras and the new candidates need the same person review as `review.md`.
 - Caveat: t01, t05 motivated the change, so their improvement is not independent evidence. t06 and t07 were written before the change and show the rule helps on constraints and some decisions, but t06/t07 outputs were seen at baseline before the fix was written.
+
+## Phase 1, round 2 (decisions that are only a request)
+
+Cause: a user prompt that merely asks for an edit ("rename tmp to buffer", "bump the version") was written up as "the user decided ...". The user-prompt guard cannot catch it because a user prompt really is cited.
+
+Before changing the prompt I added 4 fresh sessions (n06 version bump, n07 add a test, n08 colour change, u13 a stated choice with a reason; 28 in total). At baseline (`report-28-before.md`) five decisions came from plain requests: n02, n06, n07, n08, t07.
+
+Prompt changes (`memory-llm/src/prompt.rs`), three attempts, all with the same model and set. The examples in the prompt are different from the sessions in the set on purpose:
+
+| Attempt | Found | Candidates | False | No-knowledge sessions empty | Decisions from a plain request |
+|---|---|---|---|---|---|
+| baseline (round 1 prompt) | 15 / 16 | 44 | 15 (trap 5) | 7 / 13 | 5 (n02, n06, n07, n08, t07) |
+| 1: "a request is a task, not a decision" | 15 / 16 | 42 | 15 (trap 5) | 7 / 13 | 4: the sentence alone did not work |
+| 2: plus concrete request examples, "such a session gets an empty list" | 14 / 16 | 32 | 8 (trap 1) | 8 / 13 | 1 (n07) but lost u01 (bug cause, nothing extracted) and the rustls label (content found, label too strict) |
+| **3 (kept): "... not knowledge unless it exposed a cause, a failure or a surprise"** | **16 / 16** | **37** | **8 (trap 2)** | **9 / 13** | **1 (n07)** |
+
+(`report-28-after.md` is attempt 3. Attempt 2 got worse on u01 because the wording told the model that a fix session is empty; attempt 3 repairs that.)
+
+Status of the hard lines on this 28-session set after round 2:
+- Constraint false extraction: 0.
+- Decision false extraction: **1** (n07: "the user decided to add a unit test ..."). Not met. The two remaining trap matches are t06 (a gotcha and a procedure about the sandbox cache: noise, not a constraint or decision).
+- Hallucination review: not done for the new outputs.
+
+Caveats: one model, one run per attempt, temperature 0. One added sentence moved found items from 14 to 16 and a session from empty to non-empty, so the numbers are sensitive to wording and 16/16 is not a stable property. The u04 hit appeared without a change aimed at it. The examples in the prompt were written to differ from the set, but the set was used to choose between attempts, so these figures are no longer a held-out measure; new sessions are needed to check them. Attempt 3 was chosen after seeing attempt 2's loss on u01.
+
+Next options for the last decision false extraction: a second verification pass over each decision ("is this a task or a choice with a reason?"), or accept the residue and rely on review (decisions are never auto-merged and every candidate waits for a person).

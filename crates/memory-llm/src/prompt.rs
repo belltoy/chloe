@@ -22,12 +22,17 @@ sessions can reuse it.
 
 Most sessions contain nothing worth remembering, and an empty list is the correct and \
 expected answer for them. Output an item only when the events show one of these:
-- decision: someone chose an approach and the events give the reason.
+- decision: someone chose an approach over another and the events give the reason, or stated how things are to be done from now on.
 - constraint: the user stated a rule that must hold in future work.
 - procedure: a sequence of steps that was found to work for a real problem.
 - gotcha: something failed or surprised, and the events show the cause or the fix.
 - fact: a lasting property of the project that the events state outright.
 A user message that states a decision or a rule (\"Decision: ...\", \"always\", \"never\", \"must\") is always worth an item, even in a long session of routine work.
+A request to do something is a task, not a decision, even though the user wanted it done: \
+\"move this function to utils\", \"upgrade to 2.0\", \"delete the old log file\", \"make the \
+header bigger\". Carrying a task out, and what it changed, is not knowledge unless it exposed a cause, a \
+failure or a surprise; a task with none of those gets an empty list. A decision is a choice between alternatives with its reason, or a rule for \
+future work (\"we always ...\", \"from now on ...\", \"instead of X because ...\").
 Constraints and decisions need the user: only a user_prompt event can state a rule or choose \
 an approach, so cite it. Something only the assistant proposed, preferred or suggested, and the \
 user did not adopt, is not a decision or a constraint, nor any other item.

@@ -1300,6 +1300,158 @@
     }
    ],
    "traps": []
+  },
+  {
+   "id": "n06-version-bump",
+   "group": "nothing",
+   "title": "Fresh: a one-off request to bump a version",
+   "events": [
+    {
+     "id": "p1",
+     "kind": "user_prompt",
+     "text": "bump the crate version to 1.4.1 and update the changelog"
+    },
+    {
+     "id": "e1",
+     "kind": "tool_result_summary",
+     "tool": "Edit",
+     "text": "/repo/Cargo.toml\n- version = \"1.4.0\"\n+ version = \"1.4.1\""
+    },
+    {
+     "id": "e2",
+     "kind": "tool_result_summary",
+     "tool": "Edit",
+     "text": "/repo/CHANGELOG.md\n+ ## 1.4.1\n+ - fix typo in help text"
+    },
+    {
+     "id": "a1",
+     "kind": "assistant_message",
+     "text": "Bumped the version to 1.4.1 and added a changelog entry."
+    },
+    {
+     "id": "end",
+     "kind": "session_end"
+    }
+   ],
+   "expect": [],
+   "traps": []
+  },
+  {
+   "id": "n07-add-test",
+   "group": "nothing",
+   "title": "Fresh: a request to add a test",
+   "events": [
+    {
+     "id": "p1",
+     "kind": "user_prompt",
+     "text": "add a unit test for parse_date that covers an empty string"
+    },
+    {
+     "id": "e1",
+     "kind": "tool_result_summary",
+     "tool": "Edit",
+     "text": "/repo/tests/dates.rs\n+ #[test]\n+ fn empty_string_is_an_error() { assert!(parse_date(\"\").is_err()); }"
+    },
+    {
+     "id": "b1",
+     "kind": "tool_result_summary",
+     "tool": "Bash",
+     "text": "cargo test dates: 1 passed"
+    },
+    {
+     "id": "a1",
+     "kind": "assistant_message",
+     "text": "Added empty_string_is_an_error; it passes."
+    },
+    {
+     "id": "end",
+     "kind": "session_end"
+    }
+   ],
+   "expect": [],
+   "traps": []
+  },
+  {
+   "id": "n08-ui-tweak",
+   "group": "nothing",
+   "title": "Fresh: a cosmetic request",
+   "events": [
+    {
+     "id": "p1",
+     "kind": "user_prompt",
+     "text": "make the save button green instead of blue"
+    },
+    {
+     "id": "e1",
+     "kind": "tool_result_summary",
+     "tool": "Edit",
+     "text": "/repo/src/ui/button.css\n- background: #2060d0;\n+ background: #1f9d55;"
+    },
+    {
+     "id": "a1",
+     "kind": "assistant_message",
+     "text": "The save button is green now."
+    },
+    {
+     "id": "end",
+     "kind": "session_end"
+    }
+   ],
+   "expect": [],
+   "traps": []
+  },
+  {
+   "id": "u13-stated-choice-with-reason",
+   "group": "useful",
+   "title": "Fresh: the user states a choice and why, in a short remark",
+   "events": [
+    {
+     "id": "p1",
+     "kind": "user_prompt",
+     "text": "add retries to the uploader"
+    },
+    {
+     "id": "e1",
+     "kind": "tool_result_summary",
+     "tool": "Edit",
+     "text": "/repo/src/upload.rs\n+ retry(3, backoff_exponential(), || send(chunk))"
+    },
+    {
+     "id": "p2",
+     "kind": "user_prompt",
+     "text": "by the way we use exponential backoff everywhere, never fixed sleeps, fixed sleeps made our retries stampede the API last year"
+    },
+    {
+     "id": "a1",
+     "kind": "assistant_message",
+     "text": "Retries use exponential backoff."
+    },
+    {
+     "id": "end",
+     "kind": "session_end"
+    }
+   ],
+   "expect": [
+    {
+     "kind_any": [
+      "decision",
+      "constraint"
+     ],
+     "terms": [
+      [
+       "exponential",
+       "backoff"
+      ],
+      [
+       "fixed",
+       "stampede",
+       "sleep"
+      ]
+     ],
+     "note": "exponential backoff, never fixed sleeps, because of stampedes"
+    }
+   ],
+   "traps": []
   }
  ]
 }
