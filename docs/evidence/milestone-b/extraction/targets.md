@@ -36,7 +36,7 @@ Two measures are clearly not met (Constraint/Decision false extraction, content-
 
 ## To turn goals into gates
 
-A second reviewer judging the same candidates, about 40 sessions, at least one more model, and a uniform review of the 12 label matches.
+About 40 sessions, at least one more model, and a uniform review of the 12 label matches and the other candidates not yet reviewed. The verdicts on the 17 extras in `review.md` were already checked by two reviewers (reported by the user; the second reviewer's notes are not in the repo). The session labels in `sessions.json` (`expect`, `traps`) are not covered by that.
 
 ## "Serious errors never become Active on their own" (checked)
 
