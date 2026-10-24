@@ -55,6 +55,8 @@ pub const CODEX: Spec = Spec {
 
 pub const PROMPT_CHARS: usize = 4000;
 pub const SUMMARY_CHARS: usize = 300;
+/// Room for the path plus what an edit replaced and what it wrote.
+pub const EDIT_CHARS: usize = 1200;
 const NAME_CHARS: usize = 100;
 
 #[derive(Debug, thiserror::Error)]
@@ -119,7 +121,12 @@ pub fn parse_hook(
                 if mentions_sensitive_path(&raw) {
                     ev.redactions.push("sensitive_path".into());
                 } else {
-                    set_text(&mut ev, clean(&raw, SUMMARY_CHARS));
+                    let limit = if matches!(tool, Some("Edit" | "MultiEdit")) {
+                        EDIT_CHARS
+                    } else {
+                        SUMMARY_CHARS
+                    };
+                    set_text(&mut ev, clean(&raw, limit));
                 }
             }
         }
@@ -135,7 +142,12 @@ fn set_text(ev: &mut AgentEvent, c: crate::redact::Cleaned) {
 }
 
 /// What the tool was asked to do, from its input only: the command, path, pattern or query.
+/// An edit also carries the text it replaced and the text it wrote (`-` / `+` lines), because
+/// that is the only record of what a fix was. File contents the tool returns are never read.
 fn tool_summary(tool: &str, input: Option<&Value>) -> Option<String> {
+    if matches!(tool, "Edit" | "MultiEdit") {
+        return edit_summary(input?);
+    }
     let key = match tool {
         "Bash" => "command",
         "Read" | "Edit" | "Write" | "MultiEdit" | "NotebookEdit" => "file_path",
@@ -145,6 +157,26 @@ fn tool_summary(tool: &str, input: Option<&Value>) -> Option<String> {
         _ => return None,
     };
     str_field(input?, key).map(String::from)
+}
+
+fn edit_summary(input: &Value) -> Option<String> {
+    let mut out = str_field(input, "file_path")?.to_string();
+    let single = [input.clone()];
+    let edits = input
+        .get("edits")
+        .and_then(Value::as_array)
+        .map_or(&single[..], Vec::as_slice);
+    for e in edits {
+        for (mark, key) in [("-", "old_string"), ("+", "new_string")] {
+            if let Some(s) = e.get(key).and_then(Value::as_str).filter(|s| !s.is_empty()) {
+                out.push_str(&format!(
+                    "\n{mark} {}",
+                    s.replace('\n', &format!("\n{mark} "))
+                ));
+            }
+        }
+    }
+    Some(out)
 }
 
 fn our_handler(spec: &Spec, h: &Value) -> bool {
@@ -473,5 +505,31 @@ mod tests {
         std::fs::write(&p, "{ not json").unwrap();
         assert!(edit_settings_file(&CLAUDE, &p, true).is_err());
         assert_eq!(std::fs::read_to_string(&p).unwrap(), "{ not json");
+    }
+
+    #[test]
+    fn an_edit_keeps_what_it_replaced_and_wrote_but_redacted_and_bounded() {
+        let e = parse(json!({"session_id":"s","hook_event_name":"PostToolUse","tool_name":"Edit",
+            "tool_input":{"file_path":"/p/a.py","old_string":"return n // k","new_string":"return -(-n // k)  # key sk-abcdefghijklmnopqrstuvwxyz0123456789"},
+            "tool_response":{"filePath":"/p/a.py","structuredPatch":"SECRET-OUTPUT"},"tool_use_id":"t"})).unwrap();
+        let text = e.text.unwrap();
+        assert!(
+            text.starts_with("/p/a.py\n- return n // k\n+ return -(-n // k)"),
+            "{text}"
+        );
+        assert!(
+            !text.contains("sk-abc") && !text.contains("SECRET-OUTPUT"),
+            "{text}"
+        );
+        let multi = parse(json!({"session_id":"s","hook_event_name":"PostToolUse","tool_name":"MultiEdit",
+            "tool_input":{"file_path":"/p/a.py","edits":[{"old_string":"a","new_string":"b"},{"old_string":"c","new_string":"d"}]},"tool_use_id":"t"})).unwrap();
+        assert_eq!(multi.text.unwrap(), "/p/a.py\n- a\n+ b\n- c\n+ d");
+        let long = parse(json!({"session_id":"s","hook_event_name":"PostToolUse","tool_name":"Edit",
+            "tool_input":{"file_path":"/p/a.py","old_string":"x".repeat(5000),"new_string":"y"},"tool_use_id":"t"})).unwrap();
+        assert!(long.text.unwrap().chars().count() <= EDIT_CHARS + 20);
+        // Editing a credential file keeps no text at all.
+        let env = parse(json!({"session_id":"s","hook_event_name":"PostToolUse","tool_name":"Edit",
+            "tool_input":{"file_path":"/p/.env","old_string":"A=1","new_string":"A=2"},"tool_use_id":"t"})).unwrap();
+        assert!(env.text.is_none());
     }
 }

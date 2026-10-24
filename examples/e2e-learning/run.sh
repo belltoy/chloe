@@ -5,7 +5,7 @@
 #   3. A person (this script, standing in) accepts a candidate.
 #   4. A fresh Codex session finds it through MCP. Nobody calls memory_save.
 # Everything runs in a temp dir with a temp database and a temp Claude settings file; your real
-# chloe data and agent settings are not touched. Needs Ollama with qwen3:8b.
+# chloe data and agent settings are not touched. Needs Ollama with qwen3:8b and uv (pytest is installed by `uv run --with pytest` into a throwaway environment).
 # Usage: CHLOE=/path/to/chloe ./run.sh   (default: `chloe` on PATH)
 set -euo pipefail
 
@@ -27,9 +27,9 @@ echo "== 0. install hooks into a temp settings file =="
 chloe hook install claude --settings "$tmp/claude-settings.json"
 
 echo "== 1. Claude Code fixes the bug (no chloe MCP, no memory_save) =="
-claude -p "The tests fail (run: python3 -m unittest). Find the cause, fix pager.py, run the tests again, and explain the root cause in one sentence." \
-  --settings "$tmp/claude-settings.json" --allowedTools "Read,Edit,Bash(python3 *)" </dev/null | tail -5
-python3 -m unittest 2>&1 | tail -1
+claude -p "The tests fail (run: uv run --with pytest pytest -q). Find the cause, fix pager.py, run the tests again, and explain the root cause in one sentence." \
+  --settings "$tmp/claude-settings.json" --allowedTools "Read,Edit,Bash(uv run *)" </dev/null | tail -5
+uv run --with pytest pytest -q 2>&1 | tail -1
 
 echo "== 2. captured events =="
 c events import

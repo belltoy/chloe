@@ -1,6 +1,6 @@
 # Scenario B-E2E-01: automatic learning, then cross-agent recall
 
-Run on 2026-10-24, macOS arm64, commit `439b9c5` plus the script in `examples/e2e-learning/`. Claude Code 2.1.310, codex-cli 0.164.0, extraction model `qwen3:8b` and embedding model `qwen3-embedding:0.6b` via local Ollama. Temp repo, temp database and a temp Claude settings file; the real chloe data and agent settings were not touched. Raw log: `e2e-run.log` (paths shortened).
+Run on 2026-10-24, macOS arm64, commit `439b9c5` plus the script in `examples/e2e-learning/`. Claude Code 2.1.310, codex-cli 0.164.0, extraction model `qwen3:8b` and embedding model `qwen3-embedding:0.6b` via local Ollama. Temp repo, temp database and a temp Claude settings file; the real chloe data and agent settings were not touched. Raw logs (paths shortened): `e2e-run-before-edit-capture.log` (the run analysed below) and `e2e-run.log` (after edits were captured, see the last section).
 
 **Result: the pipeline works end to end, the learned memory is wrong. Not a pass of B-10 as written ("accurate summary").**
 
@@ -32,3 +32,12 @@ By design (`docs/agent-events.md`) a tool event keeps only the command or path; 
 - Extraction quality is bounded by what is captured. With the current privacy-first capture the end-to-end claim "Codex finds the right knowledge" cannot hold for facts that live in tool output or in the agent's reply.
 - One session, one bug, one local model, three runs: not a measurement of extraction quality (B-16 still needs its own evaluation set).
 - The final Codex step of `run.sh` fails on purpose; it asserts the memory about the real problem is found.
+
+## After capturing edits (same day, commit following `9008267`)
+
+Capture now keeps, for `Edit`/`MultiEdit`, the text replaced and the text written as `-`/`+` lines (1200 chars, redacted; `Write` still path only). The script was also switched to `uv run --with pytest pytest -q` (pytest in a throwaway environment). One run, same models:
+
+- The model saw `- return total_items // per_page` / `+ return -(-total_items // per_page)` and proposed a *Decision*, "Fix ceiling division in pager.py", accepted through the CLI.
+- A fresh Codex session searched for the pagination problem and returned that memory id, title and source `extracted`: `run.sh` ends with PASS.
+- The memory is on topic and not false, but thin and oddly phrased ("The user decided to fix the ceiling division ... with a proper ceiling division formula"): it does not say that floor division was the cause, because the explanation lives in Claude's final reply, which is not captured. Whether `Stop`'s `last_assistant_message` should be captured is open.
+- One run of a non-deterministic model on one trivial bug proves the mechanics, not extraction quality (B-16).
