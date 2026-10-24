@@ -1,0 +1,12 @@
+All six steps are done. The final `make publish` fails again, as expected, because `make clean` removes the signature.
+
+1. **Publish failure:** `publish` requires a `.signed` file, and only `make sign` creates it. I ran `make sign && make publish`, and it printed "published artifact". I did not change the Makefile. The release flow is `make sign` and then `make publish`.
+2. **Migration:** `ALTER TABLE ... ADD COLUMN owner TEXT NOT NULL` fails when the table already has a row, because the new column has no value for it. I added `DEFAULT ''` in `db/schema.sql`, and `python3 db/migrate.py` now prints "migration ok". If you'd rather have a real default owner, change the `''`.
+3. **`scripts/import_window.py`:** It takes a weekday (0 is Monday) and an hour, both in UTC. It prints "blocked" on Friday from 02:00 up to but not including 04:00, per `ops/staging.md`, and "ok" otherwise. I treated 04:00 as open, since the doc says "between 02:00 and 04:00". Friday 3 gives "blocked" and Friday 4 gives "ok".
+4. **`scripts/check_py.py`:** It reads the version from the `FROM` line in `.ci/Dockerfile`, which is Python 3.9, and exits non-zero if the running Python is older. It exits 0 here.
+5. **`scripts/deploy_target.py`:** It prints `eu-west`.
+6. **`make clean` then `make publish`:** The publish fails with "error: unsigned artifact" and exit code 2. `make publish` only rebuilds, so it never signs. Use `make sign publish` for a clean publish.
+
+I didn't touch `generated/`.
+
+I didn't test `check_py.py` on an older Python, and `import_window.py` doesn't validate its arguments.

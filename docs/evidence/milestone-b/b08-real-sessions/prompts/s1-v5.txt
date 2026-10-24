@@ -1,0 +1,12 @@
+Several jobs for the release, please do them in order:
+
+1. `make publish` for v1.2.0 fails. Find out why and get it published.
+2. `python3 db/migrate.py` fails since we added the owner column. Fix db/schema.sql so it runs.
+3. Write scripts/import_window.py that prints "ok" or "blocked" for a given UTC weekday and hour, according to what ops/staging.md says about the staging database.
+4. Write scripts/check_py.py that exits non-zero if the running Python is older than the one in .ci/Dockerfile.
+5. Write scripts/deploy_target.py that prints the region from deploy.cfg.
+6. Run `make clean`, then `make publish` again and tell me what happens.
+
+Rule for all of this: never edit anything under generated/, the build overwrites it.
+
+Finish with a short summary of what each step turned up.

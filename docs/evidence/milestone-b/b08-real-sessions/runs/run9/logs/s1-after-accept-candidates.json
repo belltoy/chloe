@@ -1,0 +1,133 @@
+[
+  {
+    "id": "2f669205-9819-42c5-8630-345bd9189aa6",
+    "project_id": "51a211df-31af-4e2e-a8e2-a3ed8d0c6407",
+    "kind": "procedure",
+    "title": "Deploy target region from config file",
+    "content": "The `scripts/deploy_target.py` script reads the region from `deploy.cfg` and prints it, providing the target region for deployment.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "57640e37-bbd8-48d2-8119-f5478351d641",
+      "events": [
+        "11:claude_code|36:57640e37-bbd8-48d2-8119-f5478351d641|19:tool_result_summary|30:toolu_016KxmUMp5oBXSZ8wHaan4CX",
+        "11:claude_code|36:57640e37-bbd8-48d2-8119-f5478351d641|19:tool_result_summary|30:toolu_01QNjC96z2jVrzXCDyfR7seY",
+        "11:claude_code|36:57640e37-bbd8-48d2-8119-f5478351d641|17:assistant_message|36:7e0669a1-adc5-47d8-bc0b-b14bcddaf110"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "044acefa-e2c1-48c8-ba57-ef1f0bcdab71",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T12:03:37.154575Z",
+    "decided_at": "2026-10-24T12:03:37.209817Z"
+  },
+  {
+    "id": "c976764b-61fa-40a4-b32c-6c2dd6b73cbe",
+    "project_id": "51a211df-31af-4e2e-a8e2-a3ed8d0c6407",
+    "kind": "procedure",
+    "title": "Check Python version against Dockerfile",
+    "content": "The `scripts/check_py.py` script compares the current Python version with the one specified in `.ci/Dockerfile`, exiting with a non-zero code if the current version is older.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "57640e37-bbd8-48d2-8119-f5478351d641",
+      "events": [
+        "11:claude_code|36:57640e37-bbd8-48d2-8119-f5478351d641|19:tool_result_summary|30:toolu_01LUdFYm3gD3oM6DaXEKWu8x",
+        "11:claude_code|36:57640e37-bbd8-48d2-8119-f5478351d641|19:tool_result_summary|30:toolu_01QNjC96z2jVrzXCDyfR7seY",
+        "11:claude_code|36:57640e37-bbd8-48d2-8119-f5478351d641|17:assistant_message|36:7e0669a1-adc5-47d8-bc0b-b14bcddaf110"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "a8e9f768-76db-4c97-9ea4-1306ca6b05d0",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T12:03:37.154575Z",
+    "decided_at": "2026-10-24T12:03:37.218186Z"
+  },
+  {
+    "id": "65fd3d9c-657c-4a96-ac27-a0923d64b158",
+    "project_id": "51a211df-31af-4e2e-a8e2-a3ed8d0c6407",
+    "kind": "fact",
+    "title": "Staging database import window rules",
+    "content": "The staging database has a specific import window: it is blocked on Friday from 02:00 up to but not including 04:00 UTC. All other times are allowed.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "57640e37-bbd8-48d2-8119-f5478351d641",
+      "events": [
+        "11:claude_code|36:57640e37-bbd8-48d2-8119-f5478351d641|17:assistant_message|36:7e0669a1-adc5-47d8-bc0b-b14bcddaf110"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "5257d4c6-36aa-4671-8db5-13bcba020b88",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T12:03:37.154575Z",
+    "decided_at": "2026-10-24T12:03:37.227388Z"
+  },
+  {
+    "id": "cf8ca8d4-6462-42b6-b0df-0e1d59e0b0f5",
+    "project_id": "51a211df-31af-4e2e-a8e2-a3ed8d0c6407",
+    "kind": "procedure",
+    "title": "Fix migration error by adding default value",
+    "content": "To resolve the migration error when adding the `owner` column, a default value of an empty string was added to the `owner` column in `db/schema.sql`. This allows the migration to succeed without data loss.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "57640e37-bbd8-48d2-8119-f5478351d641",
+      "events": [
+        "11:claude_code|36:57640e37-bbd8-48d2-8119-f5478351d641|19:tool_result_summary|30:toolu_01Xr9ZCWSBPe2kniPXh2sRwp",
+        "11:claude_code|36:57640e37-bbd8-48d2-8119-f5478351d641|19:tool_result_summary|30:toolu_01QNjC96z2jVrzXCDyfR7seY",
+        "11:claude_code|36:57640e37-bbd8-48d2-8119-f5478351d641|17:assistant_message|36:7e0669a1-adc5-47d8-bc0b-b14bcddaf110"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "ece420d0-ab91-42cd-926d-77a3cbeb518a",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T12:03:37.154575Z",
+    "decided_at": "2026-10-24T12:03:37.237358Z"
+  },
+  {
+    "id": "ee943521-8159-435f-ae57-9b7383bb5eee",
+    "project_id": "51a211df-31af-4e2e-a8e2-a3ed8d0c6407",
+    "kind": "constraint",
+    "title": "Never edit files under generated/",
+    "content": "The user explicitly stated that no edits should be made to files under the `generated/` directory, as the build process overwrites them.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "57640e37-bbd8-48d2-8119-f5478351d641",
+      "events": [
+        "11:claude_code|36:57640e37-bbd8-48d2-8119-f5478351d641|11:user_prompt|36:7e0669a1-adc5-47d8-bc0b-b14bcddaf110"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "5bc9957f-45ec-4a19-8539-520694d14397",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T12:03:37.154575Z",
+    "decided_at": "2026-10-24T12:03:37.24428Z"
+  }
+]

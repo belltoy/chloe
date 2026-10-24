@@ -1,0 +1,3 @@
+CREATE TABLE jobs (id INTEGER PRIMARY KEY, name TEXT);
+INSERT INTO jobs (name) VALUES ('first');
+ALTER TABLE jobs ADD COLUMN owner TEXT NOT NULL;

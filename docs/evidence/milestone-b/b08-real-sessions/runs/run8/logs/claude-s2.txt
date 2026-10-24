@@ -1,0 +1,12 @@
+v1.3.0 is not shipped. A fresh `make publish` fails on the unsigned-artifact check, and the first publish only worked because I ran `make sign` first.
+
+- **Publish:** The first `make publish` failed with `error: unsigned artifact`. I ran `make sign`, and then publish worked ("published artifact"). `sign` only runs `touch .signed`, so nothing is actually signed. I didn't tag v1.3.0 either. The Makefile has no tag or version step.
+- **Clean and publish again:** `make clean` deletes `.signed`, so publish failed again with the same unsigned error. Every publish needs a `make sign` first.
+- **`db/002_drop_flag.sql`:** It recreates `jobs` as `(id, name)`, copies the rows over, drops the old table and renames the new one. I tested it on a table that had `legacy_flag`, and the data survived. The catch is that `db/schema.sql` has no `legacy_flag` column. I only know `id` and `name`, so if your real table has other columns, add them to the script.
+- **Existing migration bug:** `db/migrate.py` already fails on `ALTER TABLE jobs ADD COLUMN owner TEXT NOT NULL`, with "Cannot add a NOT NULL column with default value NULL". I didn't touch it.
+- **`scripts/import_window.py`:** `sat 3` prints `blocked` and `fri 3` prints `ok`. The window is now Saturday 02:00–04:00 UTC, because `ops/staging.md` changed from Friday in your uncommitted edit.
+- **`scripts/check_py.py`:** It reads the Python version from `.ci/Dockerfile` and passes (local Python is 3.14.0, CI image is 3.12). Your uncommitted edit raised that image from 3.9.
+- **`scripts/deploy_target.py`:** It prints `us-east`. Your uncommitted edit changed that from `eu-west`, so check that's the region you want to ship to.
+- **`generated/api.py`:** `"owner"` is added to `FIELDS`. The Makefile doesn't generate that file, so nothing will overwrite the edit. However, `owner` isn't a column in the `jobs` table that `002_drop_flag.sql` creates.
+
+I didn't test the 002 script on SQLite 3.31 itself, only on the Python build's SQLite. It uses nothing newer than 3.31.

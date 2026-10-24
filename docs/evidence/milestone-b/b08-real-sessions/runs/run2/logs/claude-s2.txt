@@ -1,0 +1,10 @@
+v1.3.0 is published, and `db/002_drop_flag.sql` is written. The repo's `schema.sql` has no `legacy_flag` column, so the migration is built on a guess about the live table.
+
+- **Deploy:** the script failed because `make publish` refuses unsigned artifacts, and nothing had run `make sign`. I ran `make sign publish` and it printed "published artifact". The Makefile has no version or tag, so "v1.3.0" isn't recorded anywhere. I made no git tag and no commit.
+- **Migration:** `db/002_drop_flag.sql` recreates `jobs` without `legacy_flag`, copies the rows over and renames the new table, because CI's SQLite 3.31 can't `DROP COLUMN`. I tested it on an in-memory table that I gave a `legacy_flag` column, and the rows survived.
+- **Notes:** `NOTES.md` now records your six items. The Saturday 02:00–04:00 UTC staging window is stored as a plain fact, since the repo had nothing about Fridays to correct. I also changed the "do not edit" header in `generated/api.py` to say it's now hand-edited.
+
+**Not checked / risks:**
+- **Migration columns:** I assumed the live `jobs` table is `id`, `name`, `owner NOT NULL` plus `legacy_flag`. If it has other columns, they'll be dropped. Please check the migration against the real table first.
+- **Existing breakage:** `db/migrate.py` already fails on `schema.sql` (`ADD COLUMN owner TEXT NOT NULL` with no default). I left it alone.
+- **Local files:** `.signed` and `dist/` are untracked build leftovers from the deploy.

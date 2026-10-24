@@ -1,0 +1,6 @@
+accepted | SQLite version constraint
+accepted | Generated API fields
+accepted | Import window validation
+accepted | ALTER TABLE fails on NOT NULL column
+accepted | Migrate legacy_flag column
+accepted | Publishing requires a signed artifact

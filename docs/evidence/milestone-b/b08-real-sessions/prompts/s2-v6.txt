@@ -1,0 +1,13 @@
+Time to cut v1.3.0. Run the publish target and report.
+
+Remove legacy_flag from the jobs table via db/002_drop_flag.sql; DROP COLUMN needs SQLite 3.35 and CI is on 3.31, so copy the table without it.
+
+Create scripts/import_window.py, it prints ok or blocked for a UTC weekday and hour as described in ops/staging.md.
+
+Create scripts/check_py.py, it must fail on a Python older than the one .ci/Dockerfile builds on.
+
+Create scripts/deploy_target.py, it prints deploy.cfg's region.
+
+After that do make clean and make publish once more and tell me the outcome. By the way the generated/ rule is lifted (the build stopped overwriting it); add "owner" to FIELDS in generated/api.py by hand.
+
+Finish with a short summary of what each step turned up.

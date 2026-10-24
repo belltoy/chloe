@@ -1,0 +1,10 @@
+1. **Publish failed because the artifact was unsigned.** `publish` requires a `.signed` file, and only `make sign` creates it. I ran `make sign publish` and it printed "published artifact". The `sign` target only runs `touch .signed`, so it isn't a real signature.
+2. **Migration fixed.** SQLite won't add a `NOT NULL` column with no default to a table that already has rows. I changed the line in `db/schema.sql` to `owner TEXT NOT NULL DEFAULT ''`, and `db/migrate.py` now prints "migration ok". Existing rows get an empty owner, so change the default if you want something else.
+3. **`scripts/import_window.py` written.** It takes a UTC weekday (0=Mon … 6=Sun) and an hour. It prints "blocked" for Friday 02:00–03:59 and "ok" otherwise. `4 3` gave "blocked" and `4 4` gave "ok".
+4. **`scripts/check_py.py` written.** It reads `python:X.Y` from `.ci/Dockerfile` (3.9) and exits non-zero if the running Python is older. Here Python is 3.14.0, so the check passes. The "older" case wasn't exercised.
+5. **`scripts/deploy_target.py` written.** It prints `eu-west`, read from `deploy.cfg`.
+6. **`make clean` then `make publish` fails again** with "error: unsigned artifact". `clean` deletes `.signed`, so every publish needs `make sign` first. If you want `make publish` to work on its own, make `publish` depend on `sign`. I didn't change the Makefile.
+
+I never edited anything under `generated/`.
+
+Not checked: `check_py.py` only reads the major.minor version from the `FROM` line. It also assumes the Dockerfile uses a `python:X.Y` image tag.

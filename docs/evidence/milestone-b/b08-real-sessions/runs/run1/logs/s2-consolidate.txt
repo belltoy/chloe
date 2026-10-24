@@ -1,0 +1,4 @@
+imported 0 events, queued 1 sessions (0 already queued), extracted 1 sessions: 8 new candidates
+proposals: 8 made, 0 deferred (model unavailable)
+policy: 0 duplicates auto-merged, 1 conflicts flagged, 1 need a person
+review them with `chloe candidates list`

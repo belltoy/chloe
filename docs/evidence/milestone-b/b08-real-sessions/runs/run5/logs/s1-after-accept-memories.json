@@ -1,0 +1,86 @@
+[
+  {
+    "id": "81fdcb40-1ac5-4578-9394-2eba66ef09ef",
+    "project_id": "054785f8-eece-4b87-97c7-aa91c6390d66",
+    "kind": "constraint",
+    "title": "Never edit generated files",
+    "content": "The user explicitly stated that nothing under `generated/` should be edited, as the build process overwrites it.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T11:47:04.649969Z",
+    "updated_at": "2026-10-24T11:47:04.649969Z",
+    "revision": 1
+  },
+  {
+    "id": "bd813398-6dba-4603-a093-1fc0557d0765",
+    "project_id": "054785f8-eece-4b87-97c7-aa91c6390d66",
+    "kind": "procedure",
+    "title": "Fixing the owner column migration",
+    "content": "To add a `NOT NULL` column to an existing SQLite table, a default value must be provided. The `owner` column was modified to include `DEFAULT ''` to avoid errors during migration.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T11:47:04.643111Z",
+    "updated_at": "2026-10-24T11:47:04.643111Z",
+    "revision": 1
+  },
+  {
+    "id": "c344dbfe-1044-4dee-bad2-fd20831bda2d",
+    "project_id": "054785f8-eece-4b87-97c7-aa91c6390d66",
+    "kind": "gotcha",
+    "title": "SQLite migration with NOT NULL columns",
+    "content": "SQLite will fail to add a `NOT NULL` column without a default value to a table that already has rows. Providing a default value is necessary to avoid migration errors.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T11:47:04.635949Z",
+    "updated_at": "2026-10-24T11:47:04.635949Z",
+    "revision": 1
+  },
+  {
+    "id": "9f54a224-eb08-4ae8-a2d2-5f798b19866a",
+    "project_id": "054785f8-eece-4b87-97c7-aa91c6390d66",
+    "kind": "procedure",
+    "title": "Implementing import_window.py",
+    "content": "The script `import_window.py` checks a UTC weekday and hour against the staging database rules in `ops/staging.md`. It prints 'blocked' for Friday 02:00–03:59 and 'ok' otherwise.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T11:47:04.628319Z",
+    "updated_at": "2026-10-24T11:47:04.628319Z",
+    "revision": 1
+  },
+  {
+    "id": "810823ef-7010-4713-a7b1-7d711bfc73c8",
+    "project_id": "054785f8-eece-4b87-97c7-aa91c6390d66",
+    "kind": "procedure",
+    "title": "Implementing check_py.py",
+    "content": "The script `check_py.py` reads the Python version from `.ci/Dockerfile` and exits non-zero if the running Python is older. It passes when the running Python is 3.14.0, which is newer than the required 3.9.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T11:47:04.620303Z",
+    "updated_at": "2026-10-24T11:47:04.620303Z",
+    "revision": 1
+  },
+  {
+    "id": "dbafdd6d-9b19-4f7c-bd1a-daa890a2db8d",
+    "project_id": "054785f8-eece-4b87-97c7-aa91c6390d66",
+    "kind": "procedure",
+    "title": "Implementing deploy_target.py",
+    "content": "The script `deploy_target.py` reads the region from `deploy.cfg` and prints it. This provides the region information for deployment purposes.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T11:47:04.610765Z",
+    "updated_at": "2026-10-24T11:47:04.610765Z",
+    "revision": 1
+  },
+  {
+    "id": "03ed7df3-f345-4bbf-b129-c79ace1a6416",
+    "project_id": "054785f8-eece-4b87-97c7-aa91c6390d66",
+    "kind": "fact",
+    "title": "Python version check in CI",
+    "content": "The `.ci/Dockerfile` specifies the Python version as 3.9, which is used as the baseline for the `check_py.py` script to determine if the running Python is older.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T11:47:04.60368Z",
+    "updated_at": "2026-10-24T11:47:04.60368Z",
+    "revision": 1
+  }
+]

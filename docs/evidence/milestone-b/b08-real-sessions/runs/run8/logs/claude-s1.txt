@@ -1,0 +1,14 @@
+All six steps are done, but the final `make publish` fails again. I never touched `generated/`.
+
+1. **Publish v1.2.0:** `publish` refuses to run without a `.signed` marker, and nothing had created it. I ran `make sign publish` and it printed "published artifact".
+2. **Migration:** `ALTER TABLE ... ADD COLUMN owner TEXT NOT NULL` fails because the table already has a row and the new column has no default. I added `DEFAULT ''` in `db/schema.sql`, and `python3 db/migrate.py` now prints "migration ok". If you want a real owner for the existing `first` job, set it separately.
+3. **`scripts/import_window.py`:**
+   - Usage is `import_window.py WEEKDAY HOUR`, with weekday 0=Mon to 6=Sun, UTC.
+   - `ops/staging.md` says staging is read-only Fridays between 02:00 and 04:00 UTC, so Friday hours 2 and 3 print "blocked".
+   - I treated 04:00 as already open, which the doc doesn't settle.
+   - I checked Fri 3 (blocked), Fri 4 (ok) and Thu 3 (ok).
+4. **`scripts/check_py.py`:** It reads the version from `.ci/Dockerfile` (`python:3.9`) and exits non-zero if the running Python is older. Here Python is 3.14.0, so it passes. I only ran the passing case.
+5. **`scripts/deploy_target.py`:** It prints `eu-west`. `deploy.cfg` has no section header, so the script adds one before parsing.
+6. **`make clean` then `make publish`:** `clean` deletes `.signed`, so `publish` fails again with "error: unsigned artifact". Signing isn't part of `publish`, so you need `make sign publish` every time. If you want plain `make publish` to work, make `publish` depend on `sign`. I didn't change the Makefile.
+
+`dist/` and `scripts/` are untracked and nothing is committed. Neither is in a `.gitignore`.

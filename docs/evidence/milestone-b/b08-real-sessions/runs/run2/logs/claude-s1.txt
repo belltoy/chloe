@@ -1,0 +1,8 @@
+Both problems are fixed: `make publish` now succeeds and `python3 db/migrate.py` prints "migration ok".
+
+- **Publish:** it failed with "unsigned artifact" because `publish` requires the `.signed` marker and nobody had run `make sign`. I ran `make sign publish`, which printed "published artifact".
+- **Migration:** the schema inserts a row into `jobs` and then adds `owner TEXT NOT NULL` with no default. SQLite can't add a NOT NULL column without a default when rows already exist. I changed it to `owner TEXT NOT NULL DEFAULT ''` in `db/schema.sql`.
+
+I didn't commit anything. The existing `jobs` row now gets an empty-string owner, so if it should have a real one, change the default or backfill it.
+
+I didn't check the "published" output against any real registry or the eu-west region. The Makefile only echoes that text, so I can't tell from it whether a deploy happened.

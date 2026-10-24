@@ -1,0 +1,555 @@
+[
+  {
+    "id": "42b43307-171d-46f5-91f5-cbc87cb2a105",
+    "project_id": "7647af73-f6be-42e2-93b8-3b5c550083f6",
+    "kind": "fact",
+    "title": "Generated API fields updated",
+    "content": "The 'owner' field was added to the FIELDS in generated/api.py.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "50db00f4-c504-4d4f-8fea-611802b00926",
+      "events": [
+        "11:claude_code|36:50db00f4-c504-4d4f-8fea-611802b00926|11:user_prompt|36:4334d91c-2195-41be-9502-0161580f51e4",
+        "11:claude_code|36:50db00f4-c504-4d4f-8fea-611802b00926|19:tool_result_summary|30:toolu_011hUoLbht1ovo2bL2UntRsV"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "8ccef619-c753-4476-ae3d-d213c52cdb23",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "model",
+      "reason": "The new note discusses an update to generated API fields, which is not directly related to any existing note.",
+      "similar": [
+        {
+          "memory_id": "e98efc0d-32e5-4d8b-84bb-28af4588073c",
+          "title": "Check Python version in check_py.py",
+          "score": 2.863357209766157
+        },
+        {
+          "memory_id": "a3d37f04-2f6e-4a46-92b6-c4d707da28d3",
+          "title": "Rule: Never edit generated files",
+          "score": 2.732672662324855
+        },
+        {
+          "memory_id": "ea67b0c4-ee91-42b5-a813-d05907dcc07e",
+          "title": "Fix migration for SQLite",
+          "score": 1.83102433842264
+        },
+        {
+          "memory_id": "1e004c4f-bd3b-4612-b063-87191bb38b03",
+          "title": "Implement import_window.py logic",
+          "score": 1.3469581250908167
+        },
+        {
+          "memory_id": "dfb27efd-7535-4ea3-a6c9-e2c4d33fb7e3",
+          "title": "make clean removes .signed",
+          "score": 1.0638450641921235
+        }
+      ]
+    },
+    "created_at": "2026-10-24T11:48:44.379095Z",
+    "decided_at": "2026-10-24T11:49:35.63693Z"
+  },
+  {
+    "id": "02793574-fd2a-4181-ac1f-0f5c64674d1c",
+    "project_id": "7647af73-f6be-42e2-93b8-3b5c550083f6",
+    "kind": "gotcha",
+    "title": "make publish fails due to unsigned artifact",
+    "content": "Running `make publish` fails with `error: unsigned artifact` because the `sign` target only runs `touch .signed` and does not perform real signing. To proceed, run `make sign publish` if a real signing step exists.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "50db00f4-c504-4d4f-8fea-611802b00926",
+      "events": [
+        "11:claude_code|36:50db00f4-c504-4d4f-8fea-611802b00926|17:assistant_message|36:4334d91c-2195-41be-9502-0161580f51e4"
+      ]
+    },
+    "state": "conflict",
+    "memory_id": "dfb27efd-7535-4ea3-a6c9-e2c4d33fb7e3",
+    "reason": "flagged for review: The new note states that `make publish` fails due to an unsigned artifact, while \"make clean removes .signed\" explains that `make clean` deletes `.signed`, causing `make publish` to fail. The new note implies a different root cause and solution.",
+    "proposal": {
+      "action": "conflict",
+      "target": "dfb27efd-7535-4ea3-a6c9-e2c4d33fb7e3",
+      "method": "model",
+      "reason": "The new note states that `make publish` fails due to an unsigned artifact, while \"make clean removes .signed\" explains that `make clean` deletes `.signed`, causing `make publish` to fail. The new note implies a different root cause and solution.",
+      "similar": [
+        {
+          "memory_id": "03415616-a628-43fb-8d89-b71ea5d40d99",
+          "title": "Publish requires .signed file",
+          "score": 7.44651601533776
+        },
+        {
+          "memory_id": "dfb27efd-7535-4ea3-a6c9-e2c4d33fb7e3",
+          "title": "make clean removes .signed",
+          "score": 5.024278819999257
+        },
+        {
+          "memory_id": "6e3aa845-e19b-4c20-a8be-618f0830774c",
+          "title": "Deploy target region from deploy.cfg",
+          "score": 2.7314962265459655
+        },
+        {
+          "memory_id": "ea67b0c4-ee91-42b5-a813-d05907dcc07e",
+          "title": "Fix migration for SQLite",
+          "score": 1.0638446879332677
+        },
+        {
+          "memory_id": "e98efc0d-32e5-4d8b-84bb-28af4588073c",
+          "title": "Check Python version in check_py.py",
+          "score": 1.617949516983484e-6
+        }
+      ]
+    },
+    "created_at": "2026-10-24T11:48:44.379095Z",
+    "decided_at": "2026-10-24T11:49:28.744156Z"
+  },
+  {
+    "id": "40362ad4-f229-4b27-b09f-a4a2e8997606",
+    "project_id": "7647af73-f6be-42e2-93b8-3b5c550083f6",
+    "kind": "procedure",
+    "title": "Determine deployment region from config",
+    "content": "Write scripts/deploy_target.py that prints the region from deploy.cfg.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "50db00f4-c504-4d4f-8fea-611802b00926",
+      "events": [
+        "11:claude_code|36:50db00f4-c504-4d4f-8fea-611802b00926|11:user_prompt|36:4334d91c-2195-41be-9502-0161580f51e4",
+        "11:claude_code|36:50db00f4-c504-4d4f-8fea-611802b00926|19:tool_result_summary|30:toolu_01TDBY62SzRsbLYj4SqY4DDK",
+        "11:claude_code|36:50db00f4-c504-4d4f-8fea-611802b00926|17:assistant_message|36:4334d91c-2195-41be-9502-0161580f51e4"
+      ]
+    },
+    "state": "merged",
+    "memory_id": "6e3aa845-e19b-4c20-a8be-618f0830774c",
+    "reason": "auto-merged as a low-risk duplicate: The new note describes the same procedure as \"Deploy target region from deploy.cfg\", with identical functionality and no new value or detail added.",
+    "proposal": {
+      "action": "merge",
+      "target": "6e3aa845-e19b-4c20-a8be-618f0830774c",
+      "method": "model",
+      "reason": "The new note describes the same procedure as \"Deploy target region from deploy.cfg\", with identical functionality and no new value or detail added.",
+      "similar": [
+        {
+          "memory_id": "6e3aa845-e19b-4c20-a8be-618f0830774c",
+          "title": "Deploy target region from deploy.cfg",
+          "score": 13.736143621401562
+        },
+        {
+          "memory_id": "e98efc0d-32e5-4d8b-84bb-28af4588073c",
+          "title": "Check Python version in check_py.py",
+          "score": 2.525190767414471
+        },
+        {
+          "memory_id": "1e004c4f-bd3b-4612-b063-87191bb38b03",
+          "title": "Implement import_window.py logic",
+          "score": 2.0581587183867325
+        },
+        {
+          "memory_id": "a3d37f04-2f6e-4a46-92b6-c4d707da28d3",
+          "title": "Rule: Never edit generated files",
+          "score": 1.5486633598623096
+        },
+        {
+          "memory_id": "03415616-a628-43fb-8d89-b71ea5d40d99",
+          "title": "Publish requires .signed file",
+          "score": 1.4608891389983118e-6
+        }
+      ]
+    },
+    "created_at": "2026-10-24T11:48:44.379095Z",
+    "decided_at": "2026-10-24T11:49:28.743802Z"
+  },
+  {
+    "id": "97e21580-c6c2-4959-8be9-ac76d452d50a",
+    "project_id": "7647af73-f6be-42e2-93b8-3b5c550083f6",
+    "kind": "procedure",
+    "title": "Check Python version against Dockerfile",
+    "content": "Write scripts/check_py.py that fails if the running Python is older than the version specified in .ci/Dockerfile.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "50db00f4-c504-4d4f-8fea-611802b00926",
+      "events": [
+        "11:claude_code|36:50db00f4-c504-4d4f-8fea-611802b00926|11:user_prompt|36:4334d91c-2195-41be-9502-0161580f51e4",
+        "11:claude_code|36:50db00f4-c504-4d4f-8fea-611802b00926|19:tool_result_summary|30:toolu_01YWYb3Woy6JYnNLjkB1wQ9j",
+        "11:claude_code|36:50db00f4-c504-4d4f-8fea-611802b00926|17:assistant_message|36:4334d91c-2195-41be-9502-0161580f51e4"
+      ]
+    },
+    "state": "merged",
+    "memory_id": "e98efc0d-32e5-4d8b-84bb-28af4588073c",
+    "reason": "auto-merged as a low-risk duplicate: The new note describes the same procedure as \"Check Python version in check_py.py\", checking Python version against the Dockerfile with the same logic.",
+    "proposal": {
+      "action": "merge",
+      "target": "e98efc0d-32e5-4d8b-84bb-28af4588073c",
+      "method": "model",
+      "reason": "The new note describes the same procedure as \"Check Python version in check_py.py\", checking Python version against the Dockerfile with the same logic.",
+      "similar": [
+        {
+          "memory_id": "e98efc0d-32e5-4d8b-84bb-28af4588073c",
+          "title": "Check Python version in check_py.py",
+          "score": 13.255801931285792
+        },
+        {
+          "memory_id": "1e004c4f-bd3b-4612-b063-87191bb38b03",
+          "title": "Implement import_window.py logic",
+          "score": 2.058158718386732
+        },
+        {
+          "memory_id": "03415616-a628-43fb-8d89-b71ea5d40d99",
+          "title": "Publish requires .signed file",
+          "score": 1.8782758022560169
+        },
+        {
+          "memory_id": "dfb27efd-7535-4ea3-a6c9-e2c4d33fb7e3",
+          "title": "make clean removes .signed",
+          "score": 1.6712994326325326
+        },
+        {
+          "memory_id": "a3d37f04-2f6e-4a46-92b6-c4d707da28d3",
+          "title": "Rule: Never edit generated files",
+          "score": 1.5486633598623096
+        }
+      ]
+    },
+    "created_at": "2026-10-24T11:48:44.379095Z",
+    "decided_at": "2026-10-24T11:49:28.742823Z"
+  },
+  {
+    "id": "0eaa16a5-10dd-459a-9456-7acf76778e81",
+    "project_id": "7647af73-f6be-42e2-93b8-3b5c550083f6",
+    "kind": "procedure",
+    "title": "Implement import window validation script",
+    "content": "Write scripts/import_window.py that prints 'ok' or 'blocked' for a UTC weekday and hour, following the rules in ops/staging.md. It blocks Saturday 02:00–03:59 UTC.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "50db00f4-c504-4d4f-8fea-611802b00926",
+      "events": [
+        "11:claude_code|36:50db00f4-c504-4d4f-8fea-611802b00926|11:user_prompt|36:4334d91c-2195-41be-9502-0161580f51e4",
+        "11:claude_code|36:50db00f4-c504-4d4f-8fea-611802b00926|19:tool_result_summary|30:toolu_016nMSjLYE6sLWr2sVs8W37c",
+        "11:claude_code|36:50db00f4-c504-4d4f-8fea-611802b00926|17:assistant_message|36:4334d91c-2195-41be-9502-0161580f51e4"
+      ]
+    },
+    "state": "conflict",
+    "memory_id": "1e004c4f-bd3b-4612-b063-87191bb38b03",
+    "reason": "flagged for review: the model saw a duplicate but numbers or days differ: The new note describes the same script functionality as \"Implement import_window.py logic\", with identical output behavior for the blocked window.",
+    "proposal": {
+      "action": "conflict",
+      "target": "1e004c4f-bd3b-4612-b063-87191bb38b03",
+      "method": "model",
+      "reason": "the model saw a duplicate but numbers or days differ: The new note describes the same script functionality as \"Implement import_window.py logic\", with identical output behavior for the blocked window.",
+      "similar": [
+        {
+          "memory_id": "1e004c4f-bd3b-4612-b063-87191bb38b03",
+          "title": "Implement import_window.py logic",
+          "score": 16.289095851268648
+        },
+        {
+          "memory_id": "ea67b0c4-ee91-42b5-a813-d05907dcc07e",
+          "title": "Fix migration for SQLite",
+          "score": 2.420023156260586
+        },
+        {
+          "memory_id": "e98efc0d-32e5-4d8b-84bb-28af4588073c",
+          "title": "Check Python version in check_py.py",
+          "score": 1.969777866559967
+        },
+        {
+          "memory_id": "a3d37f04-2f6e-4a46-92b6-c4d707da28d3",
+          "title": "Rule: Never edit generated files",
+          "score": 1.5486619327045306
+        },
+        {
+          "memory_id": "6e3aa845-e19b-4c20-a8be-618f0830774c",
+          "title": "Deploy target region from deploy.cfg",
+          "score": 1.4909518768416865
+        }
+      ]
+    },
+    "created_at": "2026-10-24T11:48:44.379095Z",
+    "decided_at": "2026-10-24T11:49:28.742558Z"
+  },
+  {
+    "id": "b61d25a2-dec3-4677-8ff8-eccae5b5a53c",
+    "project_id": "7647af73-f6be-42e2-93b8-3b5c550083f6",
+    "kind": "procedure",
+    "title": "Create migration script to drop legacy_flag column",
+    "content": "Write db/002_drop_flag.sql that rebuilds the jobs table without the legacy_flag column. The script creates a new table, copies the rows, drops the old table, and renames the new one.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "50db00f4-c504-4d4f-8fea-611802b00926",
+      "events": [
+        "11:claude_code|36:50db00f4-c504-4d4f-8fea-611802b00926|11:user_prompt|36:4334d91c-2195-41be-9502-0161580f51e4",
+        "11:claude_code|36:50db00f4-c504-4d4f-8fea-611802b00926|19:tool_result_summary|30:toolu_01A5GqQwmvNSEZvGz4KfxdD2",
+        "11:claude_code|36:50db00f4-c504-4d4f-8fea-611802b00926|17:assistant_message|36:4334d91c-2195-41be-9502-0161580f51e4"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "d10b927f-7ae7-49df-a92b-2ba137453a05",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "model",
+      "reason": "The new note describes a migration script for dropping a column, while existing notes cover SQLite fixes, file editing rules, and publish dependencies, with no direct overlap.",
+      "similar": [
+        {
+          "memory_id": "ea67b0c4-ee91-42b5-a813-d05907dcc07e",
+          "title": "Fix migration for SQLite",
+          "score": 9.239256028650692
+        },
+        {
+          "memory_id": "a3d37f04-2f6e-4a46-92b6-c4d707da28d3",
+          "title": "Rule: Never edit generated files",
+          "score": 1.5486633598623096
+        },
+        {
+          "memory_id": "dfb27efd-7535-4ea3-a6c9-e2c4d33fb7e3",
+          "title": "make clean removes .signed",
+          "score": 1.0638450641921235
+        },
+        {
+          "memory_id": "03415616-a628-43fb-8d89-b71ea5d40d99",
+          "title": "Publish requires .signed file",
+          "score": 0.8621898802259736
+        },
+        {
+          "memory_id": "6e3aa845-e19b-4c20-a8be-618f0830774c",
+          "title": "Deploy target region from deploy.cfg",
+          "score": 0.29022048959343
+        }
+      ]
+    },
+    "created_at": "2026-10-24T11:48:44.379095Z",
+    "decided_at": "2026-10-24T11:49:35.64379Z"
+  },
+  {
+    "id": "043a5b70-9a0d-417e-8339-2be53dd2ac35",
+    "project_id": "7647af73-f6be-42e2-93b8-3b5c550083f6",
+    "kind": "decision",
+    "title": "Stop regenerating generated/",
+    "content": "The build no longer regenerates generated/, so it is fine to edit it by hand.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "50db00f4-c504-4d4f-8fea-611802b00926",
+      "events": [
+        "11:claude_code|36:50db00f4-c504-4d4f-8fea-611802b00926|11:user_prompt|36:4334d91c-2195-41be-9502-0161580f51e4"
+      ]
+    },
+    "state": "conflict",
+    "memory_id": "a3d37f04-2f6e-4a46-92b6-c4d707da28d3",
+    "reason": "flagged for review: The new note allows editing generated/ files, which directly contradicts the existing decision to never edit generated files.",
+    "proposal": {
+      "action": "conflict",
+      "target": "a3d37f04-2f6e-4a46-92b6-c4d707da28d3",
+      "method": "model",
+      "reason": "The new note allows editing generated/ files, which directly contradicts the existing decision to never edit generated files.",
+      "similar": [
+        {
+          "memory_id": "a3d37f04-2f6e-4a46-92b6-c4d707da28d3",
+          "title": "Rule: Never edit generated files",
+          "score": 6.932916533304487
+        },
+        {
+          "memory_id": "03415616-a628-43fb-8d89-b71ea5d40d99",
+          "title": "Publish requires .signed file",
+          "score": 1.8782758022560169
+        },
+        {
+          "memory_id": "dfb27efd-7535-4ea3-a6c9-e2c4d33fb7e3",
+          "title": "make clean removes .signed",
+          "score": 1.3083773939587025
+        },
+        {
+          "memory_id": "ea67b0c4-ee91-42b5-a813-d05907dcc07e",
+          "title": "Fix migration for SQLite",
+          "score": 1.0638446879332677
+        },
+        {
+          "memory_id": "6e3aa845-e19b-4c20-a8be-618f0830774c",
+          "title": "Deploy target region from deploy.cfg",
+          "score": 0.9105154414121192
+        }
+      ]
+    },
+    "created_at": "2026-10-24T11:48:44.379095Z",
+    "decided_at": "2026-10-24T11:49:28.742314Z"
+  },
+  {
+    "id": "a830af18-f656-4fda-9e1b-03163e0dbecd",
+    "project_id": "7647af73-f6be-42e2-93b8-3b5c550083f6",
+    "kind": "gotcha",
+    "title": "make clean removes .signed",
+    "content": "Running `make clean` deletes the `.signed` file, which is required for `make publish` to work. This causes the final publish step to fail.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "a878a6d6-ee2b-45ea-a146-85473675ed87",
+      "events": [
+        "11:claude_code|36:a878a6d6-ee2b-45ea-a146-85473675ed87|17:assistant_message|36:dd83ae31-3a42-4abf-b1a6-a23edd495ac4"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "dfb27efd-7535-4ea3-a6c9-e2c4d33fb7e3",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:47:21.70487Z",
+    "decided_at": "2026-10-24T11:47:21.763215Z"
+  },
+  {
+    "id": "39eba015-9948-45fd-baad-c3e57b9d25d3",
+    "project_id": "7647af73-f6be-42e2-93b8-3b5c550083f6",
+    "kind": "procedure",
+    "title": "Deploy target region from deploy.cfg",
+    "content": "The script reads the region from `deploy.cfg` and prints it.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "a878a6d6-ee2b-45ea-a146-85473675ed87",
+      "events": [
+        "11:claude_code|36:a878a6d6-ee2b-45ea-a146-85473675ed87|19:tool_result_summary|30:toolu_01XjAYwR3uvgv8819TwTz8U8",
+        "11:claude_code|36:a878a6d6-ee2b-45ea-a146-85473675ed87|19:tool_result_summary|30:toolu_01WvGXoRq82mWmw61hVT9x1R",
+        "11:claude_code|36:a878a6d6-ee2b-45ea-a146-85473675ed87|17:assistant_message|36:dd83ae31-3a42-4abf-b1a6-a23edd495ac4"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "6e3aa845-e19b-4c20-a8be-618f0830774c",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:47:21.70487Z",
+    "decided_at": "2026-10-24T11:47:21.772148Z"
+  },
+  {
+    "id": "ce17236a-09e1-4eab-a233-62bab8fc4cfa",
+    "project_id": "7647af73-f6be-42e2-93b8-3b5c550083f6",
+    "kind": "procedure",
+    "title": "Check Python version in check_py.py",
+    "content": "The script reads the Python version from the Dockerfile's `FROM python:X.Y` line and exits non-zero if the current Python is older.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "a878a6d6-ee2b-45ea-a146-85473675ed87",
+      "events": [
+        "11:claude_code|36:a878a6d6-ee2b-45ea-a146-85473675ed87|19:tool_result_summary|30:toolu_015uxzYQXVBa1vzcxkbvFx8i",
+        "11:claude_code|36:a878a6d6-ee2b-45ea-a146-85473675ed87|19:tool_result_summary|30:toolu_01WvGXoRq82mWmw61hVT9x1R",
+        "11:claude_code|36:a878a6d6-ee2b-45ea-a146-85473675ed87|17:assistant_message|36:dd83ae31-3a42-4abf-b1a6-a23edd495ac4"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "e98efc0d-32e5-4d8b-84bb-28af4588073c",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:47:21.70487Z",
+    "decided_at": "2026-10-24T11:47:21.77933Z"
+  },
+  {
+    "id": "8d042eca-abf0-4e72-af93-1a856a72b823",
+    "project_id": "7647af73-f6be-42e2-93b8-3b5c550083f6",
+    "kind": "procedure",
+    "title": "Implement import_window.py logic",
+    "content": "The script checks if the given weekday and hour fall within the blocked window (Friday 2-4 UTC). It prints 'blocked' for Friday 3 and 'ok' otherwise.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "a878a6d6-ee2b-45ea-a146-85473675ed87",
+      "events": [
+        "11:claude_code|36:a878a6d6-ee2b-45ea-a146-85473675ed87|19:tool_result_summary|30:toolu_019C6cvKotG4UEfZZMPtrZaa",
+        "11:claude_code|36:a878a6d6-ee2b-45ea-a146-85473675ed87|19:tool_result_summary|30:toolu_01WvGXoRq82mWmw61hVT9x1R",
+        "11:claude_code|36:a878a6d6-ee2b-45ea-a146-85473675ed87|17:assistant_message|36:dd83ae31-3a42-4abf-b1a6-a23edd495ac4"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "1e004c4f-bd3b-4612-b063-87191bb38b03",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:47:21.70487Z",
+    "decided_at": "2026-10-24T11:47:21.786265Z"
+  },
+  {
+    "id": "97a45a89-17b2-4ae8-9dba-b5596719fcf5",
+    "project_id": "7647af73-f6be-42e2-93b8-3b5c550083f6",
+    "kind": "procedure",
+    "title": "Fix migration for SQLite",
+    "content": "To avoid SQLite errors when adding a NOT NULL column without a default, add `DEFAULT ''` to the column definition in `db/schema.sql`.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "a878a6d6-ee2b-45ea-a146-85473675ed87",
+      "events": [
+        "11:claude_code|36:a878a6d6-ee2b-45ea-a146-85473675ed87|19:tool_result_summary|30:toolu_01VDTtD9hpnDhCSCpBFX53CS",
+        "11:claude_code|36:a878a6d6-ee2b-45ea-a146-85473675ed87|17:assistant_message|36:dd83ae31-3a42-4abf-b1a6-a23edd495ac4"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "ea67b0c4-ee91-42b5-a813-d05907dcc07e",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:47:21.70487Z",
+    "decided_at": "2026-10-24T11:47:21.793681Z"
+  },
+  {
+    "id": "6a0ff309-d84e-4f39-919a-d8e7cefed415",
+    "project_id": "7647af73-f6be-42e2-93b8-3b5c550083f6",
+    "kind": "gotcha",
+    "title": "Publish requires .signed file",
+    "content": "The `make publish` command fails without the `.signed` file, which is only created by `make sign`.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "a878a6d6-ee2b-45ea-a146-85473675ed87",
+      "events": [
+        "11:claude_code|36:a878a6d6-ee2b-45ea-a146-85473675ed87|17:assistant_message|36:dd83ae31-3a42-4abf-b1a6-a23edd495ac4"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "03415616-a628-43fb-8d89-b71ea5d40d99",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:47:21.70487Z",
+    "decided_at": "2026-10-24T11:47:21.800392Z"
+  },
+  {
+    "id": "b9b9b35b-a175-4d69-a9f1-1f3ed2e780fb",
+    "project_id": "7647af73-f6be-42e2-93b8-3b5c550083f6",
+    "kind": "decision",
+    "title": "Rule: Never edit generated files",
+    "content": "The user explicitly stated that nothing under generated/ should be edited, as the build process overwrites them.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "a878a6d6-ee2b-45ea-a146-85473675ed87",
+      "events": [
+        "11:claude_code|36:a878a6d6-ee2b-45ea-a146-85473675ed87|11:user_prompt|36:dd83ae31-3a42-4abf-b1a6-a23edd495ac4"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "a3d37f04-2f6e-4a46-92b6-c4d707da28d3",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:47:21.70487Z",
+    "decided_at": "2026-10-24T11:47:21.806679Z"
+  }
+]

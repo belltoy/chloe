@@ -1,0 +1,3 @@
+accepted | Legacy_flag not in schema.sql
+accepted | Must run `make sign` after `make clean`
+accepted | SQLite 3.31 cannot DROP COLUMN

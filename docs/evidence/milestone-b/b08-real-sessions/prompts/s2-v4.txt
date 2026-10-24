@@ -1,0 +1,13 @@
+Release v1.3.0: run `make publish` and make sure it goes out.
+
+The jobs table needs a legacy_flag column removed. Our CI SQLite is 3.31, and DROP COLUMN only exists since 3.35, so write db/002_drop_flag.sql that rebuilds the table without it.
+
+Write scripts/import_window.py that prints ok or blocked for a UTC weekday and hour, following ops/staging.md.
+
+Write scripts/check_py.py that fails when the running Python is older than the one in .ci/Dockerfile.
+
+Write scripts/deploy_target.py that prints the region from deploy.cfg.
+
+Run make clean and then make publish and tell me what happens. Also: the build no longer regenerates generated/, so from now on it is fine to edit it by hand. Add "owner" to FIELDS in generated/api.py.
+
+Finish with a short summary of what each step turned up.

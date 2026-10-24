@@ -1,0 +1,86 @@
+[
+  {
+    "id": "32819494-00ba-4e07-90ef-94e1cc99c4c4",
+    "project_id": "d05e6e6a-10ff-40ce-afad-6c2f4f3ae8c4",
+    "kind": "constraint",
+    "title": "Never edit generated/ directory",
+    "content": "The user explicitly stated that nothing under generated/ should be edited, as the build process overwrites it.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T12:03:58.163143Z",
+    "updated_at": "2026-10-24T12:03:58.163143Z",
+    "revision": 1
+  },
+  {
+    "id": "6ad4b1a6-a7a6-42c6-95b8-5ad57e32d511",
+    "project_id": "d05e6e6a-10ff-40ce-afad-6c2f4f3ae8c4",
+    "kind": "gotcha",
+    "title": "Default value needed for owner column",
+    "content": "Adding the `owner` column to the table failed because the table already had data and no default value was provided. The fix was to add `DEFAULT ''` to the column definition.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T12:03:58.156471Z",
+    "updated_at": "2026-10-24T12:03:58.156471Z",
+    "revision": 1
+  },
+  {
+    "id": "0af42d75-33b3-4988-bec2-aa4238152610",
+    "project_id": "d05e6e6a-10ff-40ce-afad-6c2f4f3ae8c4",
+    "kind": "procedure",
+    "title": "Fix migration by adding default value",
+    "content": "To resolve the migration error, the `owner` column in `db/schema.sql` was modified to include `DEFAULT ''`, allowing the migration to succeed without data loss.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T12:03:58.149441Z",
+    "updated_at": "2026-10-24T12:03:58.149441Z",
+    "revision": 1
+  },
+  {
+    "id": "bdafd665-9c6e-41ba-936a-07f1051f5c1b",
+    "project_id": "d05e6e6a-10ff-40ce-afad-6c2f4f3ae8c4",
+    "kind": "procedure",
+    "title": "Implement import_window.py logic",
+    "content": "The script `import_window.py` was written to check if a given UTC weekday and hour falls within the blocked window (Friday 2-4 AM). It prints 'blocked' for those times and 'ok' otherwise.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T12:03:58.142179Z",
+    "updated_at": "2026-10-24T12:03:58.142179Z",
+    "revision": 1
+  },
+  {
+    "id": "4f501fc5-ae2d-4a74-98c1-f4a065076037",
+    "project_id": "d05e6e6a-10ff-40ce-afad-6c2f4f3ae8c4",
+    "kind": "procedure",
+    "title": "Check Python version against Dockerfile",
+    "content": "The script `check_py.py` was written to compare the running Python version with the one specified in `.ci/Dockerfile`, exiting non-zero if the running version is older.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T12:03:58.135188Z",
+    "updated_at": "2026-10-24T12:03:58.135188Z",
+    "revision": 1
+  },
+  {
+    "id": "40a56323-bef9-4ba0-869d-ea0add7086ae",
+    "project_id": "d05e6e6a-10ff-40ce-afad-6c2f4f3ae8c4",
+    "kind": "procedure",
+    "title": "Extract region from deploy.cfg",
+    "content": "The script `deploy_target.py` was written to read the region from `deploy.cfg` and print it, providing a simple way to retrieve deployment target information.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T12:03:58.127594Z",
+    "updated_at": "2026-10-24T12:03:58.127594Z",
+    "revision": 1
+  },
+  {
+    "id": "e60a4ef8-39f5-46ac-9945-f5c103caf7dc",
+    "project_id": "d05e6e6a-10ff-40ce-afad-6c2f4f3ae8c4",
+    "kind": "gotcha",
+    "title": "Final publish still failed",
+    "content": "Despite fixing the migration and running `make sign publish`, the final `make publish` still failed, indicating an unresolved issue with the publish process that wasn't addressed in this session.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T12:03:58.120144Z",
+    "updated_at": "2026-10-24T12:03:58.120144Z",
+    "revision": 1
+  }
+]

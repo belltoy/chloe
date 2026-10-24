@@ -1,0 +1,8 @@
+I wrote `db/002_drop_flag.sql`, but I couldn't run it against a test table because the sqlite3 check needed approval. `make sign publish` ran and printed "published artifact", but the repo has no v1.3.0 version, tag or deploy script. I didn't tag or push anything.
+
+- **Publish:** the earlier failure was almost certainly the unsigned artifact, since `publish` refuses to run without `.signed`. I ran `make sign` first, then publish, and it succeeded. The Makefile has no region setting, so I couldn't confirm the us-east target.
+- **Migration:** it copies `jobs` into a new table without the column, drops the old table and renames the new one. That avoids `DROP COLUMN`, which SQLite 3.31 on CI doesn't support.
+- **`legacy_flag` isn't in `db/schema.sql`:** that file defines `jobs` with only `id`, `name` and `owner`. I wrote the copy to keep exactly those three columns. If the real database has other columns, add them to the migration or they'll be lost.
+- **Possible bug in `schema.sql`:** `ALTER TABLE jobs ADD COLUMN owner TEXT NOT NULL` has no default, which SQLite rejects. I didn't touch it.
+
+If you want a git tag `v1.3.0` pushed, say so.

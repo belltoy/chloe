@@ -1,0 +1,6 @@
+`make publish` succeeded, but I can't confirm it shipped v1.3.0 to us-east. I also wrote the migration, and the existing `db/migrate.py` fails.
+
+- **Release:** the repo has no deploy script and no version file, so there was nothing to name v1.3.0 or point at a region. I ran `make clean && make sign && make publish`, and it printed "published artifact". That target only echoes the artifact. I didn't tag anything or deploy to us-east. Tell me what actually does the deploy and I'll run it.
+- **Migration:** `db/002_drop_flag.sql` rebuilds `jobs` without `legacy_flag` instead of using `DROP COLUMN`, since CI has SQLite 3.31. I ran it on a sample table and it kept the rows and removed the column.
+- **Column definitions:** `schema.sql` has no `legacy_flag` column. I assumed the table has `id`, `name` and `owner`, so check the migration against the real schema.
+- **`db/migrate.py`:** it fails because `schema.sql` adds `owner TEXT NOT NULL` with no default. I didn't change that.

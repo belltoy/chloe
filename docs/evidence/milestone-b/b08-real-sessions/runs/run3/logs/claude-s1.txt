@@ -1,0 +1,6 @@
+Both problems are fixed: `make publish` now publishes, and `python3 db/migrate.py` prints "migration ok".
+
+- **Publish:** `make publish` refuses to run without the `.signed` marker, and the artifact had never been signed. I ran `make sign` and then `make publish`, which printed "published artifact". The Makefile has no step that sets the region, so I didn't touch eu-west.
+- **Migration:** `db/schema.sql` added `owner TEXT NOT NULL` to a table that already had a row. SQLite can't add a NOT NULL column without a default, so I changed the line to `owner TEXT NOT NULL DEFAULT ''`. Existing rows now get an empty owner, so change that default if you want something else.
+
+I didn't run the migration against the staging database.

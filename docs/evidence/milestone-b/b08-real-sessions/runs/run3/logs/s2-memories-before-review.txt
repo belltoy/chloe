@@ -1,0 +1,8 @@
+9eabeeec-66cf-45ba-a2fc-034b82d510ec  Constraint/Active  r1  Staging DB is read-only on Fridays
+07d8789c-6a7b-4042-afa5-afd739acf16c  Constraint/Active  r1  CI uses Python 3.9
+8eef35ea-e6fc-4fd6-be8a-03481b9dab9b  Constraint/Active  r1  Releases are deployed to eu-west
+32525b83-19b0-4873-9ada-dd0f6dae6c66  Constraint/Active  r1  Do not edit generated files
+ed04f646-2cae-48a5-a8cd-1ca6813abea8  Procedure/Active  r1  Fix migration by adding default value
+08c6dbc4-a830-4d85-8da0-1bd71778f3c0  Procedure/Active  r1  Publish requires signing
+6312982c-583a-48c2-892e-0864c51c1023  Gotcha/Active  r1  SQLite requires default for NOT NULL columns
+2119b790-4bc9-4b7e-8c4e-9e4fc9d943b4  Fact/Active  r1  Migration was successful

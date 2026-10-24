@@ -1,0 +1,7 @@
+875b5e06-c7b8-4e0a-ae0e-4471cd48e8fd  Constraint/Active  r1  Never edit files under generated/
+0d4f3832-be96-4e07-a0b5-3ce95ab8f9a3  Procedure/Active  r1  Fix migration for NOT NULL column
+63ccfe79-c6a1-41fc-9758-9ae6528d6128  Fact/Active  r1  Publishing requires a signed file
+4bc446d6-d887-47a1-81d4-7c08d679087e  Gotcha/Active  r1  Python version check may not exit non-zero
+7e6c4af1-d945-460f-9972-828ce29c783a  Procedure/Active  r1  Implement import window check
+15d8b49e-375d-4ca4-8365-828dd3c6f4fa  Procedure/Active  r1  Deploy target region from config
+041f3184-9a92-4302-adb1-ab577ab9e6ff  Fact/Active  r1  Makefile does not enforce version checks

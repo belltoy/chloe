@@ -1,0 +1,204 @@
+[
+  {
+    "id": "a37b2fc4-5cd0-44b8-b02c-6093edc751fa",
+    "project_id": "c205e733-d49e-46ec-b9ae-bac2d237e272",
+    "kind": "gotcha",
+    "title": "Publishing without version string",
+    "content": "The `make publish` command succeeded, but the version `v1.2.0` wasn't found in the repo. This suggests the version string might be missing or not properly tracked.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "ac4135b9-99af-40e4-8cad-cb9967001933",
+      "events": [
+        "11:claude_code|36:ac4135b9-99af-40e4-8cad-cb9967001933|17:assistant_message|36:b9d3bf84-2e2c-4dcd-90a9-2d6339fe6e3d"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T12:04:18.426677Z",
+    "decided_at": null
+  },
+  {
+    "id": "1eb4ca90-35bd-46ec-8cfb-31045e28d92a",
+    "project_id": "c205e733-d49e-46ec-b9ae-bac2d237e272",
+    "kind": "procedure",
+    "title": "Extract region from deploy configuration",
+    "content": "The script `deploy_target.py` reads the `region` value from `deploy.cfg` and prints it. This provides a straightforward way to determine the deployment target region.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "ac4135b9-99af-40e4-8cad-cb9967001933",
+      "events": [
+        "11:claude_code|36:ac4135b9-99af-40e4-8cad-cb9967001933|17:assistant_message|36:b9d3bf84-2e2c-4dcd-90a9-2d6339fe6e3d"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T12:04:18.426677Z",
+    "decided_at": null
+  },
+  {
+    "id": "50ecdfca-2dba-4a15-a5f9-0ec21cd8fcc2",
+    "project_id": "c205e733-d49e-46ec-b9ae-bac2d237e272",
+    "kind": "procedure",
+    "title": "Check Python version against Dockerfile",
+    "content": "The script `check_py.py` compares the running Python version with the one specified in `.ci/Dockerfile` and exits non-zero if it's older. This ensures consistency across environments.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "ac4135b9-99af-40e4-8cad-cb9967001933",
+      "events": [
+        "11:claude_code|36:ac4135b9-99af-40e4-8cad-cb9967001933|17:assistant_message|36:b9d3bf84-2e2c-4dcd-90a9-2d6339fe6e3d"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T12:04:18.426677Z",
+    "decided_at": null
+  },
+  {
+    "id": "0f12f5dd-ec81-4f62-899e-821e3bd1e23c",
+    "project_id": "c205e733-d49e-46ec-b9ae-bac2d237e272",
+    "kind": "fact",
+    "title": "Staging database import window",
+    "content": "The staging database blocks imports on Friday from 02:00 to 04:00 UTC. The script `import_window.py` checks the weekday and hour to determine if it's blocked.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "ac4135b9-99af-40e4-8cad-cb9967001933",
+      "events": [
+        "11:claude_code|36:ac4135b9-99af-40e4-8cad-cb9967001933|17:assistant_message|36:b9d3bf84-2e2c-4dcd-90a9-2d6339fe6e3d"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T12:04:18.426677Z",
+    "decided_at": null
+  },
+  {
+    "id": "44600541-3170-4a5a-aa7e-29bf652a7d5d",
+    "project_id": "c205e733-d49e-46ec-b9ae-bac2d237e272",
+    "kind": "gotcha",
+    "title": "SQLite won't add NOT NULL columns without defaults",
+    "content": "SQLite raises an error when adding a NOT NULL column to a table with existing rows without a default value. This was the cause of the migration failure.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "ac4135b9-99af-40e4-8cad-cb9967001933",
+      "events": [
+        "11:claude_code|36:ac4135b9-99af-40e4-8cad-cb9967001933|17:assistant_message|36:b9d3bf84-2e2c-4dcd-90a9-2d6339fe6e3d"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T12:04:18.426677Z",
+    "decided_at": null
+  },
+  {
+    "id": "47000cf6-cc66-4a67-b4e5-1470cc88a133",
+    "project_id": "c205e733-d49e-46ec-b9ae-bac2d237e272",
+    "kind": "procedure",
+    "title": "Fix SQLite NOT NULL column error",
+    "content": "To add a NOT NULL column to an existing SQLite table, provide a default value. The `owner` column was fixed by adding `DEFAULT ''` to `db/schema.sql`.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "ac4135b9-99af-40e4-8cad-cb9967001933",
+      "events": [
+        "11:claude_code|36:ac4135b9-99af-40e4-8cad-cb9967001933|19:tool_result_summary|30:toolu_01Wv8KzqxVBw98Wyh9wR9hRr",
+        "11:claude_code|36:ac4135b9-99af-40e4-8cad-cb9967001933|19:tool_result_summary|30:toolu_01DfEXXcfmZ2PmTR334xyGL4",
+        "11:claude_code|36:ac4135b9-99af-40e4-8cad-cb9967001933|17:assistant_message|36:b9d3bf84-2e2c-4dcd-90a9-2d6339fe6e3d"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T12:04:18.426677Z",
+    "decided_at": null
+  },
+  {
+    "id": "db2430f5-ceee-42fe-8345-074b26af02f5",
+    "project_id": "c205e733-d49e-46ec-b9ae-bac2d237e272",
+    "kind": "constraint",
+    "title": "Never edit generated files",
+    "content": "The user explicitly stated that nothing under `generated/` should be edited, as the build process overwrites it.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "ac4135b9-99af-40e4-8cad-cb9967001933",
+      "events": [
+        "11:claude_code|36:ac4135b9-99af-40e4-8cad-cb9967001933|11:user_prompt|36:b9d3bf84-2e2c-4dcd-90a9-2d6339fe6e3d"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T12:04:18.426677Z",
+    "decided_at": null
+  },
+  {
+    "id": "d5dbc3f4-21ce-46dc-84bf-e49828107091",
+    "project_id": "c205e733-d49e-46ec-b9ae-bac2d237e272",
+    "kind": "decision",
+    "title": "Always sign before publishing",
+    "content": "The user ruled that `make publish` requires a `.signed` file, which is only created by `make sign`. This is a rule for all future work.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "ac4135b9-99af-40e4-8cad-cb9967001933",
+      "events": [
+        "11:claude_code|36:ac4135b9-99af-40e4-8cad-cb9967001933|11:user_prompt|36:b9d3bf84-2e2c-4dcd-90a9-2d6339fe6e3d"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T12:04:18.426677Z",
+    "decided_at": null
+  }
+]

@@ -1,0 +1,98 @@
+[
+  {
+    "id": "85336cb9-33df-40ba-a87a-64dd437d9a78",
+    "project_id": "c205e733-d49e-46ec-b9ae-bac2d237e272",
+    "kind": "decision",
+    "title": "Always sign before publishing",
+    "content": "The user ruled that `make publish` requires a `.signed` file, which is only created by `make sign`. This is a rule for all future work.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T12:04:18.565223Z",
+    "updated_at": "2026-10-24T12:04:18.565223Z",
+    "revision": 1
+  },
+  {
+    "id": "047d414c-ae8d-46e6-9313-efb0244002db",
+    "project_id": "c205e733-d49e-46ec-b9ae-bac2d237e272",
+    "kind": "constraint",
+    "title": "Never edit generated files",
+    "content": "The user explicitly stated that nothing under `generated/` should be edited, as the build process overwrites it.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T12:04:18.558208Z",
+    "updated_at": "2026-10-24T12:04:18.558208Z",
+    "revision": 1
+  },
+  {
+    "id": "c45979b1-c2df-4c7f-8a9a-af84c4131e5a",
+    "project_id": "c205e733-d49e-46ec-b9ae-bac2d237e272",
+    "kind": "procedure",
+    "title": "Fix SQLite NOT NULL column error",
+    "content": "To add a NOT NULL column to an existing SQLite table, provide a default value. The `owner` column was fixed by adding `DEFAULT ''` to `db/schema.sql`.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T12:04:18.551628Z",
+    "updated_at": "2026-10-24T12:04:18.551628Z",
+    "revision": 1
+  },
+  {
+    "id": "c9279c7e-ee06-4492-89a3-eddc2468870a",
+    "project_id": "c205e733-d49e-46ec-b9ae-bac2d237e272",
+    "kind": "gotcha",
+    "title": "SQLite won't add NOT NULL columns without defaults",
+    "content": "SQLite raises an error when adding a NOT NULL column to a table with existing rows without a default value. This was the cause of the migration failure.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T12:04:18.544968Z",
+    "updated_at": "2026-10-24T12:04:18.544968Z",
+    "revision": 1
+  },
+  {
+    "id": "9cc27555-65e2-46ed-ace3-d4c6a86618db",
+    "project_id": "c205e733-d49e-46ec-b9ae-bac2d237e272",
+    "kind": "fact",
+    "title": "Staging database import window",
+    "content": "The staging database blocks imports on Friday from 02:00 to 04:00 UTC. The script `import_window.py` checks the weekday and hour to determine if it's blocked.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T12:04:18.537987Z",
+    "updated_at": "2026-10-24T12:04:18.537987Z",
+    "revision": 1
+  },
+  {
+    "id": "bd9cacdb-60d6-450d-914b-009d6b9f3170",
+    "project_id": "c205e733-d49e-46ec-b9ae-bac2d237e272",
+    "kind": "procedure",
+    "title": "Check Python version against Dockerfile",
+    "content": "The script `check_py.py` compares the running Python version with the one specified in `.ci/Dockerfile` and exits non-zero if it's older. This ensures consistency across environments.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T12:04:18.529604Z",
+    "updated_at": "2026-10-24T12:04:18.529604Z",
+    "revision": 1
+  },
+  {
+    "id": "ea1b0656-36d4-4332-b727-c6322316ed3f",
+    "project_id": "c205e733-d49e-46ec-b9ae-bac2d237e272",
+    "kind": "procedure",
+    "title": "Extract region from deploy configuration",
+    "content": "The script `deploy_target.py` reads the `region` value from `deploy.cfg` and prints it. This provides a straightforward way to determine the deployment target region.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T12:04:18.52182Z",
+    "updated_at": "2026-10-24T12:04:18.52182Z",
+    "revision": 1
+  },
+  {
+    "id": "1dbcb8c3-c5bc-4b02-a43d-2cb27f8669a2",
+    "project_id": "c205e733-d49e-46ec-b9ae-bac2d237e272",
+    "kind": "gotcha",
+    "title": "Publishing without version string",
+    "content": "The `make publish` command succeeded, but the version `v1.2.0` wasn't found in the repo. This suggests the version string might be missing or not properly tracked.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T12:04:18.512701Z",
+    "updated_at": "2026-10-24T12:04:18.512701Z",
+    "revision": 1
+  }
+]

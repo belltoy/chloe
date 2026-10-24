@@ -1,0 +1,6 @@
+accepted | Check import window script output
+merged   | Python version must match Dockerfile
+accepted | Use SQLite 3.35+ for column drop
+accepted | Update generated API fields
+accepted | Legacy flag column removal needs careful script
+accepted | Publishing requires signing before building

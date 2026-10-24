@@ -1,0 +1,155 @@
+[
+  {
+    "id": "8cbd0b27-67f2-424a-ad7e-03d818c9745d",
+    "project_id": "d98e4dce-4e07-4252-be4e-dca4b2818418",
+    "kind": "gotcha",
+    "title": "make clean removes .signed marker",
+    "content": "Running `make clean` removes the `.signed` marker, which is required for publishing. After a clean, the `make sign` command must be run again to regenerate the marker.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "91d216e8-ae87-4bd8-9035-1ff9d81cd7f3",
+      "events": [
+        "11:claude_code|36:91d216e8-ae87-4bd8-9035-1ff9d81cd7f3|11:user_prompt|36:c0d66e60-0790-448a-bfa0-593bdd122ce1"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:38:36.414558Z",
+    "decided_at": null
+  },
+  {
+    "id": "481b585d-7b48-4dad-a130-f39260ff0180",
+    "project_id": "d98e4dce-4e07-4252-be4e-dca4b2818418",
+    "kind": "fact",
+    "title": "Releases are deployed to eu-west region",
+    "content": "All releases are automatically deployed to the `eu-west` region as per the project's configuration.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "91d216e8-ae87-4bd8-9035-1ff9d81cd7f3",
+      "events": [
+        "11:claude_code|36:91d216e8-ae87-4bd8-9035-1ff9d81cd7f3|11:user_prompt|36:c0d66e60-0790-448a-bfa0-593bdd122ce1"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:38:36.414558Z",
+    "decided_at": null
+  },
+  {
+    "id": "85ebf5b5-106c-4506-b40f-7a639e6d37e7",
+    "project_id": "d98e4dce-4e07-4252-be4e-dca4b2818418",
+    "kind": "constraint",
+    "title": "CI uses Python 3.9, avoid match statements",
+    "content": "The CI environment runs Python 3.9, which does not support the `match` statement. Scripts must avoid using it to prevent syntax errors.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "91d216e8-ae87-4bd8-9035-1ff9d81cd7f3",
+      "events": [
+        "11:claude_code|36:91d216e8-ae87-4bd8-9035-1ff9d81cd7f3|11:user_prompt|36:c0d66e60-0790-448a-bfa0-593bdd122ce1"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:38:36.414558Z",
+    "decided_at": null
+  },
+  {
+    "id": "e059ee49-e80c-47f8-8bf9-90c205735414",
+    "project_id": "d98e4dce-4e07-4252-be4e-dca4b2818418",
+    "kind": "constraint",
+    "title": "Never edit files under generated/",
+    "content": "Files under the `generated/` directory are overwritten by the build process and should never be edited manually.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "91d216e8-ae87-4bd8-9035-1ff9d81cd7f3",
+      "events": [
+        "11:claude_code|36:91d216e8-ae87-4bd8-9035-1ff9d81cd7f3|11:user_prompt|36:c0d66e60-0790-448a-bfa0-593bdd122ce1"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:38:36.414558Z",
+    "decided_at": null
+  },
+  {
+    "id": "7f36550b-43dc-423f-adc4-7a9941cbebb2",
+    "project_id": "d98e4dce-4e07-4252-be4e-dca4b2818418",
+    "kind": "decision",
+    "title": "Use make sign publish to ensure signing before publishing",
+    "content": "The `make publish` command failed because the `.signed` marker was missing. The decision was to run `make sign publish` together to ensure the artifact is signed before attempting to publish.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "91d216e8-ae87-4bd8-9035-1ff9d81cd7f3",
+      "events": [
+        "11:claude_code|36:91d216e8-ae87-4bd8-9035-1ff9d81cd7f3|11:user_prompt|36:c0d66e60-0790-448a-bfa0-593bdd122ce1",
+        "11:claude_code|36:91d216e8-ae87-4bd8-9035-1ff9d81cd7f3|17:assistant_message|36:c0d66e60-0790-448a-bfa0-593bdd122ce1"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:38:36.414558Z",
+    "decided_at": null
+  },
+  {
+    "id": "66def8d4-d353-4e55-b122-6d3d0d7efa77",
+    "project_id": "d98e4dce-4e07-4252-be4e-dca4b2818418",
+    "kind": "gotcha",
+    "title": "SQLite column addition requires default value",
+    "content": "Adding a NOT NULL column to an existing table in SQLite requires providing a default value, otherwise it will fail. The migration failed because the `owner` column was added without a default, and the existing row had no value.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "91d216e8-ae87-4bd8-9035-1ff9d81cd7f3",
+      "events": [
+        "11:claude_code|36:91d216e8-ae87-4bd8-9035-1ff9d81cd7f3|19:tool_result_summary|30:toolu_01EmDF3TWheSFXVvBLNZt6aE",
+        "11:claude_code|36:91d216e8-ae87-4bd8-9035-1ff9d81cd7f3|19:tool_result_summary|30:toolu_01Bg6FaTXXy7hCvG6ndkwjBM",
+        "11:claude_code|36:91d216e8-ae87-4bd8-9035-1ff9d81cd7f3|17:assistant_message|36:c0d66e60-0790-448a-bfa0-593bdd122ce1"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:38:36.414558Z",
+    "decided_at": null
+  }
+]

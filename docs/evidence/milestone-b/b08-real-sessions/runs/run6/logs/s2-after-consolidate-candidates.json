@@ -1,0 +1,545 @@
+[
+  {
+    "id": "5b2baab4-686b-4526-bede-6883487ba425",
+    "project_id": "d127a32c-1fc0-43f2-b058-6d7e6557800c",
+    "kind": "fact",
+    "title": "Generated API fields update",
+    "content": "The `generated/api.py` file must have the `owner` field added to the `FIELDS` list manually, as the generated rule is lifted.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "de77e4b9-52d8-421a-a239-9310a8fec41f",
+      "events": [
+        "11:claude_code|36:de77e4b9-52d8-421a-a239-9310a8fec41f|19:tool_result_summary|30:toolu_01R9zmAN58N3szjFYHS5HhSL",
+        "11:claude_code|36:de77e4b9-52d8-421a-a239-9310a8fec41f|19:tool_result_summary|30:toolu_016qargKdTEhPeRszHkt12Gb"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "model",
+      "reason": "The new note discusses manually adding an `owner` field to `generated/api.py`, while existing notes address unrelated topics such as file editing constraints, migration procedures, deployment regions, publishing requirements, and Python version checks.",
+      "similar": [
+        {
+          "memory_id": "875b5e06-c7b8-4e0a-ae0e-4471cd48e8fd",
+          "title": "Never edit files under generated/",
+          "score": 2.755714339658052
+        },
+        {
+          "memory_id": "0d4f3832-be96-4e07-a0b5-3ce95ab8f9a3",
+          "title": "Fix migration for NOT NULL column",
+          "score": 1.7296987593162187
+        },
+        {
+          "memory_id": "15d8b49e-375d-4ca4-8365-828dd3c6f4fa",
+          "title": "Deploy target region from config",
+          "score": 0.5061560328016282
+        },
+        {
+          "memory_id": "63ccfe79-c6a1-41fc-9758-9ae6528d6128",
+          "title": "Publishing requires a signed file",
+          "score": 0.47598386473777254
+        },
+        {
+          "memory_id": "4bc446d6-d887-47a1-81d4-7c08d679087e",
+          "title": "Python version check may not exit non-zero",
+          "score": 0.3253144132309481
+        }
+      ]
+    },
+    "created_at": "2026-10-24T11:47:56.397705Z",
+    "decided_at": null
+  },
+  {
+    "id": "feaccc25-652b-4ac3-b013-f698c3f72fa8",
+    "project_id": "d127a32c-1fc0-43f2-b058-6d7e6557800c",
+    "kind": "procedure",
+    "title": "Deploy target region retrieval",
+    "content": "The `scripts/deploy_target.py` script reads the `region` value from `deploy.cfg` and prints it, which is used for deployment configuration.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "de77e4b9-52d8-421a-a239-9310a8fec41f",
+      "events": [
+        "11:claude_code|36:de77e4b9-52d8-421a-a239-9310a8fec41f|19:tool_result_summary|30:toolu_01MqfvbAsRMMuGZUB3yYxAbT",
+        "11:claude_code|36:de77e4b9-52d8-421a-a239-9310a8fec41f|17:assistant_message|36:6ee04e33-ac69-4a82-9eeb-8d5e20465e60"
+      ]
+    },
+    "state": "merged",
+    "memory_id": "15d8b49e-375d-4ca4-8365-828dd3c6f4fa",
+    "reason": "auto-merged as a low-risk duplicate: The new note describes the same procedure as \"Deploy target region from config\", with identical functionality and no new information added.",
+    "proposal": {
+      "action": "merge",
+      "target": "15d8b49e-375d-4ca4-8365-828dd3c6f4fa",
+      "method": "model",
+      "reason": "The new note describes the same procedure as \"Deploy target region from config\", with identical functionality and no new information added.",
+      "similar": [
+        {
+          "memory_id": "15d8b49e-375d-4ca4-8365-828dd3c6f4fa",
+          "title": "Deploy target region from config",
+          "score": 16.018402711377362
+        },
+        {
+          "memory_id": "7e6c4af1-d945-460f-9972-828ce29c783a",
+          "title": "Implement import window check",
+          "score": 2.270326717216129
+        },
+        {
+          "memory_id": "0d4f3832-be96-4e07-a0b5-3ce95ab8f9a3",
+          "title": "Fix migration for NOT NULL column",
+          "score": 1.4766205178942071
+        },
+        {
+          "memory_id": "4bc446d6-d887-47a1-81d4-7c08d679087e",
+          "title": "Python version check may not exit non-zero",
+          "score": 0.5557667765179799
+        },
+        {
+          "memory_id": "041f3184-9a92-4302-adb1-ab577ab9e6ff",
+          "title": "Makefile does not enforce version checks",
+          "score": 1.7061298572725024e-6
+        }
+      ]
+    },
+    "created_at": "2026-10-24T11:47:56.397705Z",
+    "decided_at": "2026-10-24T11:49:11.615424Z"
+  },
+  {
+    "id": "62641eaa-7f78-44e0-ae93-bedc860ea886",
+    "project_id": "d127a32c-1fc0-43f2-b058-6d7e6557800c",
+    "kind": "procedure",
+    "title": "Python version check",
+    "content": "The `scripts/check_py.py` script verifies that the Python version is at least the one used in the `.ci/Dockerfile` to ensure compatibility.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "de77e4b9-52d8-421a-a239-9310a8fec41f",
+      "events": [
+        "11:claude_code|36:de77e4b9-52d8-421a-a239-9310a8fec41f|19:tool_result_summary|30:toolu_01MqfvbAsRMMuGZUB3yYxAbT",
+        "11:claude_code|36:de77e4b9-52d8-421a-a239-9310a8fec41f|17:assistant_message|36:6ee04e33-ac69-4a82-9eeb-8d5e20465e60"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "model",
+      "reason": "The new note describes a Python version check procedure, while \"Python version check may not exit non-zero\" discusses an issue with the exit code of a similar script. They are related but not directly conflicting or duplicative.",
+      "similar": [
+        {
+          "memory_id": "4bc446d6-d887-47a1-81d4-7c08d679087e",
+          "title": "Python version check may not exit non-zero",
+          "score": 6.215347645419549
+        },
+        {
+          "memory_id": "7e6c4af1-d945-460f-9972-828ce29c783a",
+          "title": "Implement import window check",
+          "score": 1.8494868317814832
+        },
+        {
+          "memory_id": "041f3184-9a92-4302-adb1-ab577ab9e6ff",
+          "title": "Makefile does not enforce version checks",
+          "score": 1.744630599570925
+        },
+        {
+          "memory_id": "875b5e06-c7b8-4e0a-ae0e-4471cd48e8fd",
+          "title": "Never edit files under generated/",
+          "score": 1.593980329392013
+        },
+        {
+          "memory_id": "15d8b49e-375d-4ca4-8365-828dd3c6f4fa",
+          "title": "Deploy target region from config",
+          "score": 0.5061550257895518
+        }
+      ]
+    },
+    "created_at": "2026-10-24T11:47:56.397705Z",
+    "decided_at": null
+  },
+  {
+    "id": "8f95fb6b-d3d4-4d29-9a50-fb16f9c28d2f",
+    "project_id": "d127a32c-1fc0-43f2-b058-6d7e6557800c",
+    "kind": "procedure",
+    "title": "Import window validation",
+    "content": "The `scripts/import_window.py` script checks if a given UTC weekday and hour falls within the blocked window (Saturday 02:00–03:59). It prints `blocked` for that range and `ok` otherwise.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "de77e4b9-52d8-421a-a239-9310a8fec41f",
+      "events": [
+        "11:claude_code|36:de77e4b9-52d8-421a-a239-9310a8fec41f|19:tool_result_summary|30:toolu_01Vq2TfBY3Nec2NGNkXyBNfv",
+        "11:claude_code|36:de77e4b9-52d8-421a-a239-9310a8fec41f|17:assistant_message|36:6ee04e33-ac69-4a82-9eeb-8d5e20465e60"
+      ]
+    },
+    "state": "conflict",
+    "memory_id": "7e6c4af1-d945-460f-9972-828ce29c783a",
+    "reason": "flagged for review: the model saw a duplicate but numbers or days differ: The new note describes the same import window check as \"Implement import window check\", with the same functionality and output, though the blocked window is specified as Saturday 02:00–03:59 instead of Friday 02:00–04:00.",
+    "proposal": {
+      "action": "conflict",
+      "target": "7e6c4af1-d945-460f-9972-828ce29c783a",
+      "method": "model",
+      "reason": "the model saw a duplicate but numbers or days differ: The new note describes the same import window check as \"Implement import window check\", with the same functionality and output, though the blocked window is specified as Saturday 02:00–03:59 instead of Friday 02:00–04:00.",
+      "similar": [
+        {
+          "memory_id": "7e6c4af1-d945-460f-9972-828ce29c783a",
+          "title": "Implement import window check",
+          "score": 15.388805867870506
+        },
+        {
+          "memory_id": "041f3184-9a92-4302-adb1-ab577ab9e6ff",
+          "title": "Makefile does not enforce version checks",
+          "score": 1.4540143878075025
+        },
+        {
+          "memory_id": "15d8b49e-375d-4ca4-8365-828dd3c6f4fa",
+          "title": "Deploy target region from config",
+          "score": 1.3001421163784257
+        },
+        {
+          "memory_id": "4bc446d6-d887-47a1-81d4-7c08d679087e",
+          "title": "Python version check may not exit non-zero",
+          "score": 1.278775743010225
+        },
+        {
+          "memory_id": "63ccfe79-c6a1-41fc-9758-9ae6528d6128",
+          "title": "Publishing requires a signed file",
+          "score": 3.4916225330843383e-6
+        }
+      ]
+    },
+    "created_at": "2026-10-24T11:47:56.397705Z",
+    "decided_at": "2026-10-24T11:49:11.615101Z"
+  },
+  {
+    "id": "c66ef6a9-0621-494c-9e9e-47188c3495e4",
+    "project_id": "d127a32c-1fc0-43f2-b058-6d7e6557800c",
+    "kind": "gotcha",
+    "title": "Column removal may require assumptions",
+    "content": "The `db/002_drop_flag.sql` script assumes the `jobs` table only contains `id` and `name` columns, as defined in `db/schema.sql`. This may not account for other potential columns.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "de77e4b9-52d8-421a-a239-9310a8fec41f",
+      "events": [
+        "11:claude_code|36:de77e4b9-52d8-421a-a239-9310a8fec41f|17:assistant_message|36:6ee04e33-ac69-4a82-9eeb-8d5e20465e60"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "model",
+      "reason": "The new note discusses column removal assumptions in a migration script, while the existing notes cover Python version checks, NOT NULL column additions, import window checks, publishing requirements, and deployment region retrieval. They are on different topics.",
+      "similar": [
+        {
+          "memory_id": "0d4f3832-be96-4e07-a0b5-3ce95ab8f9a3",
+          "title": "Fix migration for NOT NULL column",
+          "score": 5.712246544037782
+        },
+        {
+          "memory_id": "4bc446d6-d887-47a1-81d4-7c08d679087e",
+          "title": "Python version check may not exit non-zero",
+          "score": 4.191003177809626
+        },
+        {
+          "memory_id": "7e6c4af1-d945-460f-9972-828ce29c783a",
+          "title": "Implement import window check",
+          "score": 2.0318801042206647
+        },
+        {
+          "memory_id": "63ccfe79-c6a1-41fc-9758-9ae6528d6128",
+          "title": "Publishing requires a signed file",
+          "score": 1.107999573482701
+        },
+        {
+          "memory_id": "15d8b49e-375d-4ca4-8365-828dd3c6f4fa",
+          "title": "Deploy target region from config",
+          "score": 1.0470644451255458
+        }
+      ]
+    },
+    "created_at": "2026-10-24T11:47:56.397705Z",
+    "decided_at": null
+  },
+  {
+    "id": "a1b28954-b4b7-46da-95a2-59b4b2db29f6",
+    "project_id": "d127a32c-1fc0-43f2-b058-6d7e6557800c",
+    "kind": "procedure",
+    "title": "Column removal via migration",
+    "content": "To remove the `legacy_flag` column, use `db/002_drop_flag.sql` which rebuilds the `jobs` table without the column. This approach avoids using `DROP COLUMN` directly.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "de77e4b9-52d8-421a-a239-9310a8fec41f",
+      "events": [
+        "11:claude_code|36:de77e4b9-52d8-421a-a239-9310a8fec41f|19:tool_result_summary|30:toolu_01SwxGBfi71fy4y4mHyvXxFo",
+        "11:claude_code|36:de77e4b9-52d8-421a-a239-9310a8fec41f|17:assistant_message|36:6ee04e33-ac69-4a82-9eeb-8d5e20465e60"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "model",
+      "reason": "The new note describes a procedure for removing a column via migration, while existing notes cover unrelated topics such as NOT NULL column addition, publishing requirements, and file editing constraints.",
+      "similar": [
+        {
+          "memory_id": "0d4f3832-be96-4e07-a0b5-3ce95ab8f9a3",
+          "title": "Fix migration for NOT NULL column",
+          "score": 6.843638702037426
+        },
+        {
+          "memory_id": "63ccfe79-c6a1-41fc-9758-9ae6528d6128",
+          "title": "Publishing requires a signed file",
+          "score": 1.513772093989684
+        },
+        {
+          "memory_id": "875b5e06-c7b8-4e0a-ae0e-4471cd48e8fd",
+          "title": "Never edit files under generated/",
+          "score": 2.727276365840851e-6
+        },
+        {
+          "memory_id": "15d8b49e-375d-4ca4-8365-828dd3c6f4fa",
+          "title": "Deploy target region from config",
+          "score": 2.7043200211994197e-6
+        },
+        {
+          "memory_id": "4bc446d6-d887-47a1-81d4-7c08d679087e",
+          "title": "Python version check may not exit non-zero",
+          "score": 2.546878348014084e-6
+        }
+      ]
+    },
+    "created_at": "2026-10-24T11:47:56.397705Z",
+    "decided_at": null
+  },
+  {
+    "id": "08f94253-f230-45a3-b908-6463e2b16c9c",
+    "project_id": "d127a32c-1fc0-43f2-b058-6d7e6557800c",
+    "kind": "constraint",
+    "title": "Legacy flag removal",
+    "content": "The `legacy_flag` column must be removed from the `jobs` table using `db/002_drop_flag.sql`.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "de77e4b9-52d8-421a-a239-9310a8fec41f",
+      "events": [
+        "11:claude_code|36:de77e4b9-52d8-421a-a239-9310a8fec41f|11:user_prompt|36:6ee04e33-ac69-4a82-9eeb-8d5e20465e60"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "model",
+      "reason": "The new note discusses removing a legacy flag column, while existing notes cover migration procedures, deployment scripts, file editing constraints, and version checks, which are unrelated topics.",
+      "similar": [
+        {
+          "memory_id": "0d4f3832-be96-4e07-a0b5-3ce95ab8f9a3",
+          "title": "Fix migration for NOT NULL column",
+          "score": 4.235627407757685
+        },
+        {
+          "memory_id": "15d8b49e-375d-4ca4-8365-828dd3c6f4fa",
+          "title": "Deploy target region from config",
+          "score": 2.7590085871714227
+        },
+        {
+          "memory_id": "875b5e06-c7b8-4e0a-ae0e-4471cd48e8fd",
+          "title": "Never edit files under generated/",
+          "score": 1.593980329392013
+        },
+        {
+          "memory_id": "041f3184-9a92-4302-adb1-ab577ab9e6ff",
+          "title": "Makefile does not enforce version checks",
+          "score": 1.7061298572725024e-6
+        },
+        {
+          "memory_id": "4bc446d6-d887-47a1-81d4-7c08d679087e",
+          "title": "Python version check may not exit non-zero",
+          "score": 1.6298865069356873e-6
+        }
+      ]
+    },
+    "created_at": "2026-10-24T11:47:56.397705Z",
+    "decided_at": null
+  },
+  {
+    "id": "7c3e1cca-1325-4e64-a875-e38de46b83b4",
+    "project_id": "d127a32c-1fc0-43f2-b058-6d7e6557800c",
+    "kind": "fact",
+    "title": "Makefile does not enforce version checks",
+    "content": "The Makefile does not include any checks for the version number when running `make publish`, so the version is not validated as part of the process.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "dacc0397-2756-41d4-9e6a-7b30e0533e1a",
+      "events": [
+        "11:claude_code|36:dacc0397-2756-41d4-9e6a-7b30e0533e1a|17:assistant_message|36:14dda4e9-0ebb-40bd-8c31-1c2798ef1cc4"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "041f3184-9a92-4302-adb1-ab577ab9e6ff",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:46:42.340674Z",
+    "decided_at": "2026-10-24T11:46:42.393643Z"
+  },
+  {
+    "id": "c7af9a99-da26-492f-8ab8-af0a3bf6371f",
+    "project_id": "d127a32c-1fc0-43f2-b058-6d7e6557800c",
+    "kind": "procedure",
+    "title": "Deploy target region from config",
+    "content": "The script `deploy_target.py` reads the region from `deploy.cfg` and prints it. This provides a simple way to retrieve the deployment region from the configuration file.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "dacc0397-2756-41d4-9e6a-7b30e0533e1a",
+      "events": [
+        "11:claude_code|36:dacc0397-2756-41d4-9e6a-7b30e0533e1a|19:tool_result_summary|30:toolu_01VBPzm8pQjBNwR4Reyqb5J9",
+        "11:claude_code|36:dacc0397-2756-41d4-9e6a-7b30e0533e1a|19:tool_result_summary|30:toolu_0164pVy5sgW6qgWNMnE7QTP7"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "15d8b49e-375d-4ca4-8365-828dd3c6f4fa",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:46:42.340674Z",
+    "decided_at": "2026-10-24T11:46:42.400064Z"
+  },
+  {
+    "id": "32239471-7a4f-450e-9250-3cb6c0e903f2",
+    "project_id": "d127a32c-1fc0-43f2-b058-6d7e6557800c",
+    "kind": "procedure",
+    "title": "Implement import window check",
+    "content": "The script `import_window.py` checks if a given UTC weekday and hour falls within the read-only window (Friday 02:00 to 04:00). It prints 'blocked' during this window and 'ok' otherwise.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "dacc0397-2756-41d4-9e6a-7b30e0533e1a",
+      "events": [
+        "11:claude_code|36:dacc0397-2756-41d4-9e6a-7b30e0533e1a|19:tool_result_summary|30:toolu_01YAm9Z5e4azkxn4Uid5psbW",
+        "11:claude_code|36:dacc0397-2756-41d4-9e6a-7b30e0533e1a|19:tool_result_summary|30:toolu_0164pVy5sgW6qgWNMnE7QTP7",
+        "11:claude_code|36:dacc0397-2756-41d4-9e6a-7b30e0533e1a|17:assistant_message|36:14dda4e9-0ebb-40bd-8c31-1c2798ef1cc4"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "7e6c4af1-d945-460f-9972-828ce29c783a",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:46:42.340674Z",
+    "decided_at": "2026-10-24T11:46:42.406962Z"
+  },
+  {
+    "id": "3cc2368e-896f-4663-80cf-444ceb334f31",
+    "project_id": "d127a32c-1fc0-43f2-b058-6d7e6557800c",
+    "kind": "gotcha",
+    "title": "Python version check may not exit non-zero",
+    "content": "The `check_py.py` script exits with code 0 even if the Python version is not newer than the one in the Dockerfile. This may require additional logic to ensure correct exit codes.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "dacc0397-2756-41d4-9e6a-7b30e0533e1a",
+      "events": [
+        "11:claude_code|36:dacc0397-2756-41d4-9e6a-7b30e0533e1a|17:assistant_message|36:14dda4e9-0ebb-40bd-8c31-1c2798ef1cc4"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "4bc446d6-d887-47a1-81d4-7c08d679087e",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:46:42.340674Z",
+    "decided_at": "2026-10-24T11:46:42.414621Z"
+  },
+  {
+    "id": "6a276fe4-8282-48e9-81bb-1500b997333f",
+    "project_id": "d127a32c-1fc0-43f2-b058-6d7e6557800c",
+    "kind": "fact",
+    "title": "Publishing requires a signed file",
+    "content": "The `make publish` command requires a `.signed` file, which is only created by the `make sign` command. The sign command currently only creates a placeholder file.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "dacc0397-2756-41d4-9e6a-7b30e0533e1a",
+      "events": [
+        "11:claude_code|36:dacc0397-2756-41d4-9e6a-7b30e0533e1a|17:assistant_message|36:14dda4e9-0ebb-40bd-8c31-1c2798ef1cc4"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "63ccfe79-c6a1-41fc-9758-9ae6528d6128",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:46:42.340674Z",
+    "decided_at": "2026-10-24T11:46:42.421204Z"
+  },
+  {
+    "id": "0c8f38a2-1c0b-439f-830b-8b345f364cf5",
+    "project_id": "d127a32c-1fc0-43f2-b058-6d7e6557800c",
+    "kind": "procedure",
+    "title": "Fix migration for NOT NULL column",
+    "content": "To add a NOT NULL column to an existing SQLite table, provide a default value. Modify the schema.sql file to include DEFAULT '' for the owner column.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "dacc0397-2756-41d4-9e6a-7b30e0533e1a",
+      "events": [
+        "11:claude_code|36:dacc0397-2756-41d4-9e6a-7b30e0533e1a|19:tool_result_summary|30:toolu_01G2NuaGowsHcY3Q8EAkwymG",
+        "11:claude_code|36:dacc0397-2756-41d4-9e6a-7b30e0533e1a|19:tool_result_summary|30:toolu_0164pVy5sgW6qgWNMnE7QTP7"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "0d4f3832-be96-4e07-a0b5-3ce95ab8f9a3",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:46:42.340674Z",
+    "decided_at": "2026-10-24T11:46:42.427877Z"
+  },
+  {
+    "id": "6857066d-c860-437b-b9c3-75967b109356",
+    "project_id": "d127a32c-1fc0-43f2-b058-6d7e6557800c",
+    "kind": "constraint",
+    "title": "Never edit files under generated/",
+    "content": "The user explicitly stated that no edits should be made to files under the generated/ directory as the build process overwrites them.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "dacc0397-2756-41d4-9e6a-7b30e0533e1a",
+      "events": [
+        "11:claude_code|36:dacc0397-2756-41d4-9e6a-7b30e0533e1a|11:user_prompt|36:14dda4e9-0ebb-40bd-8c31-1c2798ef1cc4"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "875b5e06-c7b8-4e0a-ae0e-4471cd48e8fd",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:46:42.340674Z",
+    "decided_at": "2026-10-24T11:46:42.434237Z"
+  }
+]

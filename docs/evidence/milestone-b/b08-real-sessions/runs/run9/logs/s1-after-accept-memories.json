@@ -1,0 +1,62 @@
+[
+  {
+    "id": "5bc9957f-45ec-4a19-8539-520694d14397",
+    "project_id": "51a211df-31af-4e2e-a8e2-a3ed8d0c6407",
+    "kind": "constraint",
+    "title": "Never edit files under generated/",
+    "content": "The user explicitly stated that no edits should be made to files under the `generated/` directory, as the build process overwrites them.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T12:03:37.244002Z",
+    "updated_at": "2026-10-24T12:03:37.244002Z",
+    "revision": 1
+  },
+  {
+    "id": "ece420d0-ab91-42cd-926d-77a3cbeb518a",
+    "project_id": "51a211df-31af-4e2e-a8e2-a3ed8d0c6407",
+    "kind": "procedure",
+    "title": "Fix migration error by adding default value",
+    "content": "To resolve the migration error when adding the `owner` column, a default value of an empty string was added to the `owner` column in `db/schema.sql`. This allows the migration to succeed without data loss.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T12:03:37.237028Z",
+    "updated_at": "2026-10-24T12:03:37.237028Z",
+    "revision": 1
+  },
+  {
+    "id": "5257d4c6-36aa-4671-8db5-13bcba020b88",
+    "project_id": "51a211df-31af-4e2e-a8e2-a3ed8d0c6407",
+    "kind": "fact",
+    "title": "Staging database import window rules",
+    "content": "The staging database has a specific import window: it is blocked on Friday from 02:00 up to but not including 04:00 UTC. All other times are allowed.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T12:03:37.227062Z",
+    "updated_at": "2026-10-24T12:03:37.227062Z",
+    "revision": 1
+  },
+  {
+    "id": "a8e9f768-76db-4c97-9ea4-1306ca6b05d0",
+    "project_id": "51a211df-31af-4e2e-a8e2-a3ed8d0c6407",
+    "kind": "procedure",
+    "title": "Check Python version against Dockerfile",
+    "content": "The `scripts/check_py.py` script compares the current Python version with the one specified in `.ci/Dockerfile`, exiting with a non-zero code if the current version is older.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T12:03:37.217896Z",
+    "updated_at": "2026-10-24T12:03:37.217896Z",
+    "revision": 1
+  },
+  {
+    "id": "044acefa-e2c1-48c8-ba57-ef1f0bcdab71",
+    "project_id": "51a211df-31af-4e2e-a8e2-a3ed8d0c6407",
+    "kind": "procedure",
+    "title": "Deploy target region from config file",
+    "content": "The `scripts/deploy_target.py` script reads the region from `deploy.cfg` and prints it, providing the target region for deployment.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T12:03:37.209512Z",
+    "updated_at": "2026-10-24T12:03:37.209512Z",
+    "revision": 1
+  }
+]

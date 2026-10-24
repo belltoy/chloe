@@ -1,0 +1,584 @@
+[
+  {
+    "id": "836eb690-2222-4a63-9fc0-3bf41e7b59fd",
+    "project_id": "d98e4dce-4e07-4252-be4e-dca4b2818418",
+    "kind": "fact",
+    "title": "No git tag or commit for v1.3.0",
+    "content": "The version `v1.3.0` was not recorded in any git tag or commit, as the Makefile lacks version or tag information.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "c8775a48-5668-4c6c-9857-cc7ca6f6b61e",
+      "events": [
+        "11:claude_code|36:c8775a48-5668-4c6c-9857-cc7ca6f6b61e|11:user_prompt|36:45aadceb-f2db-4647-a671-aa298e593b46",
+        "11:claude_code|36:c8775a48-5668-4c6c-9857-cc7ca6f6b61e|19:tool_result_summary|30:toolu_01W7Gaw52cLa5FtYCFuMmH4t",
+        "11:claude_code|36:c8775a48-5668-4c6c-9857-cc7ca6f6b61e|17:assistant_message|36:45aadceb-f2db-4647-a671-aa298e593b46"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "model",
+      "reason": "The new note discusses the absence of a git tag or commit for v1.3.0, which is unrelated to the existing notes about SQLite, CI Python version, deployment region, and Makefile signing process.",
+      "similar": [
+        {
+          "memory_id": "e4304cfa-fe6c-4731-b698-29e11d6e849c",
+          "title": "SQLite column addition requires default value",
+          "score": 3.2362914161547542
+        },
+        {
+          "memory_id": "045e5445-793b-4a9a-901a-c70eb1186715",
+          "title": "CI uses Python 3.9, avoid match statements",
+          "score": 2.986759732422181
+        },
+        {
+          "memory_id": "a85ae438-1591-4623-97e0-92d0f7b01ae1",
+          "title": "Releases are deployed to eu-west region",
+          "score": 1.4682121204388927
+        },
+        {
+          "memory_id": "1ce930fa-a88c-4a6e-9846-7542220d5395",
+          "title": "make clean removes .signed marker",
+          "score": 1.2992845555588324
+        },
+        {
+          "memory_id": "e74046d2-858e-4296-924c-97d518e84a2b",
+          "title": "Use make sign publish to ensure signing before publishing",
+          "score": 0.7613665102256714
+        }
+      ]
+    },
+    "created_at": "2026-10-24T11:39:31.544728Z",
+    "decided_at": null
+  },
+  {
+    "id": "72ab1c05-5390-4405-9cd1-eef1b7588cc4",
+    "project_id": "d98e4dce-4e07-4252-be4e-dca4b2818418",
+    "kind": "constraint",
+    "title": "Must run make sign after clean",
+    "content": "After running `make clean`, it is necessary to run `make sign` again, as the `.signed` file is removed by the clean target.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "c8775a48-5668-4c6c-9857-cc7ca6f6b61e",
+      "events": [
+        "11:claude_code|36:c8775a48-5668-4c6c-9857-cc7ca6f6b61e|11:user_prompt|36:45aadceb-f2db-4647-a671-aa298e593b46",
+        "11:claude_code|36:c8775a48-5668-4c6c-9857-cc7ca6f6b61e|19:tool_result_summary|30:toolu_01W7Gaw52cLa5FtYCFuMmH4t",
+        "11:claude_code|36:c8775a48-5668-4c6c-9857-cc7ca6f6b61e|17:assistant_message|36:45aadceb-f2db-4647-a671-aa298e593b46"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "merge",
+      "target": "1ce930fa-a88c-4a6e-9846-7542220d5395",
+      "method": "model",
+      "reason": "The new note states the same knowledge as \"make clean removes .signed marker\", confirming that `make clean` removes the `.signed` marker and `make sign` must be run again.",
+      "similar": [
+        {
+          "memory_id": "1ce930fa-a88c-4a6e-9846-7542220d5395",
+          "title": "make clean removes .signed marker",
+          "score": 10.870615922142528
+        },
+        {
+          "memory_id": "e74046d2-858e-4296-924c-97d518e84a2b",
+          "title": "Use make sign publish to ensure signing before publishing",
+          "score": 3.967319446142679
+        },
+        {
+          "memory_id": "a85ae438-1591-4623-97e0-92d0f7b01ae1",
+          "title": "Releases are deployed to eu-west region",
+          "score": 1.4682140205738454
+        },
+        {
+          "memory_id": "045e5445-793b-4a9a-901a-c70eb1186715",
+          "title": "CI uses Python 3.9, avoid match statements",
+          "score": 1.1907989816988571
+        },
+        {
+          "memory_id": "e4304cfa-fe6c-4731-b698-29e11d6e849c",
+          "title": "SQLite column addition requires default value",
+          "score": 0.5040239986803337
+        }
+      ],
+      "needs_review": "a constraint or decision is never merged automatically"
+    },
+    "created_at": "2026-10-24T11:39:31.544728Z",
+    "decided_at": null
+  },
+  {
+    "id": "1b912fea-c522-4125-a533-aee6876f84b3",
+    "project_id": "d98e4dce-4e07-4252-be4e-dca4b2818418",
+    "kind": "fact",
+    "title": "Generated files can be edited",
+    "content": "The `generated/` directory can now be edited by hand, as the build no longer regenerates it.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "c8775a48-5668-4c6c-9857-cc7ca6f6b61e",
+      "events": [
+        "11:claude_code|36:c8775a48-5668-4c6c-9857-cc7ca6f6b61e|11:user_prompt|36:45aadceb-f2db-4647-a671-aa298e593b46",
+        "11:claude_code|36:c8775a48-5668-4c6c-9857-cc7ca6f6b61e|19:tool_result_summary|30:toolu_01NGu8QAw9HckBtCTUkBpAE6",
+        "11:claude_code|36:c8775a48-5668-4c6c-9857-cc7ca6f6b61e|17:assistant_message|36:45aadceb-f2db-4647-a671-aa298e593b46"
+      ]
+    },
+    "state": "conflict",
+    "memory_id": "d7963c46-2cd9-4eb4-bbf7-afc660b6690e",
+    "reason": "flagged for review: The new note states that generated files can be edited, which directly contradicts the existing note that says never edit files under generated/",
+    "proposal": {
+      "action": "conflict",
+      "target": "d7963c46-2cd9-4eb4-bbf7-afc660b6690e",
+      "method": "model",
+      "reason": "The new note states that generated files can be edited, which directly contradicts the existing note that says never edit files under generated/",
+      "similar": [
+        {
+          "memory_id": "d7963c46-2cd9-4eb4-bbf7-afc660b6690e",
+          "title": "Never edit files under generated/",
+          "score": 11.590570020774324
+        },
+        {
+          "memory_id": "a85ae438-1591-4623-97e0-92d0f7b01ae1",
+          "title": "Releases are deployed to eu-west region",
+          "score": 1.4682121204388927
+        },
+        {
+          "memory_id": "e4304cfa-fe6c-4731-b698-29e11d6e849c",
+          "title": "SQLite column addition requires default value",
+          "score": 1.1141247352657315
+        },
+        {
+          "memory_id": "1ce930fa-a88c-4a6e-9846-7542220d5395",
+          "title": "make clean removes .signed marker",
+          "score": 0.5877882363306904
+        },
+        {
+          "memory_id": "e74046d2-858e-4296-924c-97d518e84a2b",
+          "title": "Use make sign publish to ensure signing before publishing",
+          "score": 1.6305732484076436e-6
+        }
+      ]
+    },
+    "created_at": "2026-10-24T11:39:31.544728Z",
+    "decided_at": "2026-10-24T11:40:26.840585Z"
+  },
+  {
+    "id": "febca711-3259-4604-bc14-cfc84a002762",
+    "project_id": "d98e4dce-4e07-4252-be4e-dca4b2818418",
+    "kind": "procedure",
+    "title": "Update NOTES.md with project info",
+    "content": "The NOTES.md file was updated with six key project notes, including the staging read-only window, Python version change, region change, and migration instructions.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "c8775a48-5668-4c6c-9857-cc7ca6f6b61e",
+      "events": [
+        "11:claude_code|36:c8775a48-5668-4c6c-9857-cc7ca6f6b61e|11:user_prompt|36:45aadceb-f2db-4647-a671-aa298e593b46",
+        "11:claude_code|36:c8775a48-5668-4c6c-9857-cc7ca6f6b61e|19:tool_result_summary|30:toolu_0164WZ1rJZUsajnfaJ97mSes",
+        "11:claude_code|36:c8775a48-5668-4c6c-9857-cc7ca6f6b61e|17:assistant_message|36:45aadceb-f2db-4647-a671-aa298e593b46"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "model",
+      "reason": "The new note describes an update to NOTES.md and does not directly relate to any existing note's content or decision.",
+      "similar": [
+        {
+          "memory_id": "a85ae438-1591-4623-97e0-92d0f7b01ae1",
+          "title": "Releases are deployed to eu-west region",
+          "score": 1.4682121204388927
+        },
+        {
+          "memory_id": "e74046d2-858e-4296-924c-97d518e84a2b",
+          "title": "Use make sign publish to ensure signing before publishing",
+          "score": 0.7613665102256714
+        },
+        {
+          "memory_id": "e4304cfa-fe6c-4731-b698-29e11d6e849c",
+          "title": "SQLite column addition requires default value",
+          "score": 0.5040231411894688
+        },
+        {
+          "memory_id": "1ce930fa-a88c-4a6e-9846-7542220d5395",
+          "title": "make clean removes .signed marker",
+          "score": 1.5714285714285712e-6
+        },
+        {
+          "memory_id": "d7963c46-2cd9-4eb4-bbf7-afc660b6690e",
+          "title": "Never edit files under generated/",
+          "score": 1.507494646680942e-6
+        }
+      ]
+    },
+    "created_at": "2026-10-24T11:39:31.544728Z",
+    "decided_at": null
+  },
+  {
+    "id": "3a89868a-e4c4-4c19-bc10-1e8074885cef",
+    "project_id": "d98e4dce-4e07-4252-be4e-dca4b2818418",
+    "kind": "fact",
+    "title": "Staging read-only window",
+    "content": "Staging is read-only on Saturdays from 02:00 to 04:00 UTC. This is a known fact and is recorded in NOTES.md.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "c8775a48-5668-4c6c-9857-cc7ca6f6b61e",
+      "events": [
+        "11:claude_code|36:c8775a48-5668-4c6c-9857-cc7ca6f6b61e|11:user_prompt|36:45aadceb-f2db-4647-a671-aa298e593b46",
+        "11:claude_code|36:c8775a48-5668-4c6c-9857-cc7ca6f6b61e|19:tool_result_summary|30:toolu_0164WZ1rJZUsajnfaJ97mSes",
+        "11:claude_code|36:c8775a48-5668-4c6c-9857-cc7ca6f6b61e|17:assistant_message|36:45aadceb-f2db-4647-a671-aa298e593b46"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "model",
+      "reason": "The new note discusses a staging read-only window, which is unrelated to the existing notes about signing, deployment regions, and CI constraints.",
+      "similar": [
+        {
+          "memory_id": "1ce930fa-a88c-4a6e-9846-7542220d5395",
+          "title": "make clean removes .signed marker",
+          "score": 0.5877876649021191
+        },
+        {
+          "memory_id": "e74046d2-858e-4296-924c-97d518e84a2b",
+          "title": "Use make sign publish to ensure signing before publishing",
+          "score": 0.539508798766335
+        },
+        {
+          "memory_id": "a85ae438-1591-4623-97e0-92d0f7b01ae1",
+          "title": "Releases are deployed to eu-west region",
+          "score": 1.9001349527665315e-6
+        },
+        {
+          "memory_id": "045e5445-793b-4a9a-901a-c70eb1186715",
+          "title": "CI uses Python 3.9, avoid match statements",
+          "score": 1.0129496402877696e-6
+        },
+        {
+          "memory_id": "e4304cfa-fe6c-4731-b698-29e11d6e849c",
+          "title": "SQLite column addition requires default value",
+          "score": 8.574908647990257e-7
+        }
+      ]
+    },
+    "created_at": "2026-10-24T11:39:31.544728Z",
+    "decided_at": null
+  },
+  {
+    "id": "9f40671e-9acc-4879-92fb-b48d01009e61",
+    "project_id": "d98e4dce-4e07-4252-be4e-dca4b2818418",
+    "kind": "procedure",
+    "title": "Recreate table to drop legacy_flag",
+    "content": "To remove the `legacy_flag` column from the `jobs` table, the migration recreates the table without the column, copies the rows over, and renames the new table. This works around the SQLite version limitation.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "c8775a48-5668-4c6c-9857-cc7ca6f6b61e",
+      "events": [
+        "11:claude_code|36:c8775a48-5668-4c6c-9857-cc7ca6f6b61e|19:tool_result_summary|30:toolu_01NSg3LgPsUPiNjHwZvtYC3o",
+        "11:claude_code|36:c8775a48-5668-4c6c-9857-cc7ca6f6b61e|19:tool_result_summary|30:toolu_01QtM84r9oFhoGortcv18T6G",
+        "11:claude_code|36:c8775a48-5668-4c6c-9857-cc7ca6f6b61e|17:assistant_message|36:45aadceb-f2db-4647-a671-aa298e593b46"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "model",
+      "reason": "The new note describes a table recreation procedure for removing a column, which is unrelated to the existing notes about SQLite column additions, signing procedures, deployment regions, and Python constraints.",
+      "similar": [
+        {
+          "memory_id": "e4304cfa-fe6c-4731-b698-29e11d6e849c",
+          "title": "SQLite column addition requires default value",
+          "score": 4.564208950220376
+        },
+        {
+          "memory_id": "e74046d2-858e-4296-924c-97d518e84a2b",
+          "title": "Use make sign publish to ensure signing before publishing",
+          "score": 3.5035363345400016e-6
+        },
+        {
+          "memory_id": "a85ae438-1591-4623-97e0-92d0f7b01ae1",
+          "title": "Releases are deployed to eu-west region",
+          "score": 3.393242057750625e-6
+        },
+        {
+          "memory_id": "1ce930fa-a88c-4a6e-9846-7542220d5395",
+          "title": "make clean removes .signed marker",
+          "score": 2.571428571428571e-6
+        },
+        {
+          "memory_id": "045e5445-793b-4a9a-901a-c70eb1186715",
+          "title": "CI uses Python 3.9, avoid match statements",
+          "score": 2.4001417585143707e-6
+        }
+      ]
+    },
+    "created_at": "2026-10-24T11:39:31.544728Z",
+    "decided_at": null
+  },
+  {
+    "id": "0d017a85-687c-4627-8a5b-0fdc1e02f17a",
+    "project_id": "d98e4dce-4e07-4252-be4e-dca4b2818418",
+    "kind": "constraint",
+    "title": "SQLite version for DROP COLUMN",
+    "content": "SQLite 3.35 is required to use `DROP COLUMN`, but CI has SQLite 3.31. Therefore, the table must be recreated instead of using `DROP COLUMN`.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "c8775a48-5668-4c6c-9857-cc7ca6f6b61e",
+      "events": [
+        "11:claude_code|36:c8775a48-5668-4c6c-9857-cc7ca6f6b61e|11:user_prompt|36:45aadceb-f2db-4647-a671-aa298e593b46",
+        "11:claude_code|36:c8775a48-5668-4c6c-9857-cc7ca6f6b61e|19:tool_result_summary|30:toolu_01QtM84r9oFhoGortcv18T6G",
+        "11:claude_code|36:c8775a48-5668-4c6c-9857-cc7ca6f6b61e|17:assistant_message|36:45aadceb-f2db-4647-a671-aa298e593b46"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "model",
+      "reason": "The new note discusses SQLite version requirements for `DROP COLUMN`, while existing notes address Python constraints, column addition, and migration issues, with no direct overlap.",
+      "similar": [
+        {
+          "memory_id": "045e5445-793b-4a9a-901a-c70eb1186715",
+          "title": "CI uses Python 3.9, avoid match statements",
+          "score": 4.782721121852666
+        },
+        {
+          "memory_id": "e4304cfa-fe6c-4731-b698-29e11d6e849c",
+          "title": "SQLite column addition requires default value",
+          "score": 4.602863579122217
+        },
+        {
+          "memory_id": "1ce930fa-a88c-4a6e-9846-7542220d5395",
+          "title": "make clean removes .signed marker",
+          "score": 3.186353633162641
+        },
+        {
+          "memory_id": "e74046d2-858e-4296-924c-97d518e84a2b",
+          "title": "Use make sign publish to ensure signing before publishing",
+          "score": 2.7737423620973165
+        },
+        {
+          "memory_id": "a85ae438-1591-4623-97e0-92d0f7b01ae1",
+          "title": "Releases are deployed to eu-west region",
+          "score": 1.9001349527665315e-6
+        }
+      ]
+    },
+    "created_at": "2026-10-24T11:39:31.544728Z",
+    "decided_at": null
+  },
+  {
+    "id": "b9af0ad0-ee4f-41b6-a638-c0808b4015cc",
+    "project_id": "d98e4dce-4e07-4252-be4e-dca4b2818418",
+    "kind": "decision",
+    "title": "Use make sign before publish",
+    "content": "The deploy script failed because `make publish` refuses unsigned artifacts. The solution was to run `make sign publish` first, which produces a signed artifact and publishes it.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "c8775a48-5668-4c6c-9857-cc7ca6f6b61e",
+      "events": [
+        "11:claude_code|36:c8775a48-5668-4c6c-9857-cc7ca6f6b61e|11:user_prompt|36:45aadceb-f2db-4647-a671-aa298e593b46",
+        "11:claude_code|36:c8775a48-5668-4c6c-9857-cc7ca6f6b61e|19:tool_result_summary|30:toolu_01W7Gaw52cLa5FtYCFuMmH4t",
+        "11:claude_code|36:c8775a48-5668-4c6c-9857-cc7ca6f6b61e|17:assistant_message|36:45aadceb-f2db-4647-a671-aa298e593b46"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "merge",
+      "target": "e74046d2-858e-4296-924c-97d518e84a2b",
+      "method": "model",
+      "reason": "The new note states the same decision as \"Use make sign publish to ensure signing before publishing\", describing the same solution to the same problem with the same command and outcome.",
+      "similar": [
+        {
+          "memory_id": "e74046d2-858e-4296-924c-97d518e84a2b",
+          "title": "Use make sign publish to ensure signing before publishing",
+          "score": 11.49318806719482
+        },
+        {
+          "memory_id": "1ce930fa-a88c-4a6e-9846-7542220d5395",
+          "title": "make clean removes .signed marker",
+          "score": 2.279467930439228
+        },
+        {
+          "memory_id": "e4304cfa-fe6c-4731-b698-29e11d6e849c",
+          "title": "SQLite column addition requires default value",
+          "score": 1.5120673898888402
+        },
+        {
+          "memory_id": "a85ae438-1591-4623-97e0-92d0f7b01ae1",
+          "title": "Releases are deployed to eu-west region",
+          "score": 3.393242057750625e-6
+        },
+        {
+          "memory_id": "045e5445-793b-4a9a-901a-c70eb1186715",
+          "title": "CI uses Python 3.9, avoid match statements",
+          "score": 2.4001417585143707e-6
+        }
+      ],
+      "needs_review": "a constraint or decision is never merged automatically"
+    },
+    "created_at": "2026-10-24T11:39:31.544728Z",
+    "decided_at": null
+  },
+  {
+    "id": "8cbd0b27-67f2-424a-ad7e-03d818c9745d",
+    "project_id": "d98e4dce-4e07-4252-be4e-dca4b2818418",
+    "kind": "gotcha",
+    "title": "make clean removes .signed marker",
+    "content": "Running `make clean` removes the `.signed` marker, which is required for publishing. After a clean, the `make sign` command must be run again to regenerate the marker.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "91d216e8-ae87-4bd8-9035-1ff9d81cd7f3",
+      "events": [
+        "11:claude_code|36:91d216e8-ae87-4bd8-9035-1ff9d81cd7f3|11:user_prompt|36:c0d66e60-0790-448a-bfa0-593bdd122ce1"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "1ce930fa-a88c-4a6e-9846-7542220d5395",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:38:36.414558Z",
+    "decided_at": "2026-10-24T11:38:36.48073Z"
+  },
+  {
+    "id": "481b585d-7b48-4dad-a130-f39260ff0180",
+    "project_id": "d98e4dce-4e07-4252-be4e-dca4b2818418",
+    "kind": "fact",
+    "title": "Releases are deployed to eu-west region",
+    "content": "All releases are automatically deployed to the `eu-west` region as per the project's configuration.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "91d216e8-ae87-4bd8-9035-1ff9d81cd7f3",
+      "events": [
+        "11:claude_code|36:91d216e8-ae87-4bd8-9035-1ff9d81cd7f3|11:user_prompt|36:c0d66e60-0790-448a-bfa0-593bdd122ce1"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "a85ae438-1591-4623-97e0-92d0f7b01ae1",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:38:36.414558Z",
+    "decided_at": "2026-10-24T11:38:36.490079Z"
+  },
+  {
+    "id": "85ebf5b5-106c-4506-b40f-7a639e6d37e7",
+    "project_id": "d98e4dce-4e07-4252-be4e-dca4b2818418",
+    "kind": "constraint",
+    "title": "CI uses Python 3.9, avoid match statements",
+    "content": "The CI environment runs Python 3.9, which does not support the `match` statement. Scripts must avoid using it to prevent syntax errors.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "91d216e8-ae87-4bd8-9035-1ff9d81cd7f3",
+      "events": [
+        "11:claude_code|36:91d216e8-ae87-4bd8-9035-1ff9d81cd7f3|11:user_prompt|36:c0d66e60-0790-448a-bfa0-593bdd122ce1"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "045e5445-793b-4a9a-901a-c70eb1186715",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:38:36.414558Z",
+    "decided_at": "2026-10-24T11:38:36.498373Z"
+  },
+  {
+    "id": "e059ee49-e80c-47f8-8bf9-90c205735414",
+    "project_id": "d98e4dce-4e07-4252-be4e-dca4b2818418",
+    "kind": "constraint",
+    "title": "Never edit files under generated/",
+    "content": "Files under the `generated/` directory are overwritten by the build process and should never be edited manually.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "91d216e8-ae87-4bd8-9035-1ff9d81cd7f3",
+      "events": [
+        "11:claude_code|36:91d216e8-ae87-4bd8-9035-1ff9d81cd7f3|11:user_prompt|36:c0d66e60-0790-448a-bfa0-593bdd122ce1"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "d7963c46-2cd9-4eb4-bbf7-afc660b6690e",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:38:36.414558Z",
+    "decided_at": "2026-10-24T11:38:36.506968Z"
+  },
+  {
+    "id": "7f36550b-43dc-423f-adc4-7a9941cbebb2",
+    "project_id": "d98e4dce-4e07-4252-be4e-dca4b2818418",
+    "kind": "decision",
+    "title": "Use make sign publish to ensure signing before publishing",
+    "content": "The `make publish` command failed because the `.signed` marker was missing. The decision was to run `make sign publish` together to ensure the artifact is signed before attempting to publish.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "91d216e8-ae87-4bd8-9035-1ff9d81cd7f3",
+      "events": [
+        "11:claude_code|36:91d216e8-ae87-4bd8-9035-1ff9d81cd7f3|11:user_prompt|36:c0d66e60-0790-448a-bfa0-593bdd122ce1",
+        "11:claude_code|36:91d216e8-ae87-4bd8-9035-1ff9d81cd7f3|17:assistant_message|36:c0d66e60-0790-448a-bfa0-593bdd122ce1"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "e74046d2-858e-4296-924c-97d518e84a2b",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:38:36.414558Z",
+    "decided_at": "2026-10-24T11:38:36.514493Z"
+  },
+  {
+    "id": "66def8d4-d353-4e55-b122-6d3d0d7efa77",
+    "project_id": "d98e4dce-4e07-4252-be4e-dca4b2818418",
+    "kind": "gotcha",
+    "title": "SQLite column addition requires default value",
+    "content": "Adding a NOT NULL column to an existing table in SQLite requires providing a default value, otherwise it will fail. The migration failed because the `owner` column was added without a default, and the existing row had no value.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "91d216e8-ae87-4bd8-9035-1ff9d81cd7f3",
+      "events": [
+        "11:claude_code|36:91d216e8-ae87-4bd8-9035-1ff9d81cd7f3|19:tool_result_summary|30:toolu_01EmDF3TWheSFXVvBLNZt6aE",
+        "11:claude_code|36:91d216e8-ae87-4bd8-9035-1ff9d81cd7f3|19:tool_result_summary|30:toolu_01Bg6FaTXXy7hCvG6ndkwjBM",
+        "11:claude_code|36:91d216e8-ae87-4bd8-9035-1ff9d81cd7f3|17:assistant_message|36:c0d66e60-0790-448a-bfa0-593bdd122ce1"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "e4304cfa-fe6c-4731-b698-29e11d6e849c",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:38:36.414558Z",
+    "decided_at": "2026-10-24T11:38:36.522108Z"
+  }
+]

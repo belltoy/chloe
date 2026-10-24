@@ -1,0 +1,110 @@
+[
+  {
+    "id": "d10b927f-7ae7-49df-a92b-2ba137453a05",
+    "project_id": "7647af73-f6be-42e2-93b8-3b5c550083f6",
+    "kind": "procedure",
+    "title": "Create migration script to drop legacy_flag column",
+    "content": "Write db/002_drop_flag.sql that rebuilds the jobs table without the legacy_flag column. The script creates a new table, copies the rows, drops the old table, and renames the new one.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T11:49:35.643519Z",
+    "updated_at": "2026-10-24T11:49:35.643519Z",
+    "revision": 1
+  },
+  {
+    "id": "8ccef619-c753-4476-ae3d-d213c52cdb23",
+    "project_id": "7647af73-f6be-42e2-93b8-3b5c550083f6",
+    "kind": "fact",
+    "title": "Generated API fields updated",
+    "content": "The 'owner' field was added to the FIELDS in generated/api.py.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T11:49:35.636638Z",
+    "updated_at": "2026-10-24T11:49:35.636638Z",
+    "revision": 1
+  },
+  {
+    "id": "a3d37f04-2f6e-4a46-92b6-c4d707da28d3",
+    "project_id": "7647af73-f6be-42e2-93b8-3b5c550083f6",
+    "kind": "decision",
+    "title": "Rule: Never edit generated files",
+    "content": "The user explicitly stated that nothing under generated/ should be edited, as the build process overwrites them.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T11:47:21.806413Z",
+    "updated_at": "2026-10-24T11:47:21.806413Z",
+    "revision": 1
+  },
+  {
+    "id": "03415616-a628-43fb-8d89-b71ea5d40d99",
+    "project_id": "7647af73-f6be-42e2-93b8-3b5c550083f6",
+    "kind": "gotcha",
+    "title": "Publish requires .signed file",
+    "content": "The `make publish` command fails without the `.signed` file, which is only created by `make sign`.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T11:47:21.800099Z",
+    "updated_at": "2026-10-24T11:47:21.800099Z",
+    "revision": 1
+  },
+  {
+    "id": "ea67b0c4-ee91-42b5-a813-d05907dcc07e",
+    "project_id": "7647af73-f6be-42e2-93b8-3b5c550083f6",
+    "kind": "procedure",
+    "title": "Fix migration for SQLite",
+    "content": "To avoid SQLite errors when adding a NOT NULL column without a default, add `DEFAULT ''` to the column definition in `db/schema.sql`.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T11:47:21.793311Z",
+    "updated_at": "2026-10-24T11:47:21.793311Z",
+    "revision": 1
+  },
+  {
+    "id": "1e004c4f-bd3b-4612-b063-87191bb38b03",
+    "project_id": "7647af73-f6be-42e2-93b8-3b5c550083f6",
+    "kind": "procedure",
+    "title": "Implement import_window.py logic",
+    "content": "The script checks if the given weekday and hour fall within the blocked window (Friday 2-4 UTC). It prints 'blocked' for Friday 3 and 'ok' otherwise.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T11:47:21.785991Z",
+    "updated_at": "2026-10-24T11:47:21.785991Z",
+    "revision": 1
+  },
+  {
+    "id": "e98efc0d-32e5-4d8b-84bb-28af4588073c",
+    "project_id": "7647af73-f6be-42e2-93b8-3b5c550083f6",
+    "kind": "procedure",
+    "title": "Check Python version in check_py.py",
+    "content": "The script reads the Python version from the Dockerfile's `FROM python:X.Y` line and exits non-zero if the current Python is older.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T11:47:21.77902Z",
+    "updated_at": "2026-10-24T11:47:21.77902Z",
+    "revision": 1
+  },
+  {
+    "id": "6e3aa845-e19b-4c20-a8be-618f0830774c",
+    "project_id": "7647af73-f6be-42e2-93b8-3b5c550083f6",
+    "kind": "procedure",
+    "title": "Deploy target region from deploy.cfg",
+    "content": "The script reads the region from `deploy.cfg` and prints it.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T11:47:21.771872Z",
+    "updated_at": "2026-10-24T11:47:21.771872Z",
+    "revision": 1
+  },
+  {
+    "id": "dfb27efd-7535-4ea3-a6c9-e2c4d33fb7e3",
+    "project_id": "7647af73-f6be-42e2-93b8-3b5c550083f6",
+    "kind": "gotcha",
+    "title": "make clean removes .signed",
+    "content": "Running `make clean` deletes the `.signed` file, which is required for `make publish` to work. This causes the final publish step to fail.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T11:47:21.762909Z",
+    "updated_at": "2026-10-24T11:47:21.762909Z",
+    "revision": 1
+  }
+]

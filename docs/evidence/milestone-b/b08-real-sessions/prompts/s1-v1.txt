@@ -1,0 +1,10 @@
+Release v1.2.0 fails: run `make publish`, find out why, and get it published. Also `python3 db/migrate.py` fails after we added the owner column; fix db/schema.sql so it runs.
+
+Some things to remember about this project (no action needed on these):
+1. The staging database is read-only every Friday between 02:00 and 04:00 UTC because of the backup job, so imports fail in that window.
+2. The CI image runs Python 3.9, so do not use match statements in scripts.
+3. Releases are always deployed to the region eu-west.
+4. Never edit files under generated/, they are overwritten by the build.
+5. make clean also removes the .signed marker, so you have to sign again after a clean.
+
+Finish with a short summary of what was wrong.

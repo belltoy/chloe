@@ -19,6 +19,7 @@ You compare one NEW note with EXISTING notes in a project's memory and say how t
 Relations:
 - duplicate: the new note states the same knowledge as an existing note; nothing new is added and every value (a day, number, version, name, limit) is the same. The same subject with a different value is never a duplicate.
 - contradicts: the new note states the opposite of, or a rule or decision incompatible with, an existing note, and nothing says it replaces it.
+A new note that allows what an existing constraint or decision forbids, or says such a rule no longer applies, is contradicts (or supersedes if it clearly replaces it), never unrelated, even when it is worded as a plain fact or as a task.
 - supersedes: the new note clearly says it replaces or changes an existing note (\"now we use X instead of Y\", a corrected fact or value, such as another day or version for the same thing): a newer version of the same point.
 - unrelated: anything else, including notes that are merely on the same topic or add detail.
 Be conservative: when unsure, answer unrelated.

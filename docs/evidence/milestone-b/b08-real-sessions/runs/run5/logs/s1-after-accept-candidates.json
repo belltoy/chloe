@@ -1,0 +1,187 @@
+[
+  {
+    "id": "dbd79a19-c3f5-43ff-a44f-69e3ab7a9618",
+    "project_id": "054785f8-eece-4b87-97c7-aa91c6390d66",
+    "kind": "fact",
+    "title": "Python version check in CI",
+    "content": "The `.ci/Dockerfile` specifies the Python version as 3.9, which is used as the baseline for the `check_py.py` script to determine if the running Python is older.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "33d0d6fd-5376-4b4e-be23-1f4449ddb89a",
+      "events": [
+        "11:claude_code|36:33d0d6fd-5376-4b4e-be23-1f4449ddb89a|11:user_prompt|36:bb2df2d1-8a48-47dd-ac89-c89afe9c8ee8",
+        "11:claude_code|36:33d0d6fd-5376-4b4e-be23-1f4449ddb89a|19:tool_result_summary|30:toolu_019NbYqBcydXgxsrz8wHVefa",
+        "11:claude_code|36:33d0d6fd-5376-4b4e-be23-1f4449ddb89a|17:assistant_message|36:bb2df2d1-8a48-47dd-ac89-c89afe9c8ee8"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "03ed7df3-f345-4bbf-b129-c79ace1a6416",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:47:04.554355Z",
+    "decided_at": "2026-10-24T11:47:04.604012Z"
+  },
+  {
+    "id": "2fc84a64-6d0d-467b-8d41-c06df2371724",
+    "project_id": "054785f8-eece-4b87-97c7-aa91c6390d66",
+    "kind": "procedure",
+    "title": "Implementing deploy_target.py",
+    "content": "The script `deploy_target.py` reads the region from `deploy.cfg` and prints it. This provides the region information for deployment purposes.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "33d0d6fd-5376-4b4e-be23-1f4449ddb89a",
+      "events": [
+        "11:claude_code|36:33d0d6fd-5376-4b4e-be23-1f4449ddb89a|19:tool_result_summary|30:toolu_01Tj45nBC6dtxZEGMihPJSq6",
+        "11:claude_code|36:33d0d6fd-5376-4b4e-be23-1f4449ddb89a|19:tool_result_summary|30:toolu_014Ad4VcEo7jHp7oPjG8Udg4",
+        "11:claude_code|36:33d0d6fd-5376-4b4e-be23-1f4449ddb89a|17:assistant_message|36:bb2df2d1-8a48-47dd-ac89-c89afe9c8ee8"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "dbafdd6d-9b19-4f7c-bd1a-daa890a2db8d",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:47:04.554355Z",
+    "decided_at": "2026-10-24T11:47:04.611047Z"
+  },
+  {
+    "id": "62335602-0c07-4e80-9e44-35d89687933c",
+    "project_id": "054785f8-eece-4b87-97c7-aa91c6390d66",
+    "kind": "procedure",
+    "title": "Implementing check_py.py",
+    "content": "The script `check_py.py` reads the Python version from `.ci/Dockerfile` and exits non-zero if the running Python is older. It passes when the running Python is 3.14.0, which is newer than the required 3.9.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "33d0d6fd-5376-4b4e-be23-1f4449ddb89a",
+      "events": [
+        "11:claude_code|36:33d0d6fd-5376-4b4e-be23-1f4449ddb89a|19:tool_result_summary|30:toolu_01Ho1pLtBpZrYA6aNkrifstQ",
+        "11:claude_code|36:33d0d6fd-5376-4b4e-be23-1f4449ddb89a|19:tool_result_summary|30:toolu_014Ad4VcEo7jHp7oPjG8Udg4",
+        "11:claude_code|36:33d0d6fd-5376-4b4e-be23-1f4449ddb89a|19:tool_result_summary|30:toolu_019NbYqBcydXgxsrz8wHVefa",
+        "11:claude_code|36:33d0d6fd-5376-4b4e-be23-1f4449ddb89a|17:assistant_message|36:bb2df2d1-8a48-47dd-ac89-c89afe9c8ee8"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "810823ef-7010-4713-a7b1-7d711bfc73c8",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:47:04.554355Z",
+    "decided_at": "2026-10-24T11:47:04.62058Z"
+  },
+  {
+    "id": "a8d63905-4b06-4256-8e73-496a9090b183",
+    "project_id": "054785f8-eece-4b87-97c7-aa91c6390d66",
+    "kind": "procedure",
+    "title": "Implementing import_window.py",
+    "content": "The script `import_window.py` checks a UTC weekday and hour against the staging database rules in `ops/staging.md`. It prints 'blocked' for Friday 02:00–03:59 and 'ok' otherwise.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "33d0d6fd-5376-4b4e-be23-1f4449ddb89a",
+      "events": [
+        "11:claude_code|36:33d0d6fd-5376-4b4e-be23-1f4449ddb89a|19:tool_result_summary|30:toolu_01CaNmtj7898ZtrS3X3Z123X",
+        "11:claude_code|36:33d0d6fd-5376-4b4e-be23-1f4449ddb89a|19:tool_result_summary|30:toolu_014Ad4VcEo7jHp7oPjG8Udg4",
+        "11:claude_code|36:33d0d6fd-5376-4b4e-be23-1f4449ddb89a|17:assistant_message|36:bb2df2d1-8a48-47dd-ac89-c89afe9c8ee8"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "9f54a224-eb08-4ae8-a2d2-5f798b19866a",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:47:04.554355Z",
+    "decided_at": "2026-10-24T11:47:04.628577Z"
+  },
+  {
+    "id": "ac1d54bb-f659-4ccd-a567-708d94d57117",
+    "project_id": "054785f8-eece-4b87-97c7-aa91c6390d66",
+    "kind": "gotcha",
+    "title": "SQLite migration with NOT NULL columns",
+    "content": "SQLite will fail to add a `NOT NULL` column without a default value to a table that already has rows. Providing a default value is necessary to avoid migration errors.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "33d0d6fd-5376-4b4e-be23-1f4449ddb89a",
+      "events": [
+        "11:claude_code|36:33d0d6fd-5376-4b4e-be23-1f4449ddb89a|17:assistant_message|36:bb2df2d1-8a48-47dd-ac89-c89afe9c8ee8"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "c344dbfe-1044-4dee-bad2-fd20831bda2d",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:47:04.554355Z",
+    "decided_at": "2026-10-24T11:47:04.636216Z"
+  },
+  {
+    "id": "749f4873-df08-4423-a2f6-c896241d0568",
+    "project_id": "054785f8-eece-4b87-97c7-aa91c6390d66",
+    "kind": "procedure",
+    "title": "Fixing the owner column migration",
+    "content": "To add a `NOT NULL` column to an existing SQLite table, a default value must be provided. The `owner` column was modified to include `DEFAULT ''` to avoid errors during migration.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "33d0d6fd-5376-4b4e-be23-1f4449ddb89a",
+      "events": [
+        "11:claude_code|36:33d0d6fd-5376-4b4e-be23-1f4449ddb89a|19:tool_result_summary|30:toolu_01CiP8CF5cMSBq7skEUmfsZU",
+        "11:claude_code|36:33d0d6fd-5376-4b4e-be23-1f4449ddb89a|17:assistant_message|36:bb2df2d1-8a48-47dd-ac89-c89afe9c8ee8"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "bd813398-6dba-4603-a093-1fc0557d0765",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:47:04.554355Z",
+    "decided_at": "2026-10-24T11:47:04.643381Z"
+  },
+  {
+    "id": "8abb11c3-f11b-4a22-92bf-96b3b4a52590",
+    "project_id": "054785f8-eece-4b87-97c7-aa91c6390d66",
+    "kind": "constraint",
+    "title": "Never edit generated files",
+    "content": "The user explicitly stated that nothing under `generated/` should be edited, as the build process overwrites it.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "33d0d6fd-5376-4b4e-be23-1f4449ddb89a",
+      "events": [
+        "11:claude_code|36:33d0d6fd-5376-4b4e-be23-1f4449ddb89a|11:user_prompt|36:bb2df2d1-8a48-47dd-ac89-c89afe9c8ee8"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "81fdcb40-1ac5-4578-9394-2eba66ef09ef",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:47:04.554355Z",
+    "decided_at": "2026-10-24T11:47:04.650219Z"
+  }
+]

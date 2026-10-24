@@ -1,0 +1,7 @@
+a3d37f04-2f6e-4a46-92b6-c4d707da28d3  Decision/Active  r1  Rule: Never edit generated files
+03415616-a628-43fb-8d89-b71ea5d40d99  Gotcha/Active  r1  Publish requires .signed file
+ea67b0c4-ee91-42b5-a813-d05907dcc07e  Procedure/Active  r1  Fix migration for SQLite
+1e004c4f-bd3b-4612-b063-87191bb38b03  Procedure/Active  r1  Implement import_window.py logic
+e98efc0d-32e5-4d8b-84bb-28af4588073c  Procedure/Active  r1  Check Python version in check_py.py
+6e3aa845-e19b-4c20-a8be-618f0830774c  Procedure/Active  r1  Deploy target region from deploy.cfg
+dfb27efd-7535-4ea3-a6c9-e2c4d33fb7e3  Gotcha/Active  r1  make clean removes .signed

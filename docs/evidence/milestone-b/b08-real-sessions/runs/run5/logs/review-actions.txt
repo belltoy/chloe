@@ -1,0 +1,6 @@
+accepted | Clean and publish workflow
+accepted | Generated/api.py can be edited directly
+accepted | Run import_window.py for specific days
+accepted | Schema file lacks legacy_flag
+accepted | Test migration script
+accepted | Recreate table without legacy_flag column

@@ -1,0 +1,182 @@
+[
+  {
+    "id": "54ee4f10-e3eb-465d-bc6a-54151b5b342e",
+    "project_id": "d05e6e6a-10ff-40ce-afad-6c2f4f3ae8c4",
+    "kind": "gotcha",
+    "title": "Final publish still failed",
+    "content": "Despite fixing the migration and running `make sign publish`, the final `make publish` still failed, indicating an unresolved issue with the publish process that wasn't addressed in this session.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "92b6e421-eda4-4022-9f52-37f92e0a333c",
+      "events": [
+        "11:claude_code|36:92b6e421-eda4-4022-9f52-37f92e0a333c|19:tool_result_summary|30:toolu_01QKN6FpDj9YVjnbdnMsVghT",
+        "11:claude_code|36:92b6e421-eda4-4022-9f52-37f92e0a333c|17:assistant_message|36:c19be053-a601-49c3-bb2b-4e544e926cfb"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "e60a4ef8-39f5-46ac-9945-f5c103caf7dc",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T12:03:58.044765Z",
+    "decided_at": "2026-10-24T12:03:58.120843Z"
+  },
+  {
+    "id": "a3abfcb1-3604-4b61-b4ff-ca20ea7f3216",
+    "project_id": "d05e6e6a-10ff-40ce-afad-6c2f4f3ae8c4",
+    "kind": "procedure",
+    "title": "Extract region from deploy.cfg",
+    "content": "The script `deploy_target.py` was written to read the region from `deploy.cfg` and print it, providing a simple way to retrieve deployment target information.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "92b6e421-eda4-4022-9f52-37f92e0a333c",
+      "events": [
+        "11:claude_code|36:92b6e421-eda4-4022-9f52-37f92e0a333c|19:tool_result_summary|30:toolu_014bmC9pE74zPvMh3D2ZdW3f",
+        "11:claude_code|36:92b6e421-eda4-4022-9f52-37f92e0a333c|19:tool_result_summary|30:toolu_01HaLmcDR1LeFCBBC9yTgfkY"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "40a56323-bef9-4ba0-869d-ea0add7086ae",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T12:03:58.044765Z",
+    "decided_at": "2026-10-24T12:03:58.127931Z"
+  },
+  {
+    "id": "683bcf24-d457-48f8-8e4b-bafaba461c5a",
+    "project_id": "d05e6e6a-10ff-40ce-afad-6c2f4f3ae8c4",
+    "kind": "procedure",
+    "title": "Check Python version against Dockerfile",
+    "content": "The script `check_py.py` was written to compare the running Python version with the one specified in `.ci/Dockerfile`, exiting non-zero if the running version is older.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "92b6e421-eda4-4022-9f52-37f92e0a333c",
+      "events": [
+        "11:claude_code|36:92b6e421-eda4-4022-9f52-37f92e0a333c|19:tool_result_summary|30:toolu_01D3mwDFp5sJDajnBNThkCxG",
+        "11:claude_code|36:92b6e421-eda4-4022-9f52-37f92e0a333c|19:tool_result_summary|30:toolu_01HaLmcDR1LeFCBBC9yTgfkY"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "4f501fc5-ae2d-4a74-98c1-f4a065076037",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T12:03:58.044765Z",
+    "decided_at": "2026-10-24T12:03:58.135505Z"
+  },
+  {
+    "id": "4e7ca226-170e-4b55-b2e5-14f0c8f4cb27",
+    "project_id": "d05e6e6a-10ff-40ce-afad-6c2f4f3ae8c4",
+    "kind": "procedure",
+    "title": "Implement import_window.py logic",
+    "content": "The script `import_window.py` was written to check if a given UTC weekday and hour falls within the blocked window (Friday 2-4 AM). It prints 'blocked' for those times and 'ok' otherwise.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "92b6e421-eda4-4022-9f52-37f92e0a333c",
+      "events": [
+        "11:claude_code|36:92b6e421-eda4-4022-9f52-37f92e0a333c|19:tool_result_summary|30:toolu_01UnMoDhymDMAX2duqD6xm48",
+        "11:claude_code|36:92b6e421-eda4-4022-9f52-37f92e0a333c|19:tool_result_summary|30:toolu_01HaLmcDR1LeFCBBC9yTgfkY"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "bdafd665-9c6e-41ba-936a-07f1051f5c1b",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T12:03:58.044765Z",
+    "decided_at": "2026-10-24T12:03:58.14247Z"
+  },
+  {
+    "id": "3dd529c5-9466-4c82-b242-c3b178bd98a6",
+    "project_id": "d05e6e6a-10ff-40ce-afad-6c2f4f3ae8c4",
+    "kind": "procedure",
+    "title": "Fix migration by adding default value",
+    "content": "To resolve the migration error, the `owner` column in `db/schema.sql` was modified to include `DEFAULT ''`, allowing the migration to succeed without data loss.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "92b6e421-eda4-4022-9f52-37f92e0a333c",
+      "events": [
+        "11:claude_code|36:92b6e421-eda4-4022-9f52-37f92e0a333c|19:tool_result_summary|30:toolu_01QxLy573vyF1rWoHSMvREYf",
+        "11:claude_code|36:92b6e421-eda4-4022-9f52-37f92e0a333c|17:assistant_message|36:c19be053-a601-49c3-bb2b-4e544e926cfb"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "0af42d75-33b3-4988-bec2-aa4238152610",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T12:03:58.044765Z",
+    "decided_at": "2026-10-24T12:03:58.149684Z"
+  },
+  {
+    "id": "7cb9e379-91d0-4a38-ac1d-de58c608c595",
+    "project_id": "d05e6e6a-10ff-40ce-afad-6c2f4f3ae8c4",
+    "kind": "gotcha",
+    "title": "Default value needed for owner column",
+    "content": "Adding the `owner` column to the table failed because the table already had data and no default value was provided. The fix was to add `DEFAULT ''` to the column definition.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "92b6e421-eda4-4022-9f52-37f92e0a333c",
+      "events": [
+        "11:claude_code|36:92b6e421-eda4-4022-9f52-37f92e0a333c|17:assistant_message|36:c19be053-a601-49c3-bb2b-4e544e926cfb"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "6ad4b1a6-a7a6-42c6-95b8-5ad57e32d511",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T12:03:58.044765Z",
+    "decided_at": "2026-10-24T12:03:58.15679Z"
+  },
+  {
+    "id": "6c4e8fb5-0474-4cd0-bfdf-10a90446c7d5",
+    "project_id": "d05e6e6a-10ff-40ce-afad-6c2f4f3ae8c4",
+    "kind": "constraint",
+    "title": "Never edit generated/ directory",
+    "content": "The user explicitly stated that nothing under generated/ should be edited, as the build process overwrites it.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "92b6e421-eda4-4022-9f52-37f92e0a333c",
+      "events": [
+        "11:claude_code|36:92b6e421-eda4-4022-9f52-37f92e0a333c|11:user_prompt|36:c19be053-a601-49c3-bb2b-4e544e926cfb"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "32819494-00ba-4e07-90ef-94e1cc99c4c4",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T12:03:58.044765Z",
+    "decided_at": "2026-10-24T12:03:58.163471Z"
+  }
+]

@@ -1,0 +1,7 @@
+accepted | Python version upgraded to 3.12
+accepted | Database is read-only on Saturdays
+accepted | Deploy script missing
+accepted | Make clean removes .signed file
+accepted | Legacy flag column removal
+accepted | SQLite version constraint
+left open (supersede) | Release region changed to us-east

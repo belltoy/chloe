@@ -1,0 +1,184 @@
+[
+  {
+    "id": "a830af18-f656-4fda-9e1b-03163e0dbecd",
+    "project_id": "7647af73-f6be-42e2-93b8-3b5c550083f6",
+    "kind": "gotcha",
+    "title": "make clean removes .signed",
+    "content": "Running `make clean` deletes the `.signed` file, which is required for `make publish` to work. This causes the final publish step to fail.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "a878a6d6-ee2b-45ea-a146-85473675ed87",
+      "events": [
+        "11:claude_code|36:a878a6d6-ee2b-45ea-a146-85473675ed87|17:assistant_message|36:dd83ae31-3a42-4abf-b1a6-a23edd495ac4"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:47:21.70487Z",
+    "decided_at": null
+  },
+  {
+    "id": "39eba015-9948-45fd-baad-c3e57b9d25d3",
+    "project_id": "7647af73-f6be-42e2-93b8-3b5c550083f6",
+    "kind": "procedure",
+    "title": "Deploy target region from deploy.cfg",
+    "content": "The script reads the region from `deploy.cfg` and prints it.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "a878a6d6-ee2b-45ea-a146-85473675ed87",
+      "events": [
+        "11:claude_code|36:a878a6d6-ee2b-45ea-a146-85473675ed87|19:tool_result_summary|30:toolu_01XjAYwR3uvgv8819TwTz8U8",
+        "11:claude_code|36:a878a6d6-ee2b-45ea-a146-85473675ed87|19:tool_result_summary|30:toolu_01WvGXoRq82mWmw61hVT9x1R",
+        "11:claude_code|36:a878a6d6-ee2b-45ea-a146-85473675ed87|17:assistant_message|36:dd83ae31-3a42-4abf-b1a6-a23edd495ac4"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:47:21.70487Z",
+    "decided_at": null
+  },
+  {
+    "id": "ce17236a-09e1-4eab-a233-62bab8fc4cfa",
+    "project_id": "7647af73-f6be-42e2-93b8-3b5c550083f6",
+    "kind": "procedure",
+    "title": "Check Python version in check_py.py",
+    "content": "The script reads the Python version from the Dockerfile's `FROM python:X.Y` line and exits non-zero if the current Python is older.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "a878a6d6-ee2b-45ea-a146-85473675ed87",
+      "events": [
+        "11:claude_code|36:a878a6d6-ee2b-45ea-a146-85473675ed87|19:tool_result_summary|30:toolu_015uxzYQXVBa1vzcxkbvFx8i",
+        "11:claude_code|36:a878a6d6-ee2b-45ea-a146-85473675ed87|19:tool_result_summary|30:toolu_01WvGXoRq82mWmw61hVT9x1R",
+        "11:claude_code|36:a878a6d6-ee2b-45ea-a146-85473675ed87|17:assistant_message|36:dd83ae31-3a42-4abf-b1a6-a23edd495ac4"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:47:21.70487Z",
+    "decided_at": null
+  },
+  {
+    "id": "8d042eca-abf0-4e72-af93-1a856a72b823",
+    "project_id": "7647af73-f6be-42e2-93b8-3b5c550083f6",
+    "kind": "procedure",
+    "title": "Implement import_window.py logic",
+    "content": "The script checks if the given weekday and hour fall within the blocked window (Friday 2-4 UTC). It prints 'blocked' for Friday 3 and 'ok' otherwise.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "a878a6d6-ee2b-45ea-a146-85473675ed87",
+      "events": [
+        "11:claude_code|36:a878a6d6-ee2b-45ea-a146-85473675ed87|19:tool_result_summary|30:toolu_019C6cvKotG4UEfZZMPtrZaa",
+        "11:claude_code|36:a878a6d6-ee2b-45ea-a146-85473675ed87|19:tool_result_summary|30:toolu_01WvGXoRq82mWmw61hVT9x1R",
+        "11:claude_code|36:a878a6d6-ee2b-45ea-a146-85473675ed87|17:assistant_message|36:dd83ae31-3a42-4abf-b1a6-a23edd495ac4"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:47:21.70487Z",
+    "decided_at": null
+  },
+  {
+    "id": "97a45a89-17b2-4ae8-9dba-b5596719fcf5",
+    "project_id": "7647af73-f6be-42e2-93b8-3b5c550083f6",
+    "kind": "procedure",
+    "title": "Fix migration for SQLite",
+    "content": "To avoid SQLite errors when adding a NOT NULL column without a default, add `DEFAULT ''` to the column definition in `db/schema.sql`.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "a878a6d6-ee2b-45ea-a146-85473675ed87",
+      "events": [
+        "11:claude_code|36:a878a6d6-ee2b-45ea-a146-85473675ed87|19:tool_result_summary|30:toolu_01VDTtD9hpnDhCSCpBFX53CS",
+        "11:claude_code|36:a878a6d6-ee2b-45ea-a146-85473675ed87|17:assistant_message|36:dd83ae31-3a42-4abf-b1a6-a23edd495ac4"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:47:21.70487Z",
+    "decided_at": null
+  },
+  {
+    "id": "6a0ff309-d84e-4f39-919a-d8e7cefed415",
+    "project_id": "7647af73-f6be-42e2-93b8-3b5c550083f6",
+    "kind": "gotcha",
+    "title": "Publish requires .signed file",
+    "content": "The `make publish` command fails without the `.signed` file, which is only created by `make sign`.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "a878a6d6-ee2b-45ea-a146-85473675ed87",
+      "events": [
+        "11:claude_code|36:a878a6d6-ee2b-45ea-a146-85473675ed87|17:assistant_message|36:dd83ae31-3a42-4abf-b1a6-a23edd495ac4"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:47:21.70487Z",
+    "decided_at": null
+  },
+  {
+    "id": "b9b9b35b-a175-4d69-a9f1-1f3ed2e780fb",
+    "project_id": "7647af73-f6be-42e2-93b8-3b5c550083f6",
+    "kind": "decision",
+    "title": "Rule: Never edit generated files",
+    "content": "The user explicitly stated that nothing under generated/ should be edited, as the build process overwrites them.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "a878a6d6-ee2b-45ea-a146-85473675ed87",
+      "events": [
+        "11:claude_code|36:a878a6d6-ee2b-45ea-a146-85473675ed87|11:user_prompt|36:dd83ae31-3a42-4abf-b1a6-a23edd495ac4"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:47:21.70487Z",
+    "decided_at": null
+  }
+]

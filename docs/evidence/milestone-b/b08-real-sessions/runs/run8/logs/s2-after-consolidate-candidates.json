@@ -1,0 +1,595 @@
+[
+  {
+    "id": "8ffe2740-296d-4d73-9ddc-029b12fe2cc3",
+    "project_id": "d05e6e6a-10ff-40ce-afad-6c2f4f3ae8c4",
+    "kind": "fact",
+    "title": "Generated directory is no longer overwritten",
+    "content": "The `generated/` directory is no longer overwritten by the build, allowing direct edits to files like `generated/api.py`.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "a686bb59-3265-4594-9837-9d966d2080e4",
+      "events": [
+        "11:claude_code|36:a686bb59-3265-4594-9837-9d966d2080e4|11:user_prompt|36:e030b494-452e-437c-8f4e-bf7a28ad259d"
+      ]
+    },
+    "state": "conflict",
+    "memory_id": "32819494-00ba-4e07-90ef-94e1cc99c4c4",
+    "reason": "flagged for review: The new note allows editing of the generated/ directory, which directly contradicts the existing constraint that prohibits such edits.",
+    "proposal": {
+      "action": "conflict",
+      "target": "32819494-00ba-4e07-90ef-94e1cc99c4c4",
+      "method": "model",
+      "reason": "The new note allows editing of the generated/ directory, which directly contradicts the existing constraint that prohibits such edits.",
+      "similar": [
+        {
+          "memory_id": "32819494-00ba-4e07-90ef-94e1cc99c4c4",
+          "title": "Never edit generated/ directory",
+          "score": 7.262761820935093
+        },
+        {
+          "memory_id": "0af42d75-33b3-4988-bec2-aa4238152610",
+          "title": "Fix migration by adding default value",
+          "score": 4.1073165268851834
+        },
+        {
+          "memory_id": "4f501fc5-ae2d-4a74-98c1-f4a065076037",
+          "title": "Check Python version against Dockerfile",
+          "score": 1.435165629267393
+        },
+        {
+          "memory_id": "6ad4b1a6-a7a6-42c6-95b8-5ad57e32d511",
+          "title": "Default value needed for owner column",
+          "score": 1.4004312283537776
+        },
+        {
+          "memory_id": "40a56323-bef9-4ba0-869d-ea0add7086ae",
+          "title": "Extract region from deploy.cfg",
+          "score": 2.7811494895818767e-6
+        }
+      ]
+    },
+    "created_at": "2026-10-24T12:05:12.410353Z",
+    "decided_at": "2026-10-24T12:06:29.448722Z"
+  },
+  {
+    "id": "132d9d69-5e83-472d-addd-1014a5076377",
+    "project_id": "d05e6e6a-10ff-40ce-afad-6c2f4f3ae8c4",
+    "kind": "procedure",
+    "title": "Deploy target script outputs region",
+    "content": "The `scripts/deploy_target.py` script prints the region configured in `deploy.cfg`.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "a686bb59-3265-4594-9837-9d966d2080e4",
+      "events": [
+        "11:claude_code|36:a686bb59-3265-4594-9837-9d966d2080e4|11:user_prompt|36:e030b494-452e-437c-8f4e-bf7a28ad259d"
+      ]
+    },
+    "state": "merged",
+    "memory_id": "40a56323-bef9-4ba0-869d-ea0add7086ae",
+    "reason": "auto-merged as a low-risk duplicate: The new note restates the same knowledge as \"Extract region from deploy.cfg\", describing the same script and its behavior without adding new information.",
+    "proposal": {
+      "action": "merge",
+      "target": "40a56323-bef9-4ba0-869d-ea0add7086ae",
+      "method": "model",
+      "reason": "The new note restates the same knowledge as \"Extract region from deploy.cfg\", describing the same script and its behavior without adding new information.",
+      "similar": [
+        {
+          "memory_id": "40a56323-bef9-4ba0-869d-ea0add7086ae",
+          "title": "Extract region from deploy.cfg",
+          "score": 10.719414608794011
+        },
+        {
+          "memory_id": "bdafd665-9c6e-41ba-936a-07f1051f5c1b",
+          "title": "Implement import_window.py logic",
+          "score": 2.032048034267332
+        },
+        {
+          "memory_id": "4f501fc5-ae2d-4a74-98c1-f4a065076037",
+          "title": "Check Python version against Dockerfile",
+          "score": 0.8324175671042449
+        },
+        {
+          "memory_id": "0af42d75-33b3-4988-bec2-aa4238152610",
+          "title": "Fix migration by adding default value",
+          "score": 0.25547803913751616
+        },
+        {
+          "memory_id": "e60a4ef8-39f5-46ac-9945-f5c103caf7dc",
+          "title": "Final publish still failed",
+          "score": 0.24597307686272943
+        }
+      ]
+    },
+    "created_at": "2026-10-24T12:05:12.410353Z",
+    "decided_at": "2026-10-24T12:06:29.447199Z"
+  },
+  {
+    "id": "fc610dff-da40-4e6e-97df-190bfc3a3895",
+    "project_id": "d05e6e6a-10ff-40ce-afad-6c2f4f3ae8c4",
+    "kind": "procedure",
+    "title": "Check import window script output",
+    "content": "The `scripts/import_window.py` script prints `ok` or `blocked` based on the UTC weekday+hour from `ops/staging.md`.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "a686bb59-3265-4594-9837-9d966d2080e4",
+      "events": [
+        "11:claude_code|36:a686bb59-3265-4594-9837-9d966d2080e4|11:user_prompt|36:e030b494-452e-437c-8f4e-bf7a28ad259d"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "model",
+      "reason": "The new note discusses the output of the import_window.py script, while the existing note describes the script's logic and purpose, but they do not directly relate or conflict.",
+      "similar": [
+        {
+          "memory_id": "bdafd665-9c6e-41ba-936a-07f1051f5c1b",
+          "title": "Implement import_window.py logic",
+          "score": 14.030159132082844
+        },
+        {
+          "memory_id": "4f501fc5-ae2d-4a74-98c1-f4a065076037",
+          "title": "Check Python version against Dockerfile",
+          "score": 2.0224204014021936
+        },
+        {
+          "memory_id": "40a56323-bef9-4ba0-869d-ea0add7086ae",
+          "title": "Extract region from deploy.cfg",
+          "score": 0.5109542989422221
+        },
+        {
+          "memory_id": "6ad4b1a6-a7a6-42c6-95b8-5ad57e32d511",
+          "title": "Default value needed for owner column",
+          "score": 1.7450512424540223e-6
+        },
+        {
+          "memory_id": "0af42d75-33b3-4988-bec2-aa4238152610",
+          "title": "Fix migration by adding default value",
+          "score": 1.5849537774944214e-6
+        }
+      ]
+    },
+    "created_at": "2026-10-24T12:05:12.410353Z",
+    "decided_at": null
+  },
+  {
+    "id": "c2077b65-0506-4882-bd36-f9c060e4293a",
+    "project_id": "d05e6e6a-10ff-40ce-afad-6c2f4f3ae8c4",
+    "kind": "constraint",
+    "title": "Python version must match Dockerfile",
+    "content": "The `scripts/check_py.py` script fails if the interpreter is older than the version specified in `.ci/Dockerfile`.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "a686bb59-3265-4594-9837-9d966d2080e4",
+      "events": [
+        "11:claude_code|36:a686bb59-3265-4594-9837-9d966d2080e4|11:user_prompt|36:e030b494-452e-437c-8f4e-bf7a28ad259d"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "merge",
+      "target": "4f501fc5-ae2d-4a74-98c1-f4a065076037",
+      "method": "model",
+      "reason": "The new note states the same knowledge as \"Check Python version against Dockerfile\", with no new information added and all values matching.",
+      "similar": [
+        {
+          "memory_id": "4f501fc5-ae2d-4a74-98c1-f4a065076037",
+          "title": "Check Python version against Dockerfile",
+          "score": 13.74345732062758
+        },
+        {
+          "memory_id": "bdafd665-9c6e-41ba-936a-07f1051f5c1b",
+          "title": "Implement import_window.py logic",
+          "score": 2.1339557424084603
+        },
+        {
+          "memory_id": "40a56323-bef9-4ba0-869d-ea0add7086ae",
+          "title": "Extract region from deploy.cfg",
+          "score": 0.5109542989422221
+        },
+        {
+          "memory_id": "6ad4b1a6-a7a6-42c6-95b8-5ad57e32d511",
+          "title": "Default value needed for owner column",
+          "score": 1.7450512424540223e-6
+        },
+        {
+          "memory_id": "0af42d75-33b3-4988-bec2-aa4238152610",
+          "title": "Fix migration by adding default value",
+          "score": 1.5849537774944214e-6
+        }
+      ],
+      "needs_review": "a constraint or decision is never merged automatically"
+    },
+    "created_at": "2026-10-24T12:05:12.410353Z",
+    "decided_at": null
+  },
+  {
+    "id": "0dc1f2ba-f3fc-4f54-bf2e-82fbdf5eeaf8",
+    "project_id": "d05e6e6a-10ff-40ce-afad-6c2f4f3ae8c4",
+    "kind": "decision",
+    "title": "Use SQLite 3.35+ for column drop",
+    "content": "The `db/002_drop_flag.sql` script was created to drop the `legacy_flag` column, as SQLite 3.31 does not support `DROP COLUMN` and the CI environment uses SQLite 3.31.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "a686bb59-3265-4594-9837-9d966d2080e4",
+      "events": [
+        "11:claude_code|36:a686bb59-3265-4594-9837-9d966d2080e4|11:user_prompt|36:e030b494-452e-437c-8f4e-bf7a28ad259d"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "model",
+      "reason": "The new note discusses SQLite version requirements and column dropping, while existing notes focus on migration fixes, default values, and script implementations. No direct relation or conflict is evident.",
+      "similar": [
+        {
+          "memory_id": "0af42d75-33b3-4988-bec2-aa4238152610",
+          "title": "Fix migration by adding default value",
+          "score": 3.782761456518267
+        },
+        {
+          "memory_id": "6ad4b1a6-a7a6-42c6-95b8-5ad57e32d511",
+          "title": "Default value needed for owner column",
+          "score": 2.8382003449992417
+        },
+        {
+          "memory_id": "bdafd665-9c6e-41ba-936a-07f1051f5c1b",
+          "title": "Implement import_window.py logic",
+          "score": 0.9582506553026986
+        },
+        {
+          "memory_id": "40a56323-bef9-4ba0-869d-ea0add7086ae",
+          "title": "Extract region from deploy.cfg",
+          "score": 0.2554802518942587
+        },
+        {
+          "memory_id": "4f501fc5-ae2d-4a74-98c1-f4a065076037",
+          "title": "Check Python version against Dockerfile",
+          "score": 0.2459751574901776
+        }
+      ]
+    },
+    "created_at": "2026-10-24T12:05:12.410353Z",
+    "decided_at": null
+  },
+  {
+    "id": "2c58ab94-b637-46ca-a1be-3fd2a15d4ffc",
+    "project_id": "d05e6e6a-10ff-40ce-afad-6c2f4f3ae8c4",
+    "kind": "procedure",
+    "title": "Update generated API fields",
+    "content": "Add `owner` to the `FIELDS` list in `generated/api.py` as the file was edited directly after the build no longer overwrites it.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "a686bb59-3265-4594-9837-9d966d2080e4",
+      "events": [
+        "11:claude_code|36:a686bb59-3265-4594-9837-9d966d2080e4|19:tool_result_summary|30:toolu_01CKDfYEMZDPbAtU2vG34fxs"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "model",
+      "reason": "The new note discusses updating API fields in a different file and context compared to existing notes about database migrations and Python version checks.",
+      "similar": [
+        {
+          "memory_id": "32819494-00ba-4e07-90ef-94e1cc99c4c4",
+          "title": "Never edit generated/ directory",
+          "score": 6.23314367988217
+        },
+        {
+          "memory_id": "6ad4b1a6-a7a6-42c6-95b8-5ad57e32d511",
+          "title": "Default value needed for owner column",
+          "score": 2.8254452813529785
+        },
+        {
+          "memory_id": "0af42d75-33b3-4988-bec2-aa4238152610",
+          "title": "Fix migration by adding default value",
+          "score": 1.0569956673812448
+        },
+        {
+          "memory_id": "4f501fc5-ae2d-4a74-98c1-f4a065076037",
+          "title": "Check Python version against Dockerfile",
+          "score": 0.5864480014718304
+        },
+        {
+          "memory_id": "bdafd665-9c6e-41ba-936a-07f1051f5c1b",
+          "title": "Implement import_window.py logic",
+          "score": 0.4490724458607359
+        }
+      ]
+    },
+    "created_at": "2026-10-24T12:05:12.410353Z",
+    "decided_at": null
+  },
+  {
+    "id": "6f1a53dc-8030-4048-a61d-67ae49a04406",
+    "project_id": "d05e6e6a-10ff-40ce-afad-6c2f4f3ae8c4",
+    "kind": "gotcha",
+    "title": "Legacy flag column removal needs careful script",
+    "content": "The `db/002_drop_flag.sql` script recreates the `jobs` table without the `legacy_flag` column, copies the rows, drops the old table, and renames the new one. Data survives, but the script must include all columns present in the real table.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "a686bb59-3265-4594-9837-9d966d2080e4",
+      "events": [
+        "11:claude_code|36:a686bb59-3265-4594-9837-9d966d2080e4|17:assistant_message|36:e030b494-452e-437c-8f4e-bf7a28ad259d"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "model",
+      "reason": "The new note discusses a script for removing a legacy flag column, while existing notes focus on default values, deployment scripts, and Python version checks, with no direct overlap or contradiction.",
+      "similar": [
+        {
+          "memory_id": "0af42d75-33b3-4988-bec2-aa4238152610",
+          "title": "Fix migration by adding default value",
+          "score": 5.27337997666384
+        },
+        {
+          "memory_id": "6ad4b1a6-a7a6-42c6-95b8-5ad57e32d511",
+          "title": "Default value needed for owner column",
+          "score": 3.4153201205816424
+        },
+        {
+          "memory_id": "40a56323-bef9-4ba0-869d-ea0add7086ae",
+          "title": "Extract region from deploy.cfg",
+          "score": 0.25547784475848345
+        },
+        {
+          "memory_id": "4f501fc5-ae2d-4a74-98c1-f4a065076037",
+          "title": "Check Python version against Dockerfile",
+          "score": 0.24597320000986264
+        },
+        {
+          "memory_id": "bdafd665-9c6e-41ba-936a-07f1051f5c1b",
+          "title": "Implement import_window.py logic",
+          "score": 0.23161118547301296
+        }
+      ]
+    },
+    "created_at": "2026-10-24T12:05:12.410353Z",
+    "decided_at": null
+  },
+  {
+    "id": "53ea10de-d43c-4579-afcb-1712bb001858",
+    "project_id": "d05e6e6a-10ff-40ce-afad-6c2f4f3ae8c4",
+    "kind": "gotcha",
+    "title": "Publishing requires signing before building",
+    "content": "The first `make publish` failed with `error: unsigned artifact`. Running `make sign` first resolved the issue, as `sign` only creates a `.signed` marker, but is required for publishing.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "a686bb59-3265-4594-9837-9d966d2080e4",
+      "events": [
+        "11:claude_code|36:a686bb59-3265-4594-9837-9d966d2080e4|19:tool_result_summary|30:toolu_01RB67SYUhXjxbWAySSioWhz",
+        "11:claude_code|36:a686bb59-3265-4594-9837-9d966d2080e4|17:assistant_message|36:e030b494-452e-437c-8f4e-bf7a28ad259d"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "model",
+      "reason": "The new note discusses a publishing process issue unrelated to the existing notes about migrations, Python versions, and directory constraints.",
+      "similar": [
+        {
+          "memory_id": "e60a4ef8-39f5-46ac-9945-f5c103caf7dc",
+          "title": "Final publish still failed",
+          "score": 9.1917467290718
+        },
+        {
+          "memory_id": "4f501fc5-ae2d-4a74-98c1-f4a065076037",
+          "title": "Check Python version against Dockerfile",
+          "score": 1.8398736685000203
+        },
+        {
+          "memory_id": "0af42d75-33b3-4988-bec2-aa4238152610",
+          "title": "Fix migration by adding default value",
+          "score": 1.490622706614158
+        },
+        {
+          "memory_id": "6ad4b1a6-a7a6-42c6-95b8-5ad57e32d511",
+          "title": "Default value needed for owner column",
+          "score": 0.7530194161482751
+        },
+        {
+          "memory_id": "32819494-00ba-4e07-90ef-94e1cc99c4c4",
+          "title": "Never edit generated/ directory",
+          "score": 1.5249194908756326e-6
+        }
+      ]
+    },
+    "created_at": "2026-10-24T12:05:12.410353Z",
+    "decided_at": null
+  },
+  {
+    "id": "54ee4f10-e3eb-465d-bc6a-54151b5b342e",
+    "project_id": "d05e6e6a-10ff-40ce-afad-6c2f4f3ae8c4",
+    "kind": "gotcha",
+    "title": "Final publish still failed",
+    "content": "Despite fixing the migration and running `make sign publish`, the final `make publish` still failed, indicating an unresolved issue with the publish process that wasn't addressed in this session.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "92b6e421-eda4-4022-9f52-37f92e0a333c",
+      "events": [
+        "11:claude_code|36:92b6e421-eda4-4022-9f52-37f92e0a333c|19:tool_result_summary|30:toolu_01QKN6FpDj9YVjnbdnMsVghT",
+        "11:claude_code|36:92b6e421-eda4-4022-9f52-37f92e0a333c|17:assistant_message|36:c19be053-a601-49c3-bb2b-4e544e926cfb"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "e60a4ef8-39f5-46ac-9945-f5c103caf7dc",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T12:03:58.044765Z",
+    "decided_at": "2026-10-24T12:03:58.120843Z"
+  },
+  {
+    "id": "a3abfcb1-3604-4b61-b4ff-ca20ea7f3216",
+    "project_id": "d05e6e6a-10ff-40ce-afad-6c2f4f3ae8c4",
+    "kind": "procedure",
+    "title": "Extract region from deploy.cfg",
+    "content": "The script `deploy_target.py` was written to read the region from `deploy.cfg` and print it, providing a simple way to retrieve deployment target information.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "92b6e421-eda4-4022-9f52-37f92e0a333c",
+      "events": [
+        "11:claude_code|36:92b6e421-eda4-4022-9f52-37f92e0a333c|19:tool_result_summary|30:toolu_014bmC9pE74zPvMh3D2ZdW3f",
+        "11:claude_code|36:92b6e421-eda4-4022-9f52-37f92e0a333c|19:tool_result_summary|30:toolu_01HaLmcDR1LeFCBBC9yTgfkY"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "40a56323-bef9-4ba0-869d-ea0add7086ae",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T12:03:58.044765Z",
+    "decided_at": "2026-10-24T12:03:58.127931Z"
+  },
+  {
+    "id": "683bcf24-d457-48f8-8e4b-bafaba461c5a",
+    "project_id": "d05e6e6a-10ff-40ce-afad-6c2f4f3ae8c4",
+    "kind": "procedure",
+    "title": "Check Python version against Dockerfile",
+    "content": "The script `check_py.py` was written to compare the running Python version with the one specified in `.ci/Dockerfile`, exiting non-zero if the running version is older.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "92b6e421-eda4-4022-9f52-37f92e0a333c",
+      "events": [
+        "11:claude_code|36:92b6e421-eda4-4022-9f52-37f92e0a333c|19:tool_result_summary|30:toolu_01D3mwDFp5sJDajnBNThkCxG",
+        "11:claude_code|36:92b6e421-eda4-4022-9f52-37f92e0a333c|19:tool_result_summary|30:toolu_01HaLmcDR1LeFCBBC9yTgfkY"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "4f501fc5-ae2d-4a74-98c1-f4a065076037",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T12:03:58.044765Z",
+    "decided_at": "2026-10-24T12:03:58.135505Z"
+  },
+  {
+    "id": "4e7ca226-170e-4b55-b2e5-14f0c8f4cb27",
+    "project_id": "d05e6e6a-10ff-40ce-afad-6c2f4f3ae8c4",
+    "kind": "procedure",
+    "title": "Implement import_window.py logic",
+    "content": "The script `import_window.py` was written to check if a given UTC weekday and hour falls within the blocked window (Friday 2-4 AM). It prints 'blocked' for those times and 'ok' otherwise.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "92b6e421-eda4-4022-9f52-37f92e0a333c",
+      "events": [
+        "11:claude_code|36:92b6e421-eda4-4022-9f52-37f92e0a333c|19:tool_result_summary|30:toolu_01UnMoDhymDMAX2duqD6xm48",
+        "11:claude_code|36:92b6e421-eda4-4022-9f52-37f92e0a333c|19:tool_result_summary|30:toolu_01HaLmcDR1LeFCBBC9yTgfkY"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "bdafd665-9c6e-41ba-936a-07f1051f5c1b",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T12:03:58.044765Z",
+    "decided_at": "2026-10-24T12:03:58.14247Z"
+  },
+  {
+    "id": "3dd529c5-9466-4c82-b242-c3b178bd98a6",
+    "project_id": "d05e6e6a-10ff-40ce-afad-6c2f4f3ae8c4",
+    "kind": "procedure",
+    "title": "Fix migration by adding default value",
+    "content": "To resolve the migration error, the `owner` column in `db/schema.sql` was modified to include `DEFAULT ''`, allowing the migration to succeed without data loss.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "92b6e421-eda4-4022-9f52-37f92e0a333c",
+      "events": [
+        "11:claude_code|36:92b6e421-eda4-4022-9f52-37f92e0a333c|19:tool_result_summary|30:toolu_01QxLy573vyF1rWoHSMvREYf",
+        "11:claude_code|36:92b6e421-eda4-4022-9f52-37f92e0a333c|17:assistant_message|36:c19be053-a601-49c3-bb2b-4e544e926cfb"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "0af42d75-33b3-4988-bec2-aa4238152610",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T12:03:58.044765Z",
+    "decided_at": "2026-10-24T12:03:58.149684Z"
+  },
+  {
+    "id": "7cb9e379-91d0-4a38-ac1d-de58c608c595",
+    "project_id": "d05e6e6a-10ff-40ce-afad-6c2f4f3ae8c4",
+    "kind": "gotcha",
+    "title": "Default value needed for owner column",
+    "content": "Adding the `owner` column to the table failed because the table already had data and no default value was provided. The fix was to add `DEFAULT ''` to the column definition.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "92b6e421-eda4-4022-9f52-37f92e0a333c",
+      "events": [
+        "11:claude_code|36:92b6e421-eda4-4022-9f52-37f92e0a333c|17:assistant_message|36:c19be053-a601-49c3-bb2b-4e544e926cfb"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "6ad4b1a6-a7a6-42c6-95b8-5ad57e32d511",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T12:03:58.044765Z",
+    "decided_at": "2026-10-24T12:03:58.15679Z"
+  },
+  {
+    "id": "6c4e8fb5-0474-4cd0-bfdf-10a90446c7d5",
+    "project_id": "d05e6e6a-10ff-40ce-afad-6c2f4f3ae8c4",
+    "kind": "constraint",
+    "title": "Never edit generated/ directory",
+    "content": "The user explicitly stated that nothing under generated/ should be edited, as the build process overwrites it.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "92b6e421-eda4-4022-9f52-37f92e0a333c",
+      "events": [
+        "11:claude_code|36:92b6e421-eda4-4022-9f52-37f92e0a333c|11:user_prompt|36:c19be053-a601-49c3-bb2b-4e544e926cfb"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "32819494-00ba-4e07-90ef-94e1cc99c4c4",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T12:03:58.044765Z",
+    "decided_at": "2026-10-24T12:03:58.163471Z"
+  }
+]

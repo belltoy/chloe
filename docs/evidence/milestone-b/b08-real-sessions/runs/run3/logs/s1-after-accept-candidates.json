@@ -1,0 +1,206 @@
+[
+  {
+    "id": "d9552482-9e6a-4c20-ba1a-c36bb2b50855",
+    "project_id": "afceb5b0-e726-4def-b9af-bcd554b93db5",
+    "kind": "fact",
+    "title": "Migration was successful",
+    "content": "The `python3 db/migrate.py` command printed 'migration ok', indicating the migration was applied successfully.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "84fdbd21-92b3-4c3e-95a4-70e468a95951",
+      "events": [
+        "11:claude_code|36:84fdbd21-92b3-4c3e-95a4-70e468a95951|19:tool_result_summary|30:toolu_01DVesT3Q5pqyMb8ht5gxoyB",
+        "11:claude_code|36:84fdbd21-92b3-4c3e-95a4-70e468a95951|17:assistant_message|36:262af788-9c6f-4411-b9fc-fa5f627f8575"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "2119b790-4bc9-4b7e-8c4e-9e4fc9d943b4",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:38:53.432802Z",
+    "decided_at": "2026-10-24T11:38:53.487359Z"
+  },
+  {
+    "id": "58219b7e-6c33-49fd-9f1c-3aaf1fb412c8",
+    "project_id": "afceb5b0-e726-4def-b9af-bcd554b93db5",
+    "kind": "gotcha",
+    "title": "SQLite requires default for NOT NULL columns",
+    "content": "SQLite cannot add a NOT NULL column without a default value. Existing rows will take the default value unless specified otherwise.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "84fdbd21-92b3-4c3e-95a4-70e468a95951",
+      "events": [
+        "11:claude_code|36:84fdbd21-92b3-4c3e-95a4-70e468a95951|17:assistant_message|36:262af788-9c6f-4411-b9fc-fa5f627f8575"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "6312982c-583a-48c2-892e-0864c51c1023",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:38:53.432802Z",
+    "decided_at": "2026-10-24T11:38:53.495782Z"
+  },
+  {
+    "id": "f9f24797-cbb3-4c33-b048-0a8ee672a7c8",
+    "project_id": "afceb5b0-e726-4def-b9af-bcd554b93db5",
+    "kind": "procedure",
+    "title": "Publish requires signing",
+    "content": "The `make publish` command requires the `.signed` marker to be present. To publish, run `make sign` first, then `make publish`.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "84fdbd21-92b3-4c3e-95a4-70e468a95951",
+      "events": [
+        "11:claude_code|36:84fdbd21-92b3-4c3e-95a4-70e468a95951|19:tool_result_summary|30:toolu_01DVesT3Q5pqyMb8ht5gxoyB",
+        "11:claude_code|36:84fdbd21-92b3-4c3e-95a4-70e468a95951|17:assistant_message|36:262af788-9c6f-4411-b9fc-fa5f627f8575"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "08c6dbc4-a830-4d85-8da0-1bd71778f3c0",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:38:53.432802Z",
+    "decided_at": "2026-10-24T11:38:53.504625Z"
+  },
+  {
+    "id": "0fa4e63b-9137-44be-9186-52ceb48a008f",
+    "project_id": "afceb5b0-e726-4def-b9af-bcd554b93db5",
+    "kind": "procedure",
+    "title": "Fix migration by adding default value",
+    "content": "To add a NOT NULL column to an existing table in SQLite, provide a default value. The `owner` column was added with `DEFAULT ''` to allow existing rows to have an empty value.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "84fdbd21-92b3-4c3e-95a4-70e468a95951",
+      "events": [
+        "11:claude_code|36:84fdbd21-92b3-4c3e-95a4-70e468a95951|19:tool_result_summary|30:toolu_01CCXA9eSE1FSiAfzDV5MPKu",
+        "11:claude_code|36:84fdbd21-92b3-4c3e-95a4-70e468a95951|19:tool_result_summary|30:toolu_01Uxc2atANuov2co8dx9p7fA",
+        "11:claude_code|36:84fdbd21-92b3-4c3e-95a4-70e468a95951|17:assistant_message|36:262af788-9c6f-4411-b9fc-fa5f627f8575"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "ed04f646-2cae-48a5-a8cd-1ca6813abea8",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:38:53.432802Z",
+    "decided_at": "2026-10-24T11:38:53.511566Z"
+  },
+  {
+    "id": "bfe5f0cd-ff52-4a21-ac05-d3c74a007ac9",
+    "project_id": "afceb5b0-e726-4def-b9af-bcd554b93db5",
+    "kind": "constraint",
+    "title": "Do not edit generated files",
+    "content": "Never edit files under generated/, they are overwritten by the build.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "84fdbd21-92b3-4c3e-95a4-70e468a95951",
+      "events": [
+        "11:claude_code|36:84fdbd21-92b3-4c3e-95a4-70e468a95951|11:user_prompt|36:262af788-9c6f-4411-b9fc-fa5f627f8575"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "32525b83-19b0-4873-9ada-dd0f6dae6c66",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:38:53.432802Z",
+    "decided_at": "2026-10-24T11:38:53.522669Z"
+  },
+  {
+    "id": "ea5a375e-b60f-453d-8117-5d45af6e312b",
+    "project_id": "afceb5b0-e726-4def-b9af-bcd554b93db5",
+    "kind": "constraint",
+    "title": "Releases are deployed to eu-west",
+    "content": "Releases are always deployed to the region eu-west.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "84fdbd21-92b3-4c3e-95a4-70e468a95951",
+      "events": [
+        "11:claude_code|36:84fdbd21-92b3-4c3e-95a4-70e468a95951|11:user_prompt|36:262af788-9c6f-4411-b9fc-fa5f627f8575"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "8eef35ea-e6fc-4fd6-be8a-03481b9dab9b",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:38:53.432802Z",
+    "decided_at": "2026-10-24T11:38:53.529737Z"
+  },
+  {
+    "id": "cedcc878-6e66-4ba5-94d7-fa2fe780df3b",
+    "project_id": "afceb5b0-e726-4def-b9af-bcd554b93db5",
+    "kind": "constraint",
+    "title": "CI uses Python 3.9",
+    "content": "The CI image runs Python 3.9, so do not use match statements in scripts.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "84fdbd21-92b3-4c3e-95a4-70e468a95951",
+      "events": [
+        "11:claude_code|36:84fdbd21-92b3-4c3e-95a4-70e468a95951|11:user_prompt|36:262af788-9c6f-4411-b9fc-fa5f627f8575"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "07d8789c-6a7b-4042-afa5-afd739acf16c",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:38:53.432802Z",
+    "decided_at": "2026-10-24T11:38:53.537131Z"
+  },
+  {
+    "id": "2d94860b-544e-4ed5-95a8-84a67080e258",
+    "project_id": "afceb5b0-e726-4def-b9af-bcd554b93db5",
+    "kind": "constraint",
+    "title": "Staging DB is read-only on Fridays",
+    "content": "The staging database is read-only every Friday between 02:00 and 04:00 UTC due to the backup job, so imports fail in that window.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "84fdbd21-92b3-4c3e-95a4-70e468a95951",
+      "events": [
+        "11:claude_code|36:84fdbd21-92b3-4c3e-95a4-70e468a95951|11:user_prompt|36:262af788-9c6f-4411-b9fc-fa5f627f8575"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "9eabeeec-66cf-45ba-a2fc-034b82d510ec",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:38:53.432802Z",
+    "decided_at": "2026-10-24T11:38:53.543852Z"
+  }
+]

@@ -1,0 +1,6 @@
+e4304cfa-fe6c-4731-b698-29e11d6e849c  Gotcha/Active  r1  SQLite column addition requires default value
+e74046d2-858e-4296-924c-97d518e84a2b  Decision/Active  r1  Use make sign publish to ensure signing before publishing
+d7963c46-2cd9-4eb4-bbf7-afc660b6690e  Constraint/Active  r1  Never edit files under generated/
+045e5445-793b-4a9a-901a-c70eb1186715  Constraint/Active  r1  CI uses Python 3.9, avoid match statements
+a85ae438-1591-4623-97e0-92d0f7b01ae1  Fact/Active  r1  Releases are deployed to eu-west region
+1ce930fa-a88c-4a6e-9846-7542220d5395  Gotcha/Active  r1  make clean removes .signed marker

@@ -1,0 +1,549 @@
+[
+  {
+    "id": "e81b7a3d-1491-45e4-a700-bfeddbeaa2d5",
+    "project_id": "054785f8-eece-4b87-97c7-aa91c6390d66",
+    "kind": "procedure",
+    "title": "Clean and publish workflow",
+    "content": "Running `make clean` deletes the `dist` and `.signed` directories, and `make publish` rebuilds the artifact but fails without signing.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "eb09106c-b616-4c91-8e49-29603bad550c",
+      "events": [
+        "11:claude_code|36:eb09106c-b616-4c91-8e49-29603bad550c|19:tool_result_summary|30:toolu_01Y7JoxnNja2oXXu4xJnYiQE",
+        "11:claude_code|36:eb09106c-b616-4c91-8e49-29603bad550c|17:assistant_message|36:aa972cf2-1389-4557-b2af-c6f8e6bb5eb2"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "model",
+      "reason": "The new note describes a clean and publish workflow, which is unrelated to the existing notes about Python version checks, import rules, deployment regions, and database migrations.",
+      "similar": [
+        {
+          "memory_id": "810823ef-7010-4713-a7b1-7d711bfc73c8",
+          "title": "Implementing check_py.py",
+          "score": 1.2162026062720848
+        },
+        {
+          "memory_id": "03ed7df3-f345-4bbf-b129-c79ace1a6416",
+          "title": "Python version check in CI",
+          "score": 0.7721898445638629
+        },
+        {
+          "memory_id": "9f54a224-eb08-4ae8-a2d2-5f798b19866a",
+          "title": "Implementing import_window.py",
+          "score": 0.33781116700352043
+        },
+        {
+          "memory_id": "dbafdd6d-9b19-4f7c-bd1a-daa890a2db8d",
+          "title": "Implementing deploy_target.py",
+          "score": 0.27603288068107795
+        },
+        {
+          "memory_id": "bd813398-6dba-4603-a093-1fc0557d0765",
+          "title": "Fixing the owner column migration",
+          "score": 1.8216062544420757e-6
+        }
+      ]
+    },
+    "created_at": "2026-10-24T11:48:22.897697Z",
+    "decided_at": null
+  },
+  {
+    "id": "d9a2e6bd-3264-4aae-953f-1e080e9e4e2e",
+    "project_id": "054785f8-eece-4b87-97c7-aa91c6390d66",
+    "kind": "fact",
+    "title": "Generated/api.py can be edited directly",
+    "content": "The `generated/api.py` file is no longer overwritten by the build, allowing direct edits to add fields like `owner`.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "eb09106c-b616-4c91-8e49-29603bad550c",
+      "events": [
+        "11:claude_code|36:eb09106c-b616-4c91-8e49-29603bad550c|11:user_prompt|36:aa972cf2-1389-4557-b2af-c6f8e6bb5eb2",
+        "11:claude_code|36:eb09106c-b616-4c91-8e49-29603bad550c|19:tool_result_summary|30:toolu_01LvBCuwt6rmqrjeFD8nrmZ4"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "model",
+      "reason": "The new note discusses editing `generated/api.py`, while existing notes focus on `generated/` files being non-editable and SQLite migrations, with no direct connection.",
+      "similar": [
+        {
+          "memory_id": "81fdcb40-1ac5-4578-9394-2eba66ef09ef",
+          "title": "Never edit generated files",
+          "score": 7.20124767422732
+        },
+        {
+          "memory_id": "bd813398-6dba-4603-a093-1fc0557d0765",
+          "title": "Fixing the owner column migration",
+          "score": 0.7721899051422212
+        },
+        {
+          "memory_id": "810823ef-7010-4713-a7b1-7d711bfc73c8",
+          "title": "Implementing check_py.py",
+          "score": 0.3694437895153687
+        },
+        {
+          "memory_id": "03ed7df3-f345-4bbf-b129-c79ace1a6416",
+          "title": "Python version check in CI",
+          "score": 0.3406265324102137
+        },
+        {
+          "memory_id": "c344dbfe-1044-4dee-bad2-fd20831bda2d",
+          "title": "SQLite migration with NOT NULL columns",
+          "score": 0.2432013893464083
+        }
+      ]
+    },
+    "created_at": "2026-10-24T11:48:22.897697Z",
+    "decided_at": null
+  },
+  {
+    "id": "1ad43006-f4f6-4849-afe1-c4e4af07610c",
+    "project_id": "054785f8-eece-4b87-97c7-aa91c6390d66",
+    "kind": "procedure",
+    "title": "Run import_window.py for specific days",
+    "content": "The `import_window.py` script is run for specific days (e.g., Saturday 2, Friday 3) to check if a UTC weekday+hour is ok or blocked.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "eb09106c-b616-4c91-8e49-29603bad550c",
+      "events": [
+        "11:claude_code|36:eb09106c-b616-4c91-8e49-29603bad550c|19:tool_result_summary|30:toolu_01WXRcWgT7MN2BpuzYo2S9ag"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "model",
+      "reason": "The new note discusses running `import_window.py` for specific days, while \"Implementing import_window.py\" describes the script's general behavior without specifying particular days.",
+      "similar": [
+        {
+          "memory_id": "9f54a224-eb08-4ae8-a2d2-5f798b19866a",
+          "title": "Implementing import_window.py",
+          "score": 6.9845238250296395
+        },
+        {
+          "memory_id": "03ed7df3-f345-4bbf-b129-c79ace1a6416",
+          "title": "Python version check in CI",
+          "score": 0.5867562392057669
+        },
+        {
+          "memory_id": "810823ef-7010-4713-a7b1-7d711bfc73c8",
+          "title": "Implementing check_py.py",
+          "score": 0.3694446731561203
+        },
+        {
+          "memory_id": "dbafdd6d-9b19-4f7c-bd1a-daa890a2db8d",
+          "title": "Implementing deploy_target.py",
+          "score": 0.2760358639365093
+        },
+        {
+          "memory_id": "c344dbfe-1044-4dee-bad2-fd20831bda2d",
+          "title": "SQLite migration with NOT NULL columns",
+          "score": 0.2432013893464083
+        }
+      ]
+    },
+    "created_at": "2026-10-24T11:48:22.897697Z",
+    "decided_at": null
+  },
+  {
+    "id": "7905e981-3f0e-4814-bdf0-b535cf2e00c9",
+    "project_id": "054785f8-eece-4b87-97c7-aa91c6390d66",
+    "kind": "fact",
+    "title": "Schema file lacks legacy_flag",
+    "content": "The `db/schema.sql` file does not include the `legacy_flag` column, implying the real table should only have `id` and `name`.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "eb09106c-b616-4c91-8e49-29603bad550c",
+      "events": [
+        "11:claude_code|36:eb09106c-b616-4c91-8e49-29603bad550c|17:assistant_message|36:aa972cf2-1389-4557-b2af-c6f8e6bb5eb2"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "model",
+      "reason": "The new note discusses the absence of a `legacy_flag` column in a schema file, which is unrelated to the existing notes about SQLite migrations, Python version checks, and deployment scripts.",
+      "similar": [
+        {
+          "memory_id": "bd813398-6dba-4603-a093-1fc0557d0765",
+          "title": "Fixing the owner column migration",
+          "score": 3.680708284604764
+        },
+        {
+          "memory_id": "c344dbfe-1044-4dee-bad2-fd20831bda2d",
+          "title": "SQLite migration with NOT NULL columns",
+          "score": 2.193923652276855
+        },
+        {
+          "memory_id": "03ed7df3-f345-4bbf-b129-c79ace1a6416",
+          "title": "Python version check in CI",
+          "score": 1.7610278961110347e-6
+        },
+        {
+          "memory_id": "810823ef-7010-4713-a7b1-7d711bfc73c8",
+          "title": "Implementing check_py.py",
+          "score": 1.6949937173467362e-6
+        },
+        {
+          "memory_id": "dbafdd6d-9b19-4f7c-bd1a-daa890a2db8d",
+          "title": "Implementing deploy_target.py",
+          "score": 1.648761659697652e-6
+        }
+      ]
+    },
+    "created_at": "2026-10-24T11:48:22.897697Z",
+    "decided_at": null
+  },
+  {
+    "id": "9b36e005-8c86-4101-bf37-1055a7bfab5a",
+    "project_id": "054785f8-eece-4b87-97c7-aa91c6390d66",
+    "kind": "gotcha",
+    "title": "Migration failure due to NOT NULL column",
+    "content": "The `db/migrate.py` script fails when attempting to add a NOT NULL column without a default value, indicating a need to handle such cases explicitly.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "eb09106c-b616-4c91-8e49-29603bad550c",
+      "events": [
+        "11:claude_code|36:eb09106c-b616-4c91-8e49-29603bad550c|17:assistant_message|36:aa972cf2-1389-4557-b2af-c6f8e6bb5eb2"
+      ]
+    },
+    "state": "merged",
+    "memory_id": "c344dbfe-1044-4dee-bad2-fd20831bda2d",
+    "reason": "auto-merged as a low-risk duplicate: The new note states the same knowledge as \"SQLite migration with NOT NULL columns\" about the failure of adding a NOT NULL column without a default value in SQLite.",
+    "proposal": {
+      "action": "merge",
+      "target": "c344dbfe-1044-4dee-bad2-fd20831bda2d",
+      "method": "model",
+      "reason": "The new note states the same knowledge as \"SQLite migration with NOT NULL columns\" about the failure of adding a NOT NULL column without a default value in SQLite.",
+      "similar": [
+        {
+          "memory_id": "c344dbfe-1044-4dee-bad2-fd20831bda2d",
+          "title": "SQLite migration with NOT NULL columns",
+          "score": 8.045289754701297
+        },
+        {
+          "memory_id": "bd813398-6dba-4603-a093-1fc0557d0765",
+          "title": "Fixing the owner column migration",
+          "score": 5.987430286979303
+        },
+        {
+          "memory_id": "810823ef-7010-4713-a7b1-7d711bfc73c8",
+          "title": "Implementing check_py.py",
+          "score": 1.2957197252428196
+        },
+        {
+          "memory_id": "03ed7df3-f345-4bbf-b129-c79ace1a6416",
+          "title": "Python version check in CI",
+          "score": 0.24613282319097968
+        },
+        {
+          "memory_id": "9f54a224-eb08-4ae8-a2d2-5f798b19866a",
+          "title": "Implementing import_window.py",
+          "score": 0.24320551607048876
+        }
+      ]
+    },
+    "created_at": "2026-10-24T11:48:22.897697Z",
+    "decided_at": "2026-10-24T11:49:26.749477Z"
+  },
+  {
+    "id": "2c6e0b08-b44c-42de-8521-29596dd1fb12",
+    "project_id": "054785f8-eece-4b87-97c7-aa91c6390d66",
+    "kind": "procedure",
+    "title": "Test migration script",
+    "content": "To test the migration, a throwaway table is created with the `legacy_flag` column, and the migration script is run to verify data preservation.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "eb09106c-b616-4c91-8e49-29603bad550c",
+      "events": [
+        "11:claude_code|36:eb09106c-b616-4c91-8e49-29603bad550c|17:assistant_message|36:aa972cf2-1389-4557-b2af-c6f8e6bb5eb2"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "model",
+      "reason": "The new note describes a test procedure for a migration script, while existing notes discuss migration issues, Python version checks, and import rules, with no overlap.",
+      "similar": [
+        {
+          "memory_id": "c344dbfe-1044-4dee-bad2-fd20831bda2d",
+          "title": "SQLite migration with NOT NULL columns",
+          "score": 6.578782588384167
+        },
+        {
+          "memory_id": "bd813398-6dba-4603-a093-1fc0557d0765",
+          "title": "Fixing the owner column migration",
+          "score": 4.44305411990737
+        },
+        {
+          "memory_id": "810823ef-7010-4713-a7b1-7d711bfc73c8",
+          "title": "Implementing check_py.py",
+          "score": 0.591514386400042
+        },
+        {
+          "memory_id": "03ed7df3-f345-4bbf-b129-c79ace1a6416",
+          "title": "Python version check in CI",
+          "score": 0.5867548838382365
+        },
+        {
+          "memory_id": "9f54a224-eb08-4ae8-a2d2-5f798b19866a",
+          "title": "Implementing import_window.py",
+          "score": 0.5810135240675047
+        }
+      ]
+    },
+    "created_at": "2026-10-24T11:48:22.897697Z",
+    "decided_at": null
+  },
+  {
+    "id": "d0dabf8d-8d4b-49d6-a3f4-ca92da3161d0",
+    "project_id": "054785f8-eece-4b87-97c7-aa91c6390d66",
+    "kind": "decision",
+    "title": "Recreate table without legacy_flag column",
+    "content": "The `db/002_drop_flag.sql` script is used to recreate the `jobs` table without the `legacy_flag` column, preserving existing data.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "eb09106c-b616-4c91-8e49-29603bad550c",
+      "events": [
+        "11:claude_code|36:eb09106c-b616-4c91-8e49-29603bad550c|11:user_prompt|36:aa972cf2-1389-4557-b2af-c6f8e6bb5eb2",
+        "11:claude_code|36:eb09106c-b616-4c91-8e49-29603bad550c|19:tool_result_summary|30:toolu_015WxvDCUawwc4RmuBBKGHRK",
+        "11:claude_code|36:eb09106c-b616-4c91-8e49-29603bad550c|17:assistant_message|36:aa972cf2-1389-4557-b2af-c6f8e6bb5eb2"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "model",
+      "reason": "The new note discusses dropping a column and recreating a table, while existing notes focus on migration, Python version checks, and deployment scripts, with no direct connection.",
+      "similar": [
+        {
+          "memory_id": "c344dbfe-1044-4dee-bad2-fd20831bda2d",
+          "title": "SQLite migration with NOT NULL columns",
+          "score": 3.57634996545359
+        },
+        {
+          "memory_id": "bd813398-6dba-4603-a093-1fc0557d0765",
+          "title": "Fixing the owner column migration",
+          "score": 2.666171844892139
+        },
+        {
+          "memory_id": "03ed7df3-f345-4bbf-b129-c79ace1a6416",
+          "title": "Python version check in CI",
+          "score": 2.0228350929775387
+        },
+        {
+          "memory_id": "810823ef-7010-4713-a7b1-7d711bfc73c8",
+          "title": "Implementing check_py.py",
+          "score": 0.3694427161073468
+        },
+        {
+          "memory_id": "dbafdd6d-9b19-4f7c-bd1a-daa890a2db8d",
+          "title": "Implementing deploy_target.py",
+          "score": 2.747111777546377e-6
+        }
+      ]
+    },
+    "created_at": "2026-10-24T11:48:22.897697Z",
+    "decided_at": null
+  },
+  {
+    "id": "dbd79a19-c3f5-43ff-a44f-69e3ab7a9618",
+    "project_id": "054785f8-eece-4b87-97c7-aa91c6390d66",
+    "kind": "fact",
+    "title": "Python version check in CI",
+    "content": "The `.ci/Dockerfile` specifies the Python version as 3.9, which is used as the baseline for the `check_py.py` script to determine if the running Python is older.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "33d0d6fd-5376-4b4e-be23-1f4449ddb89a",
+      "events": [
+        "11:claude_code|36:33d0d6fd-5376-4b4e-be23-1f4449ddb89a|11:user_prompt|36:bb2df2d1-8a48-47dd-ac89-c89afe9c8ee8",
+        "11:claude_code|36:33d0d6fd-5376-4b4e-be23-1f4449ddb89a|19:tool_result_summary|30:toolu_019NbYqBcydXgxsrz8wHVefa",
+        "11:claude_code|36:33d0d6fd-5376-4b4e-be23-1f4449ddb89a|17:assistant_message|36:bb2df2d1-8a48-47dd-ac89-c89afe9c8ee8"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "03ed7df3-f345-4bbf-b129-c79ace1a6416",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:47:04.554355Z",
+    "decided_at": "2026-10-24T11:47:04.604012Z"
+  },
+  {
+    "id": "2fc84a64-6d0d-467b-8d41-c06df2371724",
+    "project_id": "054785f8-eece-4b87-97c7-aa91c6390d66",
+    "kind": "procedure",
+    "title": "Implementing deploy_target.py",
+    "content": "The script `deploy_target.py` reads the region from `deploy.cfg` and prints it. This provides the region information for deployment purposes.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "33d0d6fd-5376-4b4e-be23-1f4449ddb89a",
+      "events": [
+        "11:claude_code|36:33d0d6fd-5376-4b4e-be23-1f4449ddb89a|19:tool_result_summary|30:toolu_01Tj45nBC6dtxZEGMihPJSq6",
+        "11:claude_code|36:33d0d6fd-5376-4b4e-be23-1f4449ddb89a|19:tool_result_summary|30:toolu_014Ad4VcEo7jHp7oPjG8Udg4",
+        "11:claude_code|36:33d0d6fd-5376-4b4e-be23-1f4449ddb89a|17:assistant_message|36:bb2df2d1-8a48-47dd-ac89-c89afe9c8ee8"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "dbafdd6d-9b19-4f7c-bd1a-daa890a2db8d",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:47:04.554355Z",
+    "decided_at": "2026-10-24T11:47:04.611047Z"
+  },
+  {
+    "id": "62335602-0c07-4e80-9e44-35d89687933c",
+    "project_id": "054785f8-eece-4b87-97c7-aa91c6390d66",
+    "kind": "procedure",
+    "title": "Implementing check_py.py",
+    "content": "The script `check_py.py` reads the Python version from `.ci/Dockerfile` and exits non-zero if the running Python is older. It passes when the running Python is 3.14.0, which is newer than the required 3.9.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "33d0d6fd-5376-4b4e-be23-1f4449ddb89a",
+      "events": [
+        "11:claude_code|36:33d0d6fd-5376-4b4e-be23-1f4449ddb89a|19:tool_result_summary|30:toolu_01Ho1pLtBpZrYA6aNkrifstQ",
+        "11:claude_code|36:33d0d6fd-5376-4b4e-be23-1f4449ddb89a|19:tool_result_summary|30:toolu_014Ad4VcEo7jHp7oPjG8Udg4",
+        "11:claude_code|36:33d0d6fd-5376-4b4e-be23-1f4449ddb89a|19:tool_result_summary|30:toolu_019NbYqBcydXgxsrz8wHVefa",
+        "11:claude_code|36:33d0d6fd-5376-4b4e-be23-1f4449ddb89a|17:assistant_message|36:bb2df2d1-8a48-47dd-ac89-c89afe9c8ee8"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "810823ef-7010-4713-a7b1-7d711bfc73c8",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:47:04.554355Z",
+    "decided_at": "2026-10-24T11:47:04.62058Z"
+  },
+  {
+    "id": "a8d63905-4b06-4256-8e73-496a9090b183",
+    "project_id": "054785f8-eece-4b87-97c7-aa91c6390d66",
+    "kind": "procedure",
+    "title": "Implementing import_window.py",
+    "content": "The script `import_window.py` checks a UTC weekday and hour against the staging database rules in `ops/staging.md`. It prints 'blocked' for Friday 02:00–03:59 and 'ok' otherwise.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "33d0d6fd-5376-4b4e-be23-1f4449ddb89a",
+      "events": [
+        "11:claude_code|36:33d0d6fd-5376-4b4e-be23-1f4449ddb89a|19:tool_result_summary|30:toolu_01CaNmtj7898ZtrS3X3Z123X",
+        "11:claude_code|36:33d0d6fd-5376-4b4e-be23-1f4449ddb89a|19:tool_result_summary|30:toolu_014Ad4VcEo7jHp7oPjG8Udg4",
+        "11:claude_code|36:33d0d6fd-5376-4b4e-be23-1f4449ddb89a|17:assistant_message|36:bb2df2d1-8a48-47dd-ac89-c89afe9c8ee8"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "9f54a224-eb08-4ae8-a2d2-5f798b19866a",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:47:04.554355Z",
+    "decided_at": "2026-10-24T11:47:04.628577Z"
+  },
+  {
+    "id": "ac1d54bb-f659-4ccd-a567-708d94d57117",
+    "project_id": "054785f8-eece-4b87-97c7-aa91c6390d66",
+    "kind": "gotcha",
+    "title": "SQLite migration with NOT NULL columns",
+    "content": "SQLite will fail to add a `NOT NULL` column without a default value to a table that already has rows. Providing a default value is necessary to avoid migration errors.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "33d0d6fd-5376-4b4e-be23-1f4449ddb89a",
+      "events": [
+        "11:claude_code|36:33d0d6fd-5376-4b4e-be23-1f4449ddb89a|17:assistant_message|36:bb2df2d1-8a48-47dd-ac89-c89afe9c8ee8"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "c344dbfe-1044-4dee-bad2-fd20831bda2d",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:47:04.554355Z",
+    "decided_at": "2026-10-24T11:47:04.636216Z"
+  },
+  {
+    "id": "749f4873-df08-4423-a2f6-c896241d0568",
+    "project_id": "054785f8-eece-4b87-97c7-aa91c6390d66",
+    "kind": "procedure",
+    "title": "Fixing the owner column migration",
+    "content": "To add a `NOT NULL` column to an existing SQLite table, a default value must be provided. The `owner` column was modified to include `DEFAULT ''` to avoid errors during migration.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "33d0d6fd-5376-4b4e-be23-1f4449ddb89a",
+      "events": [
+        "11:claude_code|36:33d0d6fd-5376-4b4e-be23-1f4449ddb89a|19:tool_result_summary|30:toolu_01CiP8CF5cMSBq7skEUmfsZU",
+        "11:claude_code|36:33d0d6fd-5376-4b4e-be23-1f4449ddb89a|17:assistant_message|36:bb2df2d1-8a48-47dd-ac89-c89afe9c8ee8"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "bd813398-6dba-4603-a093-1fc0557d0765",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:47:04.554355Z",
+    "decided_at": "2026-10-24T11:47:04.643381Z"
+  },
+  {
+    "id": "8abb11c3-f11b-4a22-92bf-96b3b4a52590",
+    "project_id": "054785f8-eece-4b87-97c7-aa91c6390d66",
+    "kind": "constraint",
+    "title": "Never edit generated files",
+    "content": "The user explicitly stated that nothing under `generated/` should be edited, as the build process overwrites it.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "33d0d6fd-5376-4b4e-be23-1f4449ddb89a",
+      "events": [
+        "11:claude_code|36:33d0d6fd-5376-4b4e-be23-1f4449ddb89a|11:user_prompt|36:bb2df2d1-8a48-47dd-ac89-c89afe9c8ee8"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "81fdcb40-1ac5-4578-9394-2eba66ef09ef",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:47:04.554355Z",
+    "decided_at": "2026-10-24T11:47:04.650219Z"
+  }
+]

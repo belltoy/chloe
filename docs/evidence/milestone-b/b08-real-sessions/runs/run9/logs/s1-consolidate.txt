@@ -1,0 +1,4 @@
+[2m2026-10-24T12:03:37.154443Z[0m [33m WARN[0m [2mmemory_llm::ollama[0m[2m:[0m dropped extraction candidates [3mrejected[0m[2m=[0m["unstated_rule"]
+imported 0 events, queued 1 sessions (0 already queued), extracted 1 sessions: 5 new candidates
+proposals: 5 made, 0 deferred (model unavailable)
+review them with `chloe candidates list`

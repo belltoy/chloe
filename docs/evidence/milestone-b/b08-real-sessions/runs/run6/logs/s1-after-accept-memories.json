@@ -1,0 +1,86 @@
+[
+  {
+    "id": "875b5e06-c7b8-4e0a-ae0e-4471cd48e8fd",
+    "project_id": "d127a32c-1fc0-43f2-b058-6d7e6557800c",
+    "kind": "constraint",
+    "title": "Never edit files under generated/",
+    "content": "The user explicitly stated that no edits should be made to files under the generated/ directory as the build process overwrites them.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T11:46:42.433965Z",
+    "updated_at": "2026-10-24T11:46:42.433965Z",
+    "revision": 1
+  },
+  {
+    "id": "0d4f3832-be96-4e07-a0b5-3ce95ab8f9a3",
+    "project_id": "d127a32c-1fc0-43f2-b058-6d7e6557800c",
+    "kind": "procedure",
+    "title": "Fix migration for NOT NULL column",
+    "content": "To add a NOT NULL column to an existing SQLite table, provide a default value. Modify the schema.sql file to include DEFAULT '' for the owner column.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T11:46:42.42759Z",
+    "updated_at": "2026-10-24T11:46:42.42759Z",
+    "revision": 1
+  },
+  {
+    "id": "63ccfe79-c6a1-41fc-9758-9ae6528d6128",
+    "project_id": "d127a32c-1fc0-43f2-b058-6d7e6557800c",
+    "kind": "fact",
+    "title": "Publishing requires a signed file",
+    "content": "The `make publish` command requires a `.signed` file, which is only created by the `make sign` command. The sign command currently only creates a placeholder file.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T11:46:42.420926Z",
+    "updated_at": "2026-10-24T11:46:42.420926Z",
+    "revision": 1
+  },
+  {
+    "id": "4bc446d6-d887-47a1-81d4-7c08d679087e",
+    "project_id": "d127a32c-1fc0-43f2-b058-6d7e6557800c",
+    "kind": "gotcha",
+    "title": "Python version check may not exit non-zero",
+    "content": "The `check_py.py` script exits with code 0 even if the Python version is not newer than the one in the Dockerfile. This may require additional logic to ensure correct exit codes.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T11:46:42.414349Z",
+    "updated_at": "2026-10-24T11:46:42.414349Z",
+    "revision": 1
+  },
+  {
+    "id": "7e6c4af1-d945-460f-9972-828ce29c783a",
+    "project_id": "d127a32c-1fc0-43f2-b058-6d7e6557800c",
+    "kind": "procedure",
+    "title": "Implement import window check",
+    "content": "The script `import_window.py` checks if a given UTC weekday and hour falls within the read-only window (Friday 02:00 to 04:00). It prints 'blocked' during this window and 'ok' otherwise.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T11:46:42.406658Z",
+    "updated_at": "2026-10-24T11:46:42.406658Z",
+    "revision": 1
+  },
+  {
+    "id": "15d8b49e-375d-4ca4-8365-828dd3c6f4fa",
+    "project_id": "d127a32c-1fc0-43f2-b058-6d7e6557800c",
+    "kind": "procedure",
+    "title": "Deploy target region from config",
+    "content": "The script `deploy_target.py` reads the region from `deploy.cfg` and prints it. This provides a simple way to retrieve the deployment region from the configuration file.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T11:46:42.399798Z",
+    "updated_at": "2026-10-24T11:46:42.399798Z",
+    "revision": 1
+  },
+  {
+    "id": "041f3184-9a92-4302-adb1-ab577ab9e6ff",
+    "project_id": "d127a32c-1fc0-43f2-b058-6d7e6557800c",
+    "kind": "fact",
+    "title": "Makefile does not enforce version checks",
+    "content": "The Makefile does not include any checks for the version number when running `make publish`, so the version is not validated as part of the process.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T11:46:42.393342Z",
+    "updated_at": "2026-10-24T11:46:42.393342Z",
+    "revision": 1
+  }
+]

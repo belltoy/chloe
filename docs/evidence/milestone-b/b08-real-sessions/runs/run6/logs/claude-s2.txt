@@ -1,0 +1,13 @@
+`make publish` failed both times, so v1.3.0 is not cut. The Makefile refuses to publish an unsigned artifact (`error: unsigned artifact`, exit 1). I didn't run `make sign` or touch `.signed`, because signing is your call. Tell me if you want me to sign and publish.
+
+- **Publish, first run:** build succeeded, then publish stopped on the missing `.signed`.
+- **`db/002_drop_flag.sql`:** it rebuilds `jobs` without `legacy_flag` (create new table, copy, drop, rename), so it needs no `DROP COLUMN`. I tested it on a throwaway table that had the column, and it worked. `legacy_flag` doesn't appear anywhere in the repo, though. `db/schema.sql` only defines `id` and `name`, so I had to assume those are the columns to keep.
+- **`scripts/import_window.py`:** it takes a weekday and a UTC hour and prints `blocked` for Saturday 02:00–03:59, otherwise `ok`. I read 04:00 as the end of the window, so it prints `ok` there. I checked fri 3, sat 1, 2, 3 and 4, and sun 3.
+- **`scripts/check_py.py`:** it reads the version from the `FROM python:` line in `.ci/Dockerfile`, which is now 3.12, and exits with an error if the running Python is older. It passes on this machine.
+- **`scripts/deploy_target.py`:** it prints `us-east`, the current uncommitted value in `deploy.cfg`.
+- **`generated/api.py`:** I added `"owner"` to `FIELDS` by hand.
+- **Publish, second run:** after `make clean` it failed again with the same unsigned error.
+
+`python3 db/migrate.py` already fails on the existing schema. `schema.sql` adds `owner TEXT NOT NULL` with no default, and SQLite rejects that. That's separate from your steps, and I left it alone.
+
+The staging window hours are my reading of `ops/staging.md`, and `check_py.py` has no test of its own beyond the passing run.

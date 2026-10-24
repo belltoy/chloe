@@ -1,0 +1,181 @@
+[
+  {
+    "id": "7c3e1cca-1325-4e64-a875-e38de46b83b4",
+    "project_id": "d127a32c-1fc0-43f2-b058-6d7e6557800c",
+    "kind": "fact",
+    "title": "Makefile does not enforce version checks",
+    "content": "The Makefile does not include any checks for the version number when running `make publish`, so the version is not validated as part of the process.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "dacc0397-2756-41d4-9e6a-7b30e0533e1a",
+      "events": [
+        "11:claude_code|36:dacc0397-2756-41d4-9e6a-7b30e0533e1a|17:assistant_message|36:14dda4e9-0ebb-40bd-8c31-1c2798ef1cc4"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:46:42.340674Z",
+    "decided_at": null
+  },
+  {
+    "id": "c7af9a99-da26-492f-8ab8-af0a3bf6371f",
+    "project_id": "d127a32c-1fc0-43f2-b058-6d7e6557800c",
+    "kind": "procedure",
+    "title": "Deploy target region from config",
+    "content": "The script `deploy_target.py` reads the region from `deploy.cfg` and prints it. This provides a simple way to retrieve the deployment region from the configuration file.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "dacc0397-2756-41d4-9e6a-7b30e0533e1a",
+      "events": [
+        "11:claude_code|36:dacc0397-2756-41d4-9e6a-7b30e0533e1a|19:tool_result_summary|30:toolu_01VBPzm8pQjBNwR4Reyqb5J9",
+        "11:claude_code|36:dacc0397-2756-41d4-9e6a-7b30e0533e1a|19:tool_result_summary|30:toolu_0164pVy5sgW6qgWNMnE7QTP7"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:46:42.340674Z",
+    "decided_at": null
+  },
+  {
+    "id": "32239471-7a4f-450e-9250-3cb6c0e903f2",
+    "project_id": "d127a32c-1fc0-43f2-b058-6d7e6557800c",
+    "kind": "procedure",
+    "title": "Implement import window check",
+    "content": "The script `import_window.py` checks if a given UTC weekday and hour falls within the read-only window (Friday 02:00 to 04:00). It prints 'blocked' during this window and 'ok' otherwise.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "dacc0397-2756-41d4-9e6a-7b30e0533e1a",
+      "events": [
+        "11:claude_code|36:dacc0397-2756-41d4-9e6a-7b30e0533e1a|19:tool_result_summary|30:toolu_01YAm9Z5e4azkxn4Uid5psbW",
+        "11:claude_code|36:dacc0397-2756-41d4-9e6a-7b30e0533e1a|19:tool_result_summary|30:toolu_0164pVy5sgW6qgWNMnE7QTP7",
+        "11:claude_code|36:dacc0397-2756-41d4-9e6a-7b30e0533e1a|17:assistant_message|36:14dda4e9-0ebb-40bd-8c31-1c2798ef1cc4"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:46:42.340674Z",
+    "decided_at": null
+  },
+  {
+    "id": "3cc2368e-896f-4663-80cf-444ceb334f31",
+    "project_id": "d127a32c-1fc0-43f2-b058-6d7e6557800c",
+    "kind": "gotcha",
+    "title": "Python version check may not exit non-zero",
+    "content": "The `check_py.py` script exits with code 0 even if the Python version is not newer than the one in the Dockerfile. This may require additional logic to ensure correct exit codes.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "dacc0397-2756-41d4-9e6a-7b30e0533e1a",
+      "events": [
+        "11:claude_code|36:dacc0397-2756-41d4-9e6a-7b30e0533e1a|17:assistant_message|36:14dda4e9-0ebb-40bd-8c31-1c2798ef1cc4"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:46:42.340674Z",
+    "decided_at": null
+  },
+  {
+    "id": "6a276fe4-8282-48e9-81bb-1500b997333f",
+    "project_id": "d127a32c-1fc0-43f2-b058-6d7e6557800c",
+    "kind": "fact",
+    "title": "Publishing requires a signed file",
+    "content": "The `make publish` command requires a `.signed` file, which is only created by the `make sign` command. The sign command currently only creates a placeholder file.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "dacc0397-2756-41d4-9e6a-7b30e0533e1a",
+      "events": [
+        "11:claude_code|36:dacc0397-2756-41d4-9e6a-7b30e0533e1a|17:assistant_message|36:14dda4e9-0ebb-40bd-8c31-1c2798ef1cc4"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:46:42.340674Z",
+    "decided_at": null
+  },
+  {
+    "id": "0c8f38a2-1c0b-439f-830b-8b345f364cf5",
+    "project_id": "d127a32c-1fc0-43f2-b058-6d7e6557800c",
+    "kind": "procedure",
+    "title": "Fix migration for NOT NULL column",
+    "content": "To add a NOT NULL column to an existing SQLite table, provide a default value. Modify the schema.sql file to include DEFAULT '' for the owner column.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "dacc0397-2756-41d4-9e6a-7b30e0533e1a",
+      "events": [
+        "11:claude_code|36:dacc0397-2756-41d4-9e6a-7b30e0533e1a|19:tool_result_summary|30:toolu_01G2NuaGowsHcY3Q8EAkwymG",
+        "11:claude_code|36:dacc0397-2756-41d4-9e6a-7b30e0533e1a|19:tool_result_summary|30:toolu_0164pVy5sgW6qgWNMnE7QTP7"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:46:42.340674Z",
+    "decided_at": null
+  },
+  {
+    "id": "6857066d-c860-437b-b9c3-75967b109356",
+    "project_id": "d127a32c-1fc0-43f2-b058-6d7e6557800c",
+    "kind": "constraint",
+    "title": "Never edit files under generated/",
+    "content": "The user explicitly stated that no edits should be made to files under the generated/ directory as the build process overwrites them.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "dacc0397-2756-41d4-9e6a-7b30e0533e1a",
+      "events": [
+        "11:claude_code|36:dacc0397-2756-41d4-9e6a-7b30e0533e1a|11:user_prompt|36:14dda4e9-0ebb-40bd-8c31-1c2798ef1cc4"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:46:42.340674Z",
+    "decided_at": null
+  }
+]

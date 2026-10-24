@@ -1,0 +1,74 @@
+[
+  {
+    "id": "e4304cfa-fe6c-4731-b698-29e11d6e849c",
+    "project_id": "d98e4dce-4e07-4252-be4e-dca4b2818418",
+    "kind": "gotcha",
+    "title": "SQLite column addition requires default value",
+    "content": "Adding a NOT NULL column to an existing table in SQLite requires providing a default value, otherwise it will fail. The migration failed because the `owner` column was added without a default, and the existing row had no value.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T11:38:36.521784Z",
+    "updated_at": "2026-10-24T11:38:36.521784Z",
+    "revision": 1
+  },
+  {
+    "id": "e74046d2-858e-4296-924c-97d518e84a2b",
+    "project_id": "d98e4dce-4e07-4252-be4e-dca4b2818418",
+    "kind": "decision",
+    "title": "Use make sign publish to ensure signing before publishing",
+    "content": "The `make publish` command failed because the `.signed` marker was missing. The decision was to run `make sign publish` together to ensure the artifact is signed before attempting to publish.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T11:38:36.514201Z",
+    "updated_at": "2026-10-24T11:38:36.514201Z",
+    "revision": 1
+  },
+  {
+    "id": "d7963c46-2cd9-4eb4-bbf7-afc660b6690e",
+    "project_id": "d98e4dce-4e07-4252-be4e-dca4b2818418",
+    "kind": "constraint",
+    "title": "Never edit files under generated/",
+    "content": "Files under the `generated/` directory are overwritten by the build process and should never be edited manually.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T11:38:36.50659Z",
+    "updated_at": "2026-10-24T11:38:36.50659Z",
+    "revision": 1
+  },
+  {
+    "id": "045e5445-793b-4a9a-901a-c70eb1186715",
+    "project_id": "d98e4dce-4e07-4252-be4e-dca4b2818418",
+    "kind": "constraint",
+    "title": "CI uses Python 3.9, avoid match statements",
+    "content": "The CI environment runs Python 3.9, which does not support the `match` statement. Scripts must avoid using it to prevent syntax errors.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T11:38:36.498019Z",
+    "updated_at": "2026-10-24T11:38:36.498019Z",
+    "revision": 1
+  },
+  {
+    "id": "a85ae438-1591-4623-97e0-92d0f7b01ae1",
+    "project_id": "d98e4dce-4e07-4252-be4e-dca4b2818418",
+    "kind": "fact",
+    "title": "Releases are deployed to eu-west region",
+    "content": "All releases are automatically deployed to the `eu-west` region as per the project's configuration.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T11:38:36.489728Z",
+    "updated_at": "2026-10-24T11:38:36.489728Z",
+    "revision": 1
+  },
+  {
+    "id": "1ce930fa-a88c-4a6e-9846-7542220d5395",
+    "project_id": "d98e4dce-4e07-4252-be4e-dca4b2818418",
+    "kind": "gotcha",
+    "title": "make clean removes .signed marker",
+    "content": "Running `make clean` removes the `.signed` marker, which is required for publishing. After a clean, the `make sign` command must be run again to regenerate the marker.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T11:38:36.479771Z",
+    "updated_at": "2026-10-24T11:38:36.479771Z",
+    "revision": 1
+  }
+]

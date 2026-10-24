@@ -1,0 +1,12 @@
+All six steps are done. The final `make clean` then `make publish` fails, because `clean` removes `.signed`.
+
+1. **Publish failure:** `make publish` refuses to run without a `.signed` file, and only `make sign` creates it. `make sign publish` printed "published artifact".
+2. **Migration:** `ALTER TABLE ... ADD COLUMN owner TEXT NOT NULL` fails in SQLite when the column has no default and the table already has a row. I added `DEFAULT ''` in `db/schema.sql`, and `python3 db/migrate.py` now prints "migration ok". Existing rows get an empty owner. If you want a real owner value, set one explicitly.
+3. **`scripts/import_window.py`:** usage is `import_window.py <weekday> <hour>`, with the weekday as a name like `Fri` and the hour in UTC. It prints "blocked" on Friday for hours 2 and 3, and "ok" otherwise. I read "between 02:00 and 04:00" as ending at 04:00 exclusive. Checks: `Fri 3` gives blocked, `Fri 4` and `Mon 3` give ok.
+4. **`scripts/check_py.py`:** it reads the `FROM python:X.Y` line in `.ci/Dockerfile`, which is 3.9. It exits non-zero if the running Python is older than that. It passes here.
+5. **`scripts/deploy_target.py`:** it prints `eu-west`.
+6. **Clean, then publish:** `make clean` removed `dist` and `.signed`, so `make publish` failed again with "error: unsigned artifact". Publishing after a clean needs `make sign publish`. The Makefile could make `publish` depend on `sign`, but I left it alone because you didn't ask.
+
+I didn't touch `generated/`.
+
+I didn't test `check_py.py` against a Python older than 3.9, or `import_window.py` with bad input beyond its hour assert.

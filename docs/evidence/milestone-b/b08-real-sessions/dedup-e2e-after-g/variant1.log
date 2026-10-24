@@ -1,0 +1,44 @@
+== session 1: extract, then accept everything (the first copy of each fact) ==
+[2m2026-10-24T12:08:25.043404Z[0m [33m WARN[0m [2mmemory_llm::ollama[0m[2m:[0m dropped extraction candidates [3mrejected[0m[2m=[0m["unstated_rule", "unstated_rule"]
+imported 10 events, queued 1 sessions (0 already queued), extracted 1 sessions: 2 new candidates
+proposals: 2 made, 0 deferred (model unavailable)
+review them with `chloe candidates list`
+   8722ccc8 fact | Staging DB read-only window
+   c8007b40 constraint | Python version restriction
+== session 2: same facts again, other words; one contradiction ==
+imported 10 events, queued 1 sessions (0 already queued), extracted 1 sessions: 4 new candidates
+proposals: 4 made, 0 deferred (model unavailable)
+policy: 0 duplicates auto-merged, 1 conflicts flagged, 0 need a person
+review them with `chloe candidates list`
+-- candidates after the automatic step (state, proposal) --
+   conflict | conflict model | decision | CI image upgraded to Python 3.12
+   pending | create model | fact | Staging database is read-only on Saturday mornings
+   pending | create model | gotcha | SQLite version mismatch causes ALTER TABLE issues
+   pending | create model | gotcha | Signing must precede publishing
+-- active memories now (nothing was accepted from session 2 yet) --
+   8722ccc8 fact | Staging DB read-only window
+   c8007b40 constraint | Python version restriction
+== a person follows the model's proposal for what is still pending (merge / create); conflicts are left ==
+   a538ee8b gotcha | Signing must precede publishing
+   c2f64dee gotcha | SQLite version mismatch causes ALTER TABLE issues
+   f4076120 fact | Staging database is read-only on Saturday mornings
+   8722ccc8 fact | Staging DB read-only window
+   c8007b40 constraint | Python version restriction
+== checks ==
+Active memories about signing before publish: 1 (wanted 1)
+PASS A: no two equivalent Active memories
+FAIL B: a sqlite point is missing
+PASS C staging day: the new value is kept or open for a person
+PASS D python version: the new value is kept or open for a person
+-- provenance of each memory --
+memory a538ee8b:
+    2026-10-24 12:09:20.823202 +00:00:00  Created  bd101502-5be1-4ec3-8bd5-ceff7d336b47  claude_code session s2, 4 event(s)
+memory c2f64dee:
+    2026-10-24 12:09:20.816555 +00:00:00  Created  9f515d22-718e-4c54-8389-8aebe11512a9  claude_code session s2, 3 event(s)
+memory f4076120:
+    2026-10-24 12:09:20.807853 +00:00:00  Created  58cb2514-f246-47f0-9c54-55cf45c570e0  claude_code session s2, 1 event(s)
+memory 8722ccc8:
+    2026-10-24 12:08:25.094169 +00:00:00  Created  1bd7767a-6a7c-43f1-9bab-f0894bd18ec7  claude_code session s1, 1 event(s)
+memory c8007b40:
+    2026-10-24 12:08:25.08624 +00:00:00  Created  6bd30830-5181-4861-9920-b79a31058a80  claude_code session s1, 1 event(s)
+(memories after session 1: 2; after the automatic step of session 2: 2)

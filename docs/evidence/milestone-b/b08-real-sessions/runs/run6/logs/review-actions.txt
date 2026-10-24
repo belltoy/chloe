@@ -1,0 +1,5 @@
+accepted | Generated API fields update
+accepted | Python version check
+accepted | Column removal may require assumptions
+accepted | Column removal via migration
+accepted | Legacy flag removal

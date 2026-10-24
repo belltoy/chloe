@@ -1,0 +1,12 @@
+All six jobs are done. The last `make publish` fails again, as expected after `make clean`. `check_py.py` printed nothing, so it exited 0 on this Python.
+
+1. **Publish v1.2.0:** `publish` refuses to run without a `.signed` file, and only `make sign` creates it. I ran `make sign`, then `make publish`, which printed "published artifact". The Makefile never mentions v1.2.0, so the version isn't checked anywhere. `sign` only runs `touch .signed`, so it is a placeholder, not a real signature.
+2. **Migration:** SQLite won't add a `NOT NULL` column without a default to a table that already has rows. I changed the line in `db/schema.sql` to `owner TEXT NOT NULL DEFAULT ''`. `db/migrate.py` now prints "migration ok".
+3. **`scripts/import_window.py`:** takes a weekday (Monday is 0, Sunday is 6) and an hour, both in UTC. It prints "blocked" on Friday from 02:00 up to but not including 04:00, which is the read-only window in `ops/staging.md`, and "ok" otherwise. I spot-checked it: Friday at 3 gives "blocked" and Friday at 4 gives "ok".
+4. **`scripts/check_py.py`:** reads the Python version from `.ci/Dockerfile` (3.9) and exits non-zero if the running Python is older.
+5. **`scripts/deploy_target.py`:** prints "eu-west", the region in `deploy.cfg`.
+6. **`make clean` then `make publish`:** the publish fails with "error: unsigned artifact", because `clean` deletes `.signed` and `publish` depends only on `build`. Publishing needs `make sign` first every time. I left `dist/` in place after this last run.
+
+I didn't touch `generated/`.
+
+I didn't commit anything, and I didn't test `check_py.py` against an older Python.

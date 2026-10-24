@@ -1,0 +1,545 @@
+[
+  {
+    "id": "5aeec3ab-265e-402e-a3e1-1b4e97cdfcfa",
+    "project_id": "48111386-60eb-4ce7-bb80-f5698432e575",
+    "kind": "fact",
+    "title": "Python version upgraded to 3.12",
+    "content": "The CI image was upgraded and now runs Python 3.12, not 3.9, so match statements are fine.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "89dfafc4-319b-430d-854a-67d48234f6cd",
+      "events": [
+        "11:claude_code|36:89dfafc4-319b-430d-854a-67d48234f6cd|11:user_prompt|36:9d277da8-637f-4895-bb2d-77334e735cf6"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "model",
+      "reason": "The new note discusses a Python version upgrade, which is unrelated to the existing notes about file editing, deployment, signing, migrations, and SQLite constraints.",
+      "similar": [
+        {
+          "memory_id": "13380bc9-2fc3-40a8-a8db-325690d6d20d",
+          "title": "Never edit generated files",
+          "score": 1.279043642646449
+        },
+        {
+          "memory_id": "417fcc79-65e4-4ab3-b1f7-5edd12f99c5a",
+          "title": "No deploy step in Makefile",
+          "score": 0.35134496264227605
+        },
+        {
+          "memory_id": "f5fa202a-c61f-4afb-9328-e8f883fb464a",
+          "title": "Always sign before publishing",
+          "score": 0.34624499201975156
+        },
+        {
+          "memory_id": "0c32b620-e87d-48ba-bd58-9d6148a87abf",
+          "title": "Fix migration by adding default to NOT NULL column",
+          "score": 5.818908367211675e-6
+        },
+        {
+          "memory_id": "f2a3bea6-7983-415d-84d5-31e4d0d63aaa",
+          "title": "SQLite NOT NULL columns need defaults for existing rows",
+          "score": 4.426899201095728e-6
+        }
+      ]
+    },
+    "created_at": "2026-10-24T11:37:24.40054Z",
+    "decided_at": null
+  },
+  {
+    "id": "2362ef86-64c9-45af-a016-1c7269e4b306",
+    "project_id": "48111386-60eb-4ce7-bb80-f5698432e575",
+    "kind": "fact",
+    "title": "Database is read-only on Saturdays",
+    "content": "The database is read-only on Saturdays from 02:00 to 04:00 UTC (backup job), not Fridays.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "89dfafc4-319b-430d-854a-67d48234f6cd",
+      "events": [
+        "11:claude_code|36:89dfafc4-319b-430d-854a-67d48234f6cd|11:user_prompt|36:9d277da8-637f-4895-bb2d-77334e735cf6"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "model",
+      "reason": "The new note discusses a database read-only schedule on Saturdays, which is unrelated to the existing notes about migrations, publishing, SQLite constraints, and Makefile processes.",
+      "similar": [
+        {
+          "memory_id": "0c32b620-e87d-48ba-bd58-9d6148a87abf",
+          "title": "Fix migration by adding default to NOT NULL column",
+          "score": 3.174480846268842e-6
+        },
+        {
+          "memory_id": "f5fa202a-c61f-4afb-9328-e8f883fb464a",
+          "title": "Always sign before publishing",
+          "score": 2.8043956043956045e-6
+        },
+        {
+          "memory_id": "f2a3bea6-7983-415d-84d5-31e4d0d63aaa",
+          "title": "SQLite NOT NULL columns need defaults for existing rows",
+          "score": 1.7746870653685674e-6
+        },
+        {
+          "memory_id": "417fcc79-65e4-4ab3-b1f7-5edd12f99c5a",
+          "title": "No deploy step in Makefile",
+          "score": 1.6070528967254406e-6
+        },
+        {
+          "memory_id": "13380bc9-2fc3-40a8-a8db-325690d6d20d",
+          "title": "Never edit generated files",
+          "score": 1.1642335766423358e-6
+        }
+      ]
+    },
+    "created_at": "2026-10-24T11:37:24.40054Z",
+    "decided_at": null
+  },
+  {
+    "id": "dd8db9ef-9a29-4ce0-a6b6-decddc5c91d2",
+    "project_id": "48111386-60eb-4ce7-bb80-f5698432e575",
+    "kind": "gotcha",
+    "title": "Deploy script missing",
+    "content": "The repo has no deploy script and no version file, so there was nothing to name v1.3.0 or point at a region.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "89dfafc4-319b-430d-854a-67d48234f6cd",
+      "events": [
+        "11:claude_code|36:89dfafc4-319b-430d-854a-67d48234f6cd|17:assistant_message|36:9d277da8-637f-4895-bb2d-77334e735cf6"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "model",
+      "reason": "The new note discusses the absence of a deploy script and versioning issues, while existing notes cover deployment steps, signing procedures, and database constraints.",
+      "similar": [
+        {
+          "memory_id": "417fcc79-65e4-4ab3-b1f7-5edd12f99c5a",
+          "title": "No deploy step in Makefile",
+          "score": 4.3707188156901795
+        },
+        {
+          "memory_id": "f5fa202a-c61f-4afb-9328-e8f883fb464a",
+          "title": "Always sign before publishing",
+          "score": 1.4767524761653226
+        },
+        {
+          "memory_id": "13380bc9-2fc3-40a8-a8db-325690d6d20d",
+          "title": "Never edit generated files",
+          "score": 1.2790424784128729
+        },
+        {
+          "memory_id": "0c32b620-e87d-48ba-bd58-9d6148a87abf",
+          "title": "Fix migration by adding default to NOT NULL column",
+          "score": 4.096446164187917e-6
+        },
+        {
+          "memory_id": "f2a3bea6-7983-415d-84d5-31e4d0d63aaa",
+          "title": "SQLite NOT NULL columns need defaults for existing rows",
+          "score": 2.6620305980528514e-6
+        }
+      ]
+    },
+    "created_at": "2026-10-24T11:37:24.40054Z",
+    "decided_at": null
+  },
+  {
+    "id": "6b6de6df-65d1-4010-b944-894ac1aef14d",
+    "project_id": "48111386-60eb-4ce7-bb80-f5698432e575",
+    "kind": "gotcha",
+    "title": "Make clean removes .signed file",
+    "content": "After make clean you must run make sign again, the clean target throws away the .signed file.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "89dfafc4-319b-430d-854a-67d48234f6cd",
+      "events": [
+        "11:claude_code|36:89dfafc4-319b-430d-854a-67d48234f6cd|11:user_prompt|36:9d277da8-637f-4895-bb2d-77334e735cf6"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "model",
+      "reason": "The new note discusses the effect of `make clean` on the `.signed` file, which is unrelated to the existing notes about publishing, deployment, migrations, and file editing constraints.",
+      "similar": [
+        {
+          "memory_id": "f5fa202a-c61f-4afb-9328-e8f883fb464a",
+          "title": "Always sign before publishing",
+          "score": 5.76940127823551
+        },
+        {
+          "memory_id": "417fcc79-65e4-4ab3-b1f7-5edd12f99c5a",
+          "title": "No deploy step in Makefile",
+          "score": 0.3513425022482058
+        },
+        {
+          "memory_id": "0c32b620-e87d-48ba-bd58-9d6148a87abf",
+          "title": "Fix migration by adding default to NOT NULL column",
+          "score": 1.29938900203666e-6
+        },
+        {
+          "memory_id": "13380bc9-2fc3-40a8-a8db-325690d6d20d",
+          "title": "Never edit generated files",
+          "score": 1.1642335766423358e-6
+        },
+        {
+          "memory_id": "f2a3bea6-7983-415d-84d5-31e4d0d63aaa",
+          "title": "SQLite NOT NULL columns need defaults for existing rows",
+          "score": 8.873435326842837e-7
+        }
+      ]
+    },
+    "created_at": "2026-10-24T11:37:24.40054Z",
+    "decided_at": null
+  },
+  {
+    "id": "cda2569c-8200-4fc4-849b-57b6680a3347",
+    "project_id": "48111386-60eb-4ce7-bb80-f5698432e575",
+    "kind": "decision",
+    "title": "Editing generated files is allowed",
+    "content": "Editing files in generated/ is fine now, we stopped overwriting them in the build.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "89dfafc4-319b-430d-854a-67d48234f6cd",
+      "events": [
+        "11:claude_code|36:89dfafc4-319b-430d-854a-67d48234f6cd|11:user_prompt|36:9d277da8-637f-4895-bb2d-77334e735cf6"
+      ]
+    },
+    "state": "conflict",
+    "memory_id": "13380bc9-2fc3-40a8-a8db-325690d6d20d",
+    "reason": "flagged for review: The new note allows editing generated files, which directly contradicts the existing constraint that prohibits editing generated files.",
+    "proposal": {
+      "action": "conflict",
+      "target": "13380bc9-2fc3-40a8-a8db-325690d6d20d",
+      "method": "model",
+      "reason": "The new note allows editing generated files, which directly contradicts the existing constraint that prohibits editing generated files.",
+      "similar": [
+        {
+          "memory_id": "13380bc9-2fc3-40a8-a8db-325690d6d20d",
+          "title": "Never edit generated files",
+          "score": 5.488740016972957
+        },
+        {
+          "memory_id": "417fcc79-65e4-4ab3-b1f7-5edd12f99c5a",
+          "title": "No deploy step in Makefile",
+          "score": 3.408295132750285e-6
+        },
+        {
+          "memory_id": "0c32b620-e87d-48ba-bd58-9d6148a87abf",
+          "title": "Fix migration by adding default to NOT NULL column",
+          "score": 2.2213543199557352e-6
+        },
+        {
+          "memory_id": "f2a3bea6-7983-415d-84d5-31e4d0d63aaa",
+          "title": "SQLite NOT NULL columns need defaults for existing rows",
+          "score": 1.7746870653685674e-6
+        },
+        {
+          "memory_id": "f5fa202a-c61f-4afb-9328-e8f883fb464a",
+          "title": "Always sign before publishing",
+          "score": 1.4021978021978025e-6
+        }
+      ]
+    },
+    "created_at": "2026-10-24T11:37:24.40054Z",
+    "decided_at": "2026-10-24T11:37:44.056548Z"
+  },
+  {
+    "id": "a4028f54-aa95-4dc4-9f5b-9d58ddfd3315",
+    "project_id": "48111386-60eb-4ce7-bb80-f5698432e575",
+    "kind": "decision",
+    "title": "Legacy flag column removal",
+    "content": "The legacy_flag column is removed from the jobs table by rebuilding the table instead of using DROP COLUMN.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "89dfafc4-319b-430d-854a-67d48234f6cd",
+      "events": [
+        "11:claude_code|36:89dfafc4-319b-430d-854a-67d48234f6cd|11:user_prompt|36:9d277da8-637f-4895-bb2d-77334e735cf6",
+        "11:claude_code|36:89dfafc4-319b-430d-854a-67d48234f6cd|19:tool_result_summary|30:toolu_016HySwzG7Uwvh3v8LFUMYME",
+        "11:claude_code|36:89dfafc4-319b-430d-854a-67d48234f6cd|19:tool_result_summary|30:toolu_01BiuXwb9GN8jS5rQ7VXFhz4",
+        "11:claude_code|36:89dfafc4-319b-430d-854a-67d48234f6cd|17:assistant_message|36:9d277da8-637f-4895-bb2d-77334e735cf6"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "model",
+      "reason": "The new note discusses removing a legacy flag column, while existing notes address NOT NULL defaults, migration fixes, deploy steps, and file editing constraints.",
+      "similar": [
+        {
+          "memory_id": "f2a3bea6-7983-415d-84d5-31e4d0d63aaa",
+          "title": "SQLite NOT NULL columns need defaults for existing rows",
+          "score": 1.400357276955934
+        },
+        {
+          "memory_id": "0c32b620-e87d-48ba-bd58-9d6148a87abf",
+          "title": "Fix migration by adding default to NOT NULL column",
+          "score": 0.6013175511630645
+        },
+        {
+          "memory_id": "417fcc79-65e4-4ab3-b1f7-5edd12f99c5a",
+          "title": "No deploy step in Makefile",
+          "score": 2.651242749425932e-6
+        },
+        {
+          "memory_id": "13380bc9-2fc3-40a8-a8db-325690d6d20d",
+          "title": "Never edit generated files",
+          "score": 2.3284671532846717e-6
+        },
+        {
+          "memory_id": "f5fa202a-c61f-4afb-9328-e8f883fb464a",
+          "title": "Always sign before publishing",
+          "score": 1.4021978021978025e-6
+        }
+      ]
+    },
+    "created_at": "2026-10-24T11:37:24.40054Z",
+    "decided_at": null
+  },
+  {
+    "id": "1e5e4f24-11a2-49a4-82b7-77a03514838a",
+    "project_id": "48111386-60eb-4ce7-bb80-f5698432e575",
+    "kind": "decision",
+    "title": "SQLite version constraint",
+    "content": "The CI SQLite is 3.31, and DROP COLUMN only exists since 3.35, so rebuild the table instead of using DROP COLUMN.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "89dfafc4-319b-430d-854a-67d48234f6cd",
+      "events": [
+        "11:claude_code|36:89dfafc4-319b-430d-854a-67d48234f6cd|11:user_prompt|36:9d277da8-637f-4895-bb2d-77334e735cf6"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "model",
+      "reason": "The new note discusses SQLite version constraints and table rebuilds, while existing notes cover NOT NULL defaults, file editing rules, migration fixes, and deployment procedures.",
+      "similar": [
+        {
+          "memory_id": "f2a3bea6-7983-415d-84d5-31e4d0d63aaa",
+          "title": "SQLite NOT NULL columns need defaults for existing rows",
+          "score": 2.3644162155226995
+        },
+        {
+          "memory_id": "13380bc9-2fc3-40a8-a8db-325690d6d20d",
+          "title": "Never edit generated files",
+          "score": 1.2790424784128729
+        },
+        {
+          "memory_id": "0c32b620-e87d-48ba-bd58-9d6148a87abf",
+          "title": "Fix migration by adding default to NOT NULL column",
+          "score": 0.6013158287008615
+        },
+        {
+          "memory_id": "417fcc79-65e4-4ab3-b1f7-5edd12f99c5a",
+          "title": "No deploy step in Makefile",
+          "score": 0.3513425022482058
+        },
+        {
+          "memory_id": "f5fa202a-c61f-4afb-9328-e8f883fb464a",
+          "title": "Always sign before publishing",
+          "score": 0.34624218762414716
+        }
+      ]
+    },
+    "created_at": "2026-10-24T11:37:24.40054Z",
+    "decided_at": null
+  },
+  {
+    "id": "2aff034b-c681-464f-9650-0df0224d0ea2",
+    "project_id": "48111386-60eb-4ce7-bb80-f5698432e575",
+    "kind": "decision",
+    "title": "Release region changed to us-east",
+    "content": "The release region was changed to us-east from now on, not eu-west.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "89dfafc4-319b-430d-854a-67d48234f6cd",
+      "events": [
+        "11:claude_code|36:89dfafc4-319b-430d-854a-67d48234f6cd|11:user_prompt|36:9d277da8-637f-4895-bb2d-77334e735cf6"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "supersede",
+      "target": "417fcc79-65e4-4ab3-b1f7-5edd12f99c5a",
+      "method": "model",
+      "reason": "The new note states the release region is now us-east, replacing the previous eu-west region mentioned in \"No deploy step in Makefile\".",
+      "similar": [
+        {
+          "memory_id": "417fcc79-65e4-4ab3-b1f7-5edd12f99c5a",
+          "title": "No deploy step in Makefile",
+          "score": 4.588643282964179
+        },
+        {
+          "memory_id": "0c32b620-e87d-48ba-bd58-9d6148a87abf",
+          "title": "Fix migration by adding default to NOT NULL column",
+          "score": 5.818908367211675e-6
+        },
+        {
+          "memory_id": "f2a3bea6-7983-415d-84d5-31e4d0d63aaa",
+          "title": "SQLite NOT NULL columns need defaults for existing rows",
+          "score": 4.426899201095728e-6
+        },
+        {
+          "memory_id": "f5fa202a-c61f-4afb-9328-e8f883fb464a",
+          "title": "Always sign before publishing",
+          "score": 4.206593406593406e-6
+        },
+        {
+          "memory_id": "13380bc9-2fc3-40a8-a8db-325690d6d20d",
+          "title": "Never edit generated files",
+          "score": 2.3284671532846717e-6
+        }
+      ],
+      "needs_review": "replacing a memory is always decided by a person"
+    },
+    "created_at": "2026-10-24T11:37:24.40054Z",
+    "decided_at": null
+  },
+  {
+    "id": "46bc6726-130b-41b7-be29-f0c1ddbb1528",
+    "project_id": "48111386-60eb-4ce7-bb80-f5698432e575",
+    "kind": "fact",
+    "title": "No deploy step in Makefile",
+    "content": "The `make publish` command does not include a deploy step, so the eu-west region was not affected by the release.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "c9382b79-ec9f-4228-9ef6-9b1676e76bbd",
+      "events": [
+        "11:claude_code|36:c9382b79-ec9f-4228-9ef6-9b1676e76bbd|17:assistant_message|36:d6ef8144-af2e-4ead-b995-38405da4b4e4"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "417fcc79-65e4-4ab3-b1f7-5edd12f99c5a",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:36:43.480794Z",
+    "decided_at": "2026-10-24T11:36:43.559296Z"
+  },
+  {
+    "id": "c5e97006-c0da-4bdb-809d-b3f71e7fbbb6",
+    "project_id": "48111386-60eb-4ce7-bb80-f5698432e575",
+    "kind": "procedure",
+    "title": "Fix migration by adding default to NOT NULL column",
+    "content": "To resolve the migration error, the `owner` column in `schema.sql` was modified to include `DEFAULT ''`, allowing existing rows to be populated with an empty string.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "c9382b79-ec9f-4228-9ef6-9b1676e76bbd",
+      "events": [
+        "11:claude_code|36:c9382b79-ec9f-4228-9ef6-9b1676e76bbd|11:user_prompt|36:d6ef8144-af2e-4ead-b995-38405da4b4e4",
+        "11:claude_code|36:c9382b79-ec9f-4228-9ef6-9b1676e76bbd|17:assistant_message|36:d6ef8144-af2e-4ead-b995-38405da4b4e4"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "0c32b620-e87d-48ba-bd58-9d6148a87abf",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:36:43.480794Z",
+    "decided_at": "2026-10-24T11:36:43.566687Z"
+  },
+  {
+    "id": "0f109169-32b8-41c1-9e9c-44f7454f8675",
+    "project_id": "48111386-60eb-4ce7-bb80-f5698432e575",
+    "kind": "gotcha",
+    "title": "SQLite NOT NULL columns need defaults for existing rows",
+    "content": "Adding a `NOT NULL` column to a table with existing rows in SQLite requires a default value, otherwise it will fail. The `owner` column was fixed by adding `DEFAULT ''`.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "c9382b79-ec9f-4228-9ef6-9b1676e76bbd",
+      "events": [
+        "11:claude_code|36:c9382b79-ec9f-4228-9ef6-9b1676e76bbd|11:user_prompt|36:d6ef8144-af2e-4ead-b995-38405da4b4e4",
+        "11:claude_code|36:c9382b79-ec9f-4228-9ef6-9b1676e76bbd|17:assistant_message|36:d6ef8144-af2e-4ead-b995-38405da4b4e4"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "f2a3bea6-7983-415d-84d5-31e4d0d63aaa",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:36:43.480794Z",
+    "decided_at": "2026-10-24T11:36:43.574042Z"
+  },
+  {
+    "id": "b4e8666e-9a18-4dda-8885-d1d5c78fc236",
+    "project_id": "48111386-60eb-4ce7-bb80-f5698432e575",
+    "kind": "constraint",
+    "title": "Never edit generated files",
+    "content": "Files under `generated/` are overwritten by the build process and should not be manually edited.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "c9382b79-ec9f-4228-9ef6-9b1676e76bbd",
+      "events": [
+        "11:claude_code|36:c9382b79-ec9f-4228-9ef6-9b1676e76bbd|11:user_prompt|36:d6ef8144-af2e-4ead-b995-38405da4b4e4"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "13380bc9-2fc3-40a8-a8db-325690d6d20d",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:36:43.480794Z",
+    "decided_at": "2026-10-24T11:36:43.580789Z"
+  },
+  {
+    "id": "606a4e25-dbe8-414e-a6d6-87add6f9c225",
+    "project_id": "48111386-60eb-4ce7-bb80-f5698432e575",
+    "kind": "decision",
+    "title": "Always sign before publishing",
+    "content": "The `publish` target requires the `.signed` marker to run. It was missing, so `make sign publish` was used to ensure publishing could proceed.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "c9382b79-ec9f-4228-9ef6-9b1676e76bbd",
+      "events": [
+        "11:claude_code|36:c9382b79-ec9f-4228-9ef6-9b1676e76bbd|11:user_prompt|36:d6ef8144-af2e-4ead-b995-38405da4b4e4",
+        "11:claude_code|36:c9382b79-ec9f-4228-9ef6-9b1676e76bbd|19:tool_result_summary|30:toolu_01CcPUteBReCzWAB5zuuKdGd",
+        "11:claude_code|36:c9382b79-ec9f-4228-9ef6-9b1676e76bbd|17:assistant_message|36:d6ef8144-af2e-4ead-b995-38405da4b4e4"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "f5fa202a-c61f-4afb-9328-e8f883fb464a",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:36:43.480794Z",
+    "decided_at": "2026-10-24T11:36:43.587488Z"
+  }
+]

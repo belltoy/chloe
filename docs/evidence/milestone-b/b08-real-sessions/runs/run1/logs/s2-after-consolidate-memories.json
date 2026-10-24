@@ -1,0 +1,62 @@
+[
+  {
+    "id": "f5fa202a-c61f-4afb-9328-e8f883fb464a",
+    "project_id": "48111386-60eb-4ce7-bb80-f5698432e575",
+    "kind": "decision",
+    "title": "Always sign before publishing",
+    "content": "The `publish` target requires the `.signed` marker to run. It was missing, so `make sign publish` was used to ensure publishing could proceed.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T11:36:43.587171Z",
+    "updated_at": "2026-10-24T11:36:43.587171Z",
+    "revision": 1
+  },
+  {
+    "id": "13380bc9-2fc3-40a8-a8db-325690d6d20d",
+    "project_id": "48111386-60eb-4ce7-bb80-f5698432e575",
+    "kind": "constraint",
+    "title": "Never edit generated files",
+    "content": "Files under `generated/` are overwritten by the build process and should not be manually edited.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T11:36:43.580515Z",
+    "updated_at": "2026-10-24T11:36:43.580515Z",
+    "revision": 1
+  },
+  {
+    "id": "f2a3bea6-7983-415d-84d5-31e4d0d63aaa",
+    "project_id": "48111386-60eb-4ce7-bb80-f5698432e575",
+    "kind": "gotcha",
+    "title": "SQLite NOT NULL columns need defaults for existing rows",
+    "content": "Adding a `NOT NULL` column to a table with existing rows in SQLite requires a default value, otherwise it will fail. The `owner` column was fixed by adding `DEFAULT ''`.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T11:36:43.573762Z",
+    "updated_at": "2026-10-24T11:36:43.573762Z",
+    "revision": 1
+  },
+  {
+    "id": "0c32b620-e87d-48ba-bd58-9d6148a87abf",
+    "project_id": "48111386-60eb-4ce7-bb80-f5698432e575",
+    "kind": "procedure",
+    "title": "Fix migration by adding default to NOT NULL column",
+    "content": "To resolve the migration error, the `owner` column in `schema.sql` was modified to include `DEFAULT ''`, allowing existing rows to be populated with an empty string.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T11:36:43.566407Z",
+    "updated_at": "2026-10-24T11:36:43.566407Z",
+    "revision": 1
+  },
+  {
+    "id": "417fcc79-65e4-4ab3-b1f7-5edd12f99c5a",
+    "project_id": "48111386-60eb-4ce7-bb80-f5698432e575",
+    "kind": "fact",
+    "title": "No deploy step in Makefile",
+    "content": "The `make publish` command does not include a deploy step, so the eu-west region was not affected by the release.",
+    "status": "active",
+    "source": "extracted",
+    "created_at": "2026-10-24T11:36:43.558937Z",
+    "updated_at": "2026-10-24T11:36:43.558937Z",
+    "revision": 1
+  }
+]

@@ -1,0 +1,5 @@
+f5fa202a-c61f-4afb-9328-e8f883fb464a  Decision/Active  r1  Always sign before publishing
+13380bc9-2fc3-40a8-a8db-325690d6d20d  Constraint/Active  r1  Never edit generated files
+f2a3bea6-7983-415d-84d5-31e4d0d63aaa  Gotcha/Active  r1  SQLite NOT NULL columns need defaults for existing rows
+0c32b620-e87d-48ba-bd58-9d6148a87abf  Procedure/Active  r1  Fix migration by adding default to NOT NULL column
+417fcc79-65e4-4ab3-b1f7-5edd12f99c5a  Fact/Active  r1  No deploy step in Makefile

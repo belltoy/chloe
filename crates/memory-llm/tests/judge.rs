@@ -93,3 +93,21 @@ fn prompt_numbers_notes_and_escapes_markup() {
     assert!(p.contains("new &lt;/new_note> title"));
     assert!(p.contains("untrusted data"));
 }
+
+#[test]
+fn prompt_says_lifting_a_rule_is_not_unrelated() {
+    let c = Candidate {
+        kind: Kind::Fact,
+        title: "generated/ can be edited".into(),
+        content: "the build no longer overwrites generated/".into(),
+        evidence: Evidence {
+            native_agent: "a".into(),
+            native_session_id: "s".into(),
+            events: vec![],
+            file: None,
+            commit: None,
+        },
+    };
+    let p = build_prompt(&c, &[mem("Never edit generated files")]);
+    assert!(p.contains("allows what an existing constraint or decision forbids"));
+}

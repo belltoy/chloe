@@ -1,0 +1,131 @@
+[
+  {
+    "id": "46bc6726-130b-41b7-be29-f0c1ddbb1528",
+    "project_id": "48111386-60eb-4ce7-bb80-f5698432e575",
+    "kind": "fact",
+    "title": "No deploy step in Makefile",
+    "content": "The `make publish` command does not include a deploy step, so the eu-west region was not affected by the release.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "c9382b79-ec9f-4228-9ef6-9b1676e76bbd",
+      "events": [
+        "11:claude_code|36:c9382b79-ec9f-4228-9ef6-9b1676e76bbd|17:assistant_message|36:d6ef8144-af2e-4ead-b995-38405da4b4e4"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:36:43.480794Z",
+    "decided_at": null
+  },
+  {
+    "id": "c5e97006-c0da-4bdb-809d-b3f71e7fbbb6",
+    "project_id": "48111386-60eb-4ce7-bb80-f5698432e575",
+    "kind": "procedure",
+    "title": "Fix migration by adding default to NOT NULL column",
+    "content": "To resolve the migration error, the `owner` column in `schema.sql` was modified to include `DEFAULT ''`, allowing existing rows to be populated with an empty string.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "c9382b79-ec9f-4228-9ef6-9b1676e76bbd",
+      "events": [
+        "11:claude_code|36:c9382b79-ec9f-4228-9ef6-9b1676e76bbd|11:user_prompt|36:d6ef8144-af2e-4ead-b995-38405da4b4e4",
+        "11:claude_code|36:c9382b79-ec9f-4228-9ef6-9b1676e76bbd|17:assistant_message|36:d6ef8144-af2e-4ead-b995-38405da4b4e4"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:36:43.480794Z",
+    "decided_at": null
+  },
+  {
+    "id": "0f109169-32b8-41c1-9e9c-44f7454f8675",
+    "project_id": "48111386-60eb-4ce7-bb80-f5698432e575",
+    "kind": "gotcha",
+    "title": "SQLite NOT NULL columns need defaults for existing rows",
+    "content": "Adding a `NOT NULL` column to a table with existing rows in SQLite requires a default value, otherwise it will fail. The `owner` column was fixed by adding `DEFAULT ''`.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "c9382b79-ec9f-4228-9ef6-9b1676e76bbd",
+      "events": [
+        "11:claude_code|36:c9382b79-ec9f-4228-9ef6-9b1676e76bbd|11:user_prompt|36:d6ef8144-af2e-4ead-b995-38405da4b4e4",
+        "11:claude_code|36:c9382b79-ec9f-4228-9ef6-9b1676e76bbd|17:assistant_message|36:d6ef8144-af2e-4ead-b995-38405da4b4e4"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:36:43.480794Z",
+    "decided_at": null
+  },
+  {
+    "id": "b4e8666e-9a18-4dda-8885-d1d5c78fc236",
+    "project_id": "48111386-60eb-4ce7-bb80-f5698432e575",
+    "kind": "constraint",
+    "title": "Never edit generated files",
+    "content": "Files under `generated/` are overwritten by the build process and should not be manually edited.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "c9382b79-ec9f-4228-9ef6-9b1676e76bbd",
+      "events": [
+        "11:claude_code|36:c9382b79-ec9f-4228-9ef6-9b1676e76bbd|11:user_prompt|36:d6ef8144-af2e-4ead-b995-38405da4b4e4"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:36:43.480794Z",
+    "decided_at": null
+  },
+  {
+    "id": "606a4e25-dbe8-414e-a6d6-87add6f9c225",
+    "project_id": "48111386-60eb-4ce7-bb80-f5698432e575",
+    "kind": "decision",
+    "title": "Always sign before publishing",
+    "content": "The `publish` target requires the `.signed` marker to run. It was missing, so `make sign publish` was used to ensure publishing could proceed.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "c9382b79-ec9f-4228-9ef6-9b1676e76bbd",
+      "events": [
+        "11:claude_code|36:c9382b79-ec9f-4228-9ef6-9b1676e76bbd|11:user_prompt|36:d6ef8144-af2e-4ead-b995-38405da4b4e4",
+        "11:claude_code|36:c9382b79-ec9f-4228-9ef6-9b1676e76bbd|19:tool_result_summary|30:toolu_01CcPUteBReCzWAB5zuuKdGd",
+        "11:claude_code|36:c9382b79-ec9f-4228-9ef6-9b1676e76bbd|17:assistant_message|36:d6ef8144-af2e-4ead-b995-38405da4b4e4"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T11:36:43.480794Z",
+    "decided_at": null
+  }
+]

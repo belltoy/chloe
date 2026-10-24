@@ -1,0 +1,11 @@
+Please ship v1.3.0, the deploy script died on me last time. Then write db/002_drop_flag.sql that removes the legacy_flag column from the jobs table.
+
+Notes for the project:
+1. Heads up, staging is actually read-only on Saturdays, 02:00-04:00 UTC, for the backup. Please update what we know about Fridays.
+2. CI moved to Python 3.12 (it was 3.9). You can use match now.
+3. We moved production, the target region is us-east now instead of eu-west.
+4. You may edit generated/ by hand from now on; the build no longer regenerates it.
+5. After make clean you must run make sign again, the clean target throws away the .signed file.
+6. DROP COLUMN needs SQLite 3.35 and CI has 3.31, so recreate the table.
+
+Finish with a short summary.

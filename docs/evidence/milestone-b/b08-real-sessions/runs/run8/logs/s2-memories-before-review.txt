@@ -1,0 +1,7 @@
+32819494-00ba-4e07-90ef-94e1cc99c4c4  Constraint/Active  r1  Never edit generated/ directory
+6ad4b1a6-a7a6-42c6-95b8-5ad57e32d511  Gotcha/Active  r1  Default value needed for owner column
+0af42d75-33b3-4988-bec2-aa4238152610  Procedure/Active  r1  Fix migration by adding default value
+bdafd665-9c6e-41ba-936a-07f1051f5c1b  Procedure/Active  r1  Implement import_window.py logic
+4f501fc5-ae2d-4a74-98c1-f4a065076037  Procedure/Active  r1  Check Python version against Dockerfile
+40a56323-bef9-4ba0-869d-ea0add7086ae  Procedure/Active  r1  Extract region from deploy.cfg
+e60a4ef8-39f5-46ac-9945-f5c103caf7dc  Gotcha/Active  r1  Final publish still failed

@@ -1,0 +1,41 @@
+== session 1: extract, then accept everything (the first copy of each fact) ==
+[2m2026-10-24T12:08:17.745829Z[0m [33m WARN[0m [2mmemory_llm::ollama[0m[2m:[0m dropped extraction candidates [3mrejected[0m[2m=[0m["unstated_rule", "unstated_rule"]
+imported 10 events, queued 1 sessions (0 already queued), extracted 1 sessions: 2 new candidates
+proposals: 2 made, 0 deferred (model unavailable)
+review them with `chloe candidates list`
+   fc4fea2b fact | Staging DB read-only window
+   2fd08ac6 constraint | Python version restriction
+== session 2: same facts again, other words; one contradiction ==
+imported 10 events, queued 1 sessions (0 already queued), extracted 1 sessions: 4 new candidates
+proposals: 4 made, 0 deferred (model unavailable)
+policy: 0 duplicates auto-merged, 2 conflicts flagged, 0 need a person
+review them with `chloe candidates list`
+-- candidates after the automatic step (state, proposal) --
+   conflict | conflict model | decision | CI image upgraded to Python 3.12
+   conflict | conflict model | fact | Staging is read-only on Saturdays
+   pending | create model | gotcha | SQLite version mismatch causes ALTER TABLE issues
+   pending | create model | gotcha | Signing must precede publishing
+-- active memories now (nothing was accepted from session 2 yet) --
+   fc4fea2b fact | Staging DB read-only window
+   2fd08ac6 constraint | Python version restriction
+== a person follows the model's proposal for what is still pending (merge / create); conflicts are left ==
+   1c36d67f gotcha | Signing must precede publishing
+   dbbd2f1a gotcha | SQLite version mismatch causes ALTER TABLE issues
+   fc4fea2b fact | Staging DB read-only window
+   2fd08ac6 constraint | Python version restriction
+== checks ==
+Active memories about signing before publish: 1 (wanted 1)
+PASS A: no two equivalent Active memories
+FAIL B: a sqlite point is missing
+PASS C staging day: the new value is kept or open for a person
+PASS D python version: the new value is kept or open for a person
+-- provenance of each memory --
+memory 1c36d67f:
+    2026-10-24 12:09:19.274144 +00:00:00  Created  408c739c-426c-4580-9a75-55b2527d0bb6  claude_code session s2, 4 event(s)
+memory dbbd2f1a:
+    2026-10-24 12:09:19.266802 +00:00:00  Created  563be916-3152-49e3-b591-f6d9014d6d43  claude_code session s2, 3 event(s)
+memory fc4fea2b:
+    2026-10-24 12:08:17.814068 +00:00:00  Created  a8df307e-f7f6-4dfd-a1b1-74f89769582d  claude_code session s1, 1 event(s)
+memory 2fd08ac6:
+    2026-10-24 12:08:17.802382 +00:00:00  Created  8f565d02-d52c-45dc-9ee5-893a3d469590  claude_code session s1, 1 event(s)
+(memories after session 1: 2; after the automatic step of session 2: 2)

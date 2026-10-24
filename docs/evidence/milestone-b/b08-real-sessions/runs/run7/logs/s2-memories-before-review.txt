@@ -1,0 +1,8 @@
+85336cb9-33df-40ba-a87a-64dd437d9a78  Decision/Active  r1  Always sign before publishing
+047d414c-ae8d-46e6-9313-efb0244002db  Constraint/Active  r1  Never edit generated files
+c45979b1-c2df-4c7f-8a9a-af84c4131e5a  Procedure/Active  r1  Fix SQLite NOT NULL column error
+c9279c7e-ee06-4492-89a3-eddc2468870a  Gotcha/Active  r1  SQLite won't add NOT NULL columns without defaults
+9cc27555-65e2-46ed-ace3-d4c6a86618db  Fact/Active  r1  Staging database import window
+bd9cacdb-60d6-450d-914b-009d6b9f3170  Procedure/Active  r1  Check Python version against Dockerfile
+ea1b0656-36d4-4332-b727-c6322316ed3f  Procedure/Active  r1  Extract region from deploy configuration
+1dbcb8c3-c5bc-4b02-a43d-2cb27f8669a2  Gotcha/Active  r1  Publishing without version string

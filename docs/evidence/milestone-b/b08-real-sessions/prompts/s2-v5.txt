@@ -1,0 +1,13 @@
+Ship v1.3.0 please; publish target, check it works.
+
+Need the legacy_flag column gone from jobs. CI has SQLite 3.31 and DROP COLUMN arrived in 3.35, so recreate the table without the column in db/002_drop_flag.sql.
+
+scripts/import_window.py: print ok/blocked for a UTC weekday+hour, based on ops/staging.md.
+
+scripts/check_py.py: fail if the interpreter is older than what .ci/Dockerfile uses.
+
+scripts/deploy_target.py: print the region configured in deploy.cfg.
+
+Then clean and publish again, what happens? And note generated/ is no longer overwritten by the build, so you can edit it directly now; add "owner" to FIELDS in generated/api.py.
+
+Finish with a short summary of what each step turned up.

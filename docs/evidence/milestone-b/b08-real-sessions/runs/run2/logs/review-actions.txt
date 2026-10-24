@@ -1,0 +1,7 @@
+accepted | No git tag or commit for v1.3.0
+merged   | Must run make sign after clean
+accepted | Update NOTES.md with project info
+accepted | Staging read-only window
+accepted | Recreate table to drop legacy_flag
+accepted | SQLite version for DROP COLUMN
+merged   | Use make sign before publish

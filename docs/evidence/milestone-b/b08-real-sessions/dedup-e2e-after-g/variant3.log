@@ -1,0 +1,41 @@
+== session 1: extract, then accept everything (the first copy of each fact) ==
+[2m2026-10-24T12:08:32.318552Z[0m [33m WARN[0m [2mmemory_llm::ollama[0m[2m:[0m dropped extraction candidates [3mrejected[0m[2m=[0m["unstated_rule", "unstated_rule"]
+imported 10 events, queued 1 sessions (0 already queued), extracted 1 sessions: 2 new candidates
+proposals: 2 made, 0 deferred (model unavailable)
+review them with `chloe candidates list`
+   29123c7b fact | Staging DB read-only window
+   29138b6d constraint | Python version restriction
+== session 2: same facts again, other words; one contradiction ==
+imported 10 events, queued 1 sessions (0 already queued), extracted 1 sessions: 4 new candidates
+proposals: 4 made, 0 deferred (model unavailable)
+policy: 0 duplicates auto-merged, 2 conflicts flagged, 0 need a person
+review them with `chloe candidates list`
+-- candidates after the automatic step (state, proposal) --
+   conflict | conflict model | decision | Upgrade CI image to Python 3.12
+   conflict | conflict model | fact | Staging DB is read-only during backups
+   pending | create model | gotcha | SQLite version mismatch causes ALTER TABLE issues
+   pending | create model | gotcha | Signing must precede publishing
+-- active memories now (nothing was accepted from session 2 yet) --
+   29123c7b fact | Staging DB read-only window
+   29138b6d constraint | Python version restriction
+== a person follows the model's proposal for what is still pending (merge / create); conflicts are left ==
+   a1a5f642 gotcha | Signing must precede publishing
+   725bcd2f gotcha | SQLite version mismatch causes ALTER TABLE issues
+   29123c7b fact | Staging DB read-only window
+   29138b6d constraint | Python version restriction
+== checks ==
+Active memories about signing before publish: 1 (wanted 1)
+PASS A: no two equivalent Active memories
+FAIL B: a sqlite point is missing
+PASS C staging day: the new value is kept or open for a person
+PASS D python version: the new value is kept or open for a person
+-- provenance of each memory --
+memory a1a5f642:
+    2026-10-24 12:09:22.44088 +00:00:00  Created  750a8367-78f3-4ad1-817e-6ffc7f4d5696  claude_code session s2, 4 event(s)
+memory 725bcd2f:
+    2026-10-24 12:09:22.433742 +00:00:00  Created  6da8eb01-245d-4602-9698-567f7ff78adb  claude_code session s2, 3 event(s)
+memory 29123c7b:
+    2026-10-24 12:08:32.392286 +00:00:00  Created  2954a6dd-8121-4f7c-96d7-2d8644dd0ede  claude_code session s1, 1 event(s)
+memory 29138b6d:
+    2026-10-24 12:08:32.38226 +00:00:00  Created  1a62ce17-6777-43e4-93e0-48a36e2d300f  claude_code session s1, 1 event(s)
+(memories after session 1: 2; after the automatic step of session 2: 2)

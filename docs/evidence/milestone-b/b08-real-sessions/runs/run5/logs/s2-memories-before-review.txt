@@ -1,0 +1,7 @@
+81fdcb40-1ac5-4578-9394-2eba66ef09ef  Constraint/Active  r1  Never edit generated files
+bd813398-6dba-4603-a093-1fc0557d0765  Procedure/Active  r1  Fixing the owner column migration
+c344dbfe-1044-4dee-bad2-fd20831bda2d  Gotcha/Active  r1  SQLite migration with NOT NULL columns
+9f54a224-eb08-4ae8-a2d2-5f798b19866a  Procedure/Active  r1  Implementing import_window.py
+810823ef-7010-4713-a7b1-7d711bfc73c8  Procedure/Active  r1  Implementing check_py.py
+dbafdd6d-9b19-4f7c-bd1a-daa890a2db8d  Procedure/Active  r1  Implementing deploy_target.py
+03ed7df3-f345-4bbf-b129-c79ace1a6416  Fact/Active  r1  Python version check in CI

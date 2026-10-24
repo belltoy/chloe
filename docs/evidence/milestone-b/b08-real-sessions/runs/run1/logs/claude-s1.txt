@@ -1,0 +1,6 @@
+Both problems are fixed: `make publish` now succeeds and `python3 db/migrate.py` prints "migration ok".
+
+- **Publish:** The `publish` target refuses to run without the `.signed` marker, and it was missing. I ran `make sign publish` and it published. I didn't deploy anywhere. The Makefile has no deploy step, so I didn't touch the eu-west region.
+- **Migration:** `schema.sql` adds `owner TEXT NOT NULL` to `jobs` after a row is already inserted. SQLite rejects a NOT NULL column with no default when rows exist. I changed it to `owner TEXT NOT NULL DEFAULT ''`.
+
+I only ran the migration against the in-memory database in `migrate.py`, not staging. Existing rows get an empty owner, so set real owners if that matters.

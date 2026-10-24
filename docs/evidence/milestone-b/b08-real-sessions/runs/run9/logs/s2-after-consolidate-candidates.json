@@ -1,0 +1,551 @@
+[
+  {
+    "id": "0aaf81b3-c3ff-4a13-9504-c69a0ac0efb0",
+    "project_id": "51a211df-31af-4e2e-a8e2-a3ed8d0c6407",
+    "kind": "gotcha",
+    "title": "SQLite version constraint",
+    "content": "The `DROP COLUMN` operation requires SQLite 3.35, but the CI environment is running SQLite 3.31. As a result, the migration script copies the table without the `legacy_flag` column instead of dropping it directly.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "1a4e9163-23a6-42c4-89b0-b51b0dbc8754",
+      "events": [
+        "11:claude_code|36:1a4e9163-23a6-42c4-89b0-b51b0dbc8754|11:user_prompt|36:b143eef6-730f-4803-9d7c-a8e13bc0cb1b",
+        "11:claude_code|36:1a4e9163-23a6-42c4-89b0-b51b0dbc8754|17:assistant_message|36:b143eef6-730f-4803-9d7c-a8e13bc0cb1b"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "model",
+      "reason": "The new note discusses SQLite version constraints affecting a migration script, while existing notes cover Python version checks, database import windows, migration fixes, and file editing constraints. No direct relation or conflict is evident.",
+      "similar": [
+        {
+          "memory_id": "a8e9f768-76db-4c97-9ea4-1306ca6b05d0",
+          "title": "Check Python version against Dockerfile",
+          "score": 3.4549896831244515
+        },
+        {
+          "memory_id": "5257d4c6-36aa-4671-8db5-13bcba020b88",
+          "title": "Staging database import window rules",
+          "score": 1.421077098252876
+        },
+        {
+          "memory_id": "ece420d0-ab91-42cd-926d-77a3cbeb518a",
+          "title": "Fix migration error by adding default value",
+          "score": 1.3947980912671465
+        },
+        {
+          "memory_id": "5bc9957f-45ec-4a19-8539-520694d14397",
+          "title": "Never edit files under generated/",
+          "score": 1.6369341102644556e-6
+        },
+        {
+          "memory_id": "044acefa-e2c1-48c8-ba57-ef1f0bcdab71",
+          "title": "Deploy target region from config file",
+          "score": 1.6369341102644556e-6
+        }
+      ]
+    },
+    "created_at": "2026-10-24T12:04:53.13952Z",
+    "decided_at": null
+  },
+  {
+    "id": "260247e6-cc91-41ea-a11a-a9b2c1a8a8b7",
+    "project_id": "51a211df-31af-4e2e-a8e2-a3ed8d0c6407",
+    "kind": "fact",
+    "title": "Generated API fields",
+    "content": "The `generated/api.py` file includes the fields 'id', 'name', and 'owner'. The 'owner' field was added manually after the migration.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "1a4e9163-23a6-42c4-89b0-b51b0dbc8754",
+      "events": [
+        "11:claude_code|36:1a4e9163-23a6-42c4-89b0-b51b0dbc8754|19:tool_result_summary|30:toolu_01NryXFxrU9ztfBQSMNQCba3",
+        "11:claude_code|36:1a4e9163-23a6-42c4-89b0-b51b0dbc8754|19:tool_result_summary|30:toolu_01TxfcF2BaX5eBFifW7cv3S3"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "model",
+      "reason": "The new note discusses the `generated/api.py` file and the 'owner' field, which is unrelated to the existing notes about deployment, constraints, migrations, Python versions, and database import windows.",
+      "similar": [
+        {
+          "memory_id": "044acefa-e2c1-48c8-ba57-ef1f0bcdab71",
+          "title": "Deploy target region from config file",
+          "score": 3.557251698530598
+        },
+        {
+          "memory_id": "5bc9957f-45ec-4a19-8539-520694d14397",
+          "title": "Never edit files under generated/",
+          "score": 2.062264334552171
+        },
+        {
+          "memory_id": "ece420d0-ab91-42cd-926d-77a3cbeb518a",
+          "title": "Fix migration error by adding default value",
+          "score": 1.3947980912671465
+        },
+        {
+          "memory_id": "a8e9f768-76db-4c97-9ea4-1306ca6b05d0",
+          "title": "Check Python version against Dockerfile",
+          "score": 0.4557022544134189
+        },
+        {
+          "memory_id": "5257d4c6-36aa-4671-8db5-13bcba020b88",
+          "title": "Staging database import window rules",
+          "score": 9.902386117136662e-7
+        }
+      ]
+    },
+    "created_at": "2026-10-24T12:04:53.13952Z",
+    "decided_at": null
+  },
+  {
+    "id": "c56b15f4-ad32-4929-bd17-cd2f4e48d1cb",
+    "project_id": "51a211df-31af-4e2e-a8e2-a3ed8d0c6407",
+    "kind": "procedure",
+    "title": "Import window validation",
+    "content": "The `scripts/import_window.py` script checks if a given UTC weekday and hour is allowed based on the rules in `ops/staging.md`. It prints 'ok' or 'blocked' depending on the input.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "1a4e9163-23a6-42c4-89b0-b51b0dbc8754",
+      "events": [
+        "11:claude_code|36:1a4e9163-23a6-42c4-89b0-b51b0dbc8754|19:tool_result_summary|30:toolu_01192DXModuaE9tqcet3Vpx3",
+        "11:claude_code|36:1a4e9163-23a6-42c4-89b0-b51b0dbc8754|19:tool_result_summary|30:toolu_013CAMQL1UnVHWocmLHxACQ9"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "model",
+      "reason": "The new note introduces a new script for import window validation, which is not directly related to the existing notes about the staging database import window rules or other procedures.",
+      "similar": [
+        {
+          "memory_id": "5257d4c6-36aa-4671-8db5-13bcba020b88",
+          "title": "Staging database import window rules",
+          "score": 5.437226314933868
+        },
+        {
+          "memory_id": "a8e9f768-76db-4c97-9ea4-1306ca6b05d0",
+          "title": "Check Python version against Dockerfile",
+          "score": 2.5179914466550333
+        },
+        {
+          "memory_id": "044acefa-e2c1-48c8-ba57-ef1f0bcdab71",
+          "title": "Deploy target region from config file",
+          "score": 2.2823976946388083
+        },
+        {
+          "memory_id": "ece420d0-ab91-42cd-926d-77a3cbeb518a",
+          "title": "Fix migration error by adding default value",
+          "score": 2.502306871681116e-6
+        },
+        {
+          "memory_id": "5bc9957f-45ec-4a19-8539-520694d14397",
+          "title": "Never edit files under generated/",
+          "score": 1.6369341102644556e-6
+        }
+      ]
+    },
+    "created_at": "2026-10-24T12:04:53.13952Z",
+    "decided_at": null
+  },
+  {
+    "id": "0e435c03-e369-41a1-80be-52b29bb8fc7d",
+    "project_id": "51a211df-31af-4e2e-a8e2-a3ed8d0c6407",
+    "kind": "procedure",
+    "title": "Deploy target region",
+    "content": "The `scripts/deploy_target.py` script prints the region from `deploy.cfg`, which is used to determine the deployment target for the release.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "1a4e9163-23a6-42c4-89b0-b51b0dbc8754",
+      "events": [
+        "11:claude_code|36:1a4e9163-23a6-42c4-89b0-b51b0dbc8754|19:tool_result_summary|30:toolu_0158Yd6qYWuwQ13jt8tTVRKo",
+        "11:claude_code|36:1a4e9163-23a6-42c4-89b0-b51b0dbc8754|19:tool_result_summary|30:toolu_013CAMQL1UnVHWocmLHxACQ9"
+      ]
+    },
+    "state": "merged",
+    "memory_id": "044acefa-e2c1-48c8-ba57-ef1f0bcdab71",
+    "reason": "auto-merged as a low-risk duplicate: The new note states the same procedure as \"Deploy target region from config file\", with no new information added.",
+    "proposal": {
+      "action": "merge",
+      "target": "044acefa-e2c1-48c8-ba57-ef1f0bcdab71",
+      "method": "model",
+      "reason": "The new note states the same procedure as \"Deploy target region from config file\", with no new information added.",
+      "similar": [
+        {
+          "memory_id": "044acefa-e2c1-48c8-ba57-ef1f0bcdab71",
+          "title": "Deploy target region from config file",
+          "score": 10.422758121870702
+        },
+        {
+          "memory_id": "a8e9f768-76db-4c97-9ea4-1306ca6b05d0",
+          "title": "Check Python version against Dockerfile",
+          "score": 1.4432162711350929
+        },
+        {
+          "memory_id": "5257d4c6-36aa-4671-8db5-13bcba020b88",
+          "title": "Staging database import window rules",
+          "score": 0.6663765911825758
+        },
+        {
+          "memory_id": "5bc9957f-45ec-4a19-8539-520694d14397",
+          "title": "Never edit files under generated/",
+          "score": 1.6369341102644556e-6
+        },
+        {
+          "memory_id": "ece420d0-ab91-42cd-926d-77a3cbeb518a",
+          "title": "Fix migration error by adding default value",
+          "score": 1.6100518020500386e-6
+        }
+      ]
+    },
+    "created_at": "2026-10-24T12:04:53.13952Z",
+    "decided_at": "2026-10-24T12:06:24.404206Z"
+  },
+  {
+    "id": "92f2ce60-c389-4fcc-9674-5b5548732081",
+    "project_id": "51a211df-31af-4e2e-a8e2-a3ed8d0c6407",
+    "kind": "procedure",
+    "title": "Check Python version",
+    "content": "The `scripts/check_py.py` script must fail if the Python version is older than the one used in the `.ci/Dockerfile`. This ensures compatibility with the build environment.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "1a4e9163-23a6-42c4-89b0-b51b0dbc8754",
+      "events": [
+        "11:claude_code|36:1a4e9163-23a6-42c4-89b0-b51b0dbc8754|19:tool_result_summary|30:toolu_01GMtjnfguoBxudrjUAZXahy",
+        "11:claude_code|36:1a4e9163-23a6-42c4-89b0-b51b0dbc8754|19:tool_result_summary|30:toolu_013CAMQL1UnVHWocmLHxACQ9"
+      ]
+    },
+    "state": "merged",
+    "memory_id": "a8e9f768-76db-4c97-9ea4-1306ca6b05d0",
+    "reason": "auto-merged as a low-risk duplicate: The new note describes the same procedure as \"Check Python version against Dockerfile\", with identical functionality and no new information added.",
+    "proposal": {
+      "action": "merge",
+      "target": "a8e9f768-76db-4c97-9ea4-1306ca6b05d0",
+      "method": "model",
+      "reason": "The new note describes the same procedure as \"Check Python version against Dockerfile\", with identical functionality and no new information added.",
+      "similar": [
+        {
+          "memory_id": "a8e9f768-76db-4c97-9ea4-1306ca6b05d0",
+          "title": "Check Python version against Dockerfile",
+          "score": 9.6449361095341
+        },
+        {
+          "memory_id": "044acefa-e2c1-48c8-ba57-ef1f0bcdab71",
+          "title": "Deploy target region from config file",
+          "score": 1.0929129397571191
+        },
+        {
+          "memory_id": "5257d4c6-36aa-4671-8db5-13bcba020b88",
+          "title": "Staging database import window rules",
+          "score": 0.33318879071059376
+        },
+        {
+          "memory_id": "5bc9957f-45ec-4a19-8539-520694d14397",
+          "title": "Never edit files under generated/",
+          "score": 1.6369341102644556e-6
+        },
+        {
+          "memory_id": "ece420d0-ab91-42cd-926d-77a3cbeb518a",
+          "title": "Fix migration error by adding default value",
+          "score": 1.6100518020500386e-6
+        }
+      ]
+    },
+    "created_at": "2026-10-24T12:04:53.13952Z",
+    "decided_at": "2026-10-24T12:06:24.4035Z"
+  },
+  {
+    "id": "262a46d5-8fb8-4d28-87bc-b5bc99770f8c",
+    "project_id": "51a211df-31af-4e2e-a8e2-a3ed8d0c6407",
+    "kind": "gotcha",
+    "title": "ALTER TABLE fails on NOT NULL column",
+    "content": "The `db/migrate.py` script fails with 'Cannot add a NOT NULL column with default value NULL' because the `ALTER TABLE` command attempts to add a `NOT NULL` column without a default value. This error occurs before any changes are made.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "1a4e9163-23a6-42c4-89b0-b51b0dbc8754",
+      "events": [
+        "11:claude_code|36:1a4e9163-23a6-42c4-89b0-b51b0dbc8754|17:assistant_message|36:b143eef6-730f-4803-9d7c-a8e13bc0cb1b"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "model",
+      "reason": "The new note discusses an error in the `db/migrate.py` script related to `ALTER TABLE` and NOT NULL columns, which is not directly related to any existing note.",
+      "similar": [
+        {
+          "memory_id": "ece420d0-ab91-42cd-926d-77a3cbeb518a",
+          "title": "Fix migration error by adding default value",
+          "score": 4.317492143833156
+        },
+        {
+          "memory_id": "a8e9f768-76db-4c97-9ea4-1306ca6b05d0",
+          "title": "Check Python version against Dockerfile",
+          "score": 2.272778179341891
+        },
+        {
+          "memory_id": "5257d4c6-36aa-4671-8db5-13bcba020b88",
+          "title": "Staging database import window rules",
+          "score": 2.175778595561788
+        },
+        {
+          "memory_id": "044acefa-e2c1-48c8-ba57-ef1f0bcdab71",
+          "title": "Deploy target region from config file",
+          "score": 0.7286091721494495
+        },
+        {
+          "memory_id": "5bc9957f-45ec-4a19-8539-520694d14397",
+          "title": "Never edit files under generated/",
+          "score": 1.6369341102644556e-6
+        }
+      ]
+    },
+    "created_at": "2026-10-24T12:04:53.13952Z",
+    "decided_at": null
+  },
+  {
+    "id": "ec333694-30f7-43d4-b52a-ff1aeb910196",
+    "project_id": "51a211df-31af-4e2e-a8e2-a3ed8d0c6407",
+    "kind": "procedure",
+    "title": "Migrate legacy_flag column",
+    "content": "To remove the `legacy_flag` column from the `jobs` table, run `db/migrate.py` which rebuilds the table as `jobs_new` without the column, copies the rows, drops the old table, and renames the new one. The migration re-copies the table against the repo's schema which already lacks the `legacy_flag` column.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "1a4e9163-23a6-42c4-89b0-b51b0dbc8754",
+      "events": [
+        "11:claude_code|36:1a4e9163-23a6-42c4-89b0-b51b0dbc8754|19:tool_result_summary|30:toolu_01XQCNfCxcuAeDAG3Sjs5JRw",
+        "11:claude_code|36:1a4e9163-23a6-42c4-89b0-b51b0dbc8754|19:tool_result_summary|30:toolu_01RgihttSx8gYu4jhfz9hFSd",
+        "11:claude_code|36:1a4e9163-23a6-42c4-89b0-b51b0dbc8754|17:assistant_message|36:b143eef6-730f-4803-9d7c-a8e13bc0cb1b"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "model",
+      "reason": "The new note describes a migration procedure for the `legacy_flag` column, which is unrelated to the existing notes about migration errors, deployment, Python version checks, import windows, and file editing constraints.",
+      "similar": [
+        {
+          "memory_id": "ece420d0-ab91-42cd-926d-77a3cbeb518a",
+          "title": "Fix migration error by adding default value",
+          "score": 2.3750419533344203
+        },
+        {
+          "memory_id": "044acefa-e2c1-48c8-ba57-ef1f0bcdab71",
+          "title": "Deploy target region from config file",
+          "score": 0.9959150720517616
+        },
+        {
+          "memory_id": "a8e9f768-76db-4c97-9ea4-1306ca6b05d0",
+          "title": "Check Python version against Dockerfile",
+          "score": 0.4557022544134188
+        },
+        {
+          "memory_id": "5257d4c6-36aa-4671-8db5-13bcba020b88",
+          "title": "Staging database import window rules",
+          "score": 0.3331897809492055
+        },
+        {
+          "memory_id": "5bc9957f-45ec-4a19-8539-520694d14397",
+          "title": "Never edit files under generated/",
+          "score": 2.7196497936323777e-6
+        }
+      ]
+    },
+    "created_at": "2026-10-24T12:04:53.13952Z",
+    "decided_at": null
+  },
+  {
+    "id": "f453ec3c-4d64-41e7-be26-6dce81034ca9",
+    "project_id": "51a211df-31af-4e2e-a8e2-a3ed8d0c6407",
+    "kind": "gotcha",
+    "title": "Publishing requires a signed artifact",
+    "content": "The `make publish` command fails unless `.signed` exists. `make clean` deletes it, so the second run started unsigned. `make sign` only creates `.signed` but does not sign the artifact, so it is not used.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "1a4e9163-23a6-42c4-89b0-b51b0dbc8754",
+      "events": [
+        "11:claude_code|36:1a4e9163-23a6-42c4-89b0-b51b0dbc8754|19:tool_result_summary|30:toolu_013CAMQL1UnVHWocmLHxACQ9",
+        "11:claude_code|36:1a4e9163-23a6-42c4-89b0-b51b0dbc8754|17:assistant_message|36:b143eef6-730f-4803-9d7c-a8e13bc0cb1b"
+      ]
+    },
+    "state": "pending",
+    "memory_id": null,
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "model",
+      "reason": "The new note discusses publishing requirements and the `.signed` file, which is unrelated to the existing notes about deployment, database import windows, Python version checks, migration errors, and file editing constraints.",
+      "similar": [
+        {
+          "memory_id": "044acefa-e2c1-48c8-ba57-ef1f0bcdab71",
+          "title": "Deploy target region from config file",
+          "score": 0.3643054045417799
+        },
+        {
+          "memory_id": "5257d4c6-36aa-4671-8db5-13bcba020b88",
+          "title": "Staging database import window rules",
+          "score": 0.3331897809492055
+        },
+        {
+          "memory_id": "a8e9f768-76db-4c97-9ea4-1306ca6b05d0",
+          "title": "Check Python version against Dockerfile",
+          "score": 2.654876866485811e-6
+        },
+        {
+          "memory_id": "ece420d0-ab91-42cd-926d-77a3cbeb518a",
+          "title": "Fix migration error by adding default value",
+          "score": 2.502306871681116e-6
+        },
+        {
+          "memory_id": "5bc9957f-45ec-4a19-8539-520694d14397",
+          "title": "Never edit files under generated/",
+          "score": 1.6369341102644556e-6
+        }
+      ]
+    },
+    "created_at": "2026-10-24T12:04:53.13952Z",
+    "decided_at": null
+  },
+  {
+    "id": "2f669205-9819-42c5-8630-345bd9189aa6",
+    "project_id": "51a211df-31af-4e2e-a8e2-a3ed8d0c6407",
+    "kind": "procedure",
+    "title": "Deploy target region from config file",
+    "content": "The `scripts/deploy_target.py` script reads the region from `deploy.cfg` and prints it, providing the target region for deployment.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "57640e37-bbd8-48d2-8119-f5478351d641",
+      "events": [
+        "11:claude_code|36:57640e37-bbd8-48d2-8119-f5478351d641|19:tool_result_summary|30:toolu_016KxmUMp5oBXSZ8wHaan4CX",
+        "11:claude_code|36:57640e37-bbd8-48d2-8119-f5478351d641|19:tool_result_summary|30:toolu_01QNjC96z2jVrzXCDyfR7seY",
+        "11:claude_code|36:57640e37-bbd8-48d2-8119-f5478351d641|17:assistant_message|36:7e0669a1-adc5-47d8-bc0b-b14bcddaf110"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "044acefa-e2c1-48c8-ba57-ef1f0bcdab71",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T12:03:37.154575Z",
+    "decided_at": "2026-10-24T12:03:37.209817Z"
+  },
+  {
+    "id": "c976764b-61fa-40a4-b32c-6c2dd6b73cbe",
+    "project_id": "51a211df-31af-4e2e-a8e2-a3ed8d0c6407",
+    "kind": "procedure",
+    "title": "Check Python version against Dockerfile",
+    "content": "The `scripts/check_py.py` script compares the current Python version with the one specified in `.ci/Dockerfile`, exiting with a non-zero code if the current version is older.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "57640e37-bbd8-48d2-8119-f5478351d641",
+      "events": [
+        "11:claude_code|36:57640e37-bbd8-48d2-8119-f5478351d641|19:tool_result_summary|30:toolu_01LUdFYm3gD3oM6DaXEKWu8x",
+        "11:claude_code|36:57640e37-bbd8-48d2-8119-f5478351d641|19:tool_result_summary|30:toolu_01QNjC96z2jVrzXCDyfR7seY",
+        "11:claude_code|36:57640e37-bbd8-48d2-8119-f5478351d641|17:assistant_message|36:7e0669a1-adc5-47d8-bc0b-b14bcddaf110"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "a8e9f768-76db-4c97-9ea4-1306ca6b05d0",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T12:03:37.154575Z",
+    "decided_at": "2026-10-24T12:03:37.218186Z"
+  },
+  {
+    "id": "65fd3d9c-657c-4a96-ac27-a0923d64b158",
+    "project_id": "51a211df-31af-4e2e-a8e2-a3ed8d0c6407",
+    "kind": "fact",
+    "title": "Staging database import window rules",
+    "content": "The staging database has a specific import window: it is blocked on Friday from 02:00 up to but not including 04:00 UTC. All other times are allowed.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "57640e37-bbd8-48d2-8119-f5478351d641",
+      "events": [
+        "11:claude_code|36:57640e37-bbd8-48d2-8119-f5478351d641|17:assistant_message|36:7e0669a1-adc5-47d8-bc0b-b14bcddaf110"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "5257d4c6-36aa-4671-8db5-13bcba020b88",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T12:03:37.154575Z",
+    "decided_at": "2026-10-24T12:03:37.227388Z"
+  },
+  {
+    "id": "cf8ca8d4-6462-42b6-b0df-0e1d59e0b0f5",
+    "project_id": "51a211df-31af-4e2e-a8e2-a3ed8d0c6407",
+    "kind": "procedure",
+    "title": "Fix migration error by adding default value",
+    "content": "To resolve the migration error when adding the `owner` column, a default value of an empty string was added to the `owner` column in `db/schema.sql`. This allows the migration to succeed without data loss.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "57640e37-bbd8-48d2-8119-f5478351d641",
+      "events": [
+        "11:claude_code|36:57640e37-bbd8-48d2-8119-f5478351d641|19:tool_result_summary|30:toolu_01Xr9ZCWSBPe2kniPXh2sRwp",
+        "11:claude_code|36:57640e37-bbd8-48d2-8119-f5478351d641|19:tool_result_summary|30:toolu_01QNjC96z2jVrzXCDyfR7seY",
+        "11:claude_code|36:57640e37-bbd8-48d2-8119-f5478351d641|17:assistant_message|36:7e0669a1-adc5-47d8-bc0b-b14bcddaf110"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "ece420d0-ab91-42cd-926d-77a3cbeb518a",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T12:03:37.154575Z",
+    "decided_at": "2026-10-24T12:03:37.237358Z"
+  },
+  {
+    "id": "ee943521-8159-435f-ae57-9b7383bb5eee",
+    "project_id": "51a211df-31af-4e2e-a8e2-a3ed8d0c6407",
+    "kind": "constraint",
+    "title": "Never edit files under generated/",
+    "content": "The user explicitly stated that no edits should be made to files under the `generated/` directory, as the build process overwrites them.",
+    "evidence": {
+      "native_agent": "claude_code",
+      "native_session_id": "57640e37-bbd8-48d2-8119-f5478351d641",
+      "events": [
+        "11:claude_code|36:57640e37-bbd8-48d2-8119-f5478351d641|11:user_prompt|36:7e0669a1-adc5-47d8-bc0b-b14bcddaf110"
+      ]
+    },
+    "state": "accepted",
+    "memory_id": "5bc9957f-45ec-4a19-8539-520694d14397",
+    "reason": null,
+    "proposal": {
+      "action": "create",
+      "method": "rules",
+      "reason": "no similar memory found by full-text search",
+      "similar": []
+    },
+    "created_at": "2026-10-24T12:03:37.154575Z",
+    "decided_at": "2026-10-24T12:03:37.24428Z"
+  }
+]

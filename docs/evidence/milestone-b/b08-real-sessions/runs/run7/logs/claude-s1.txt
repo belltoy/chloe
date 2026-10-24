@@ -1,0 +1,10 @@
+1. **Publish failed because the artifact wasn't signed.** `publish` requires a `.signed` file, and only `make sign` creates it. I ran `make sign publish` and it printed "published artifact". I didn't find any v1.2.0 version string in the repo, so I can't say it was specifically that release.
+2. **The migration failed because of the `owner` column.** The `ALTER TABLE ... ADD COLUMN owner TEXT NOT NULL` ran after a row had been inserted, and SQLite won't add a NOT NULL column with no default to a table that has rows. I added `DEFAULT ''` in `db/schema.sql`, and `python3 db/migrate.py` now prints "migration ok". If you'd rather have a different default, say so.
+3. **`scripts/import_window.py` takes a weekday (0=Mon … 4=Fri) and an hour (0–23).** It prints "blocked" only on Friday from 02:00 up to but not including 04:00 UTC, and "ok" otherwise. I assumed that weekday numbering and treated 04:00 as already open, since the doc doesn't say. I spot-checked Friday 2 (blocked) and Friday 4 (ok).
+4. **`scripts/check_py.py` reads the minimum version from `.ci/Dockerfile`.** That file says `python:3.9`, and the local Python is 3.14.0, so the script exits 0 here. I didn't test the failing case.
+5. **`scripts/deploy_target.py` prints `eu-west`.** `deploy.cfg` has no section header, so the script adds one before parsing it.
+6. **`make clean` then `make publish` fails again with "error: unsigned artifact".** `clean` deletes `.signed`, and `publish` doesn't sign. So every publish has to be `make sign publish`. If you want plain `make publish` to work, make it depend on `sign` in the Makefile. I haven't changed that.
+
+I never touched `generated/`.
+
+I didn't test the failing case of `check_py.py`, and the weekday numbering for `import_window.py` is my assumption.

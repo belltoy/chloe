@@ -1,0 +1,2 @@
+accepted | Generated API fields updated
+accepted | Create migration script to drop legacy_flag column
