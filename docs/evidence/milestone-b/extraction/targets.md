@@ -8,7 +8,7 @@ These errors can pollute long-term memory, so the acceptance set must show none.
 
 | Measure | Definition | Now | Target | Status |
 |---|---|---|---|---|
-| Hallucination | Candidate content has no support in the session, or a number, negation or scope is altered. Judged by a person over all candidates, including TRAP and UNEXPECTED ones | first baseline (original prompt, 38 candidates, all reviewed): 8 partly unsupported (about 21%), 0 fully unfaithful; current prompt (28 sessions, 37 candidates, two reviewers, `review-current.md`): 17 of 37 partly or wholly unsupported (45.9%; 18 if the one disputed item is ruled against), 1 undecided | 0 | **Not met** on both; the two reviews differ in strictness (see `review-current.md`) |
+| Hallucination | Candidate content has no support in the session, or a number, negation or scope is altered. Judged by a person over all candidates, including TRAP and UNEXPECTED ones | first baseline (original prompt, 38 candidates, all reviewed): 8 partly unsupported (about 21%), 0 fully unfaithful; current prompt (28 sessions, 37 candidates, two reviewers, `review-current.md`): 13 of 37 partly or wholly unsupported (35.1%) after the three strictness rulings | 0 | **Not met** on both (21.1% and 35.1%) |
 | Constraint/Decision false extraction | A constraint or decision that records an environment workaround, an assistant preference, or an abandoned approach | 2 (t01 cache workaround, t05 `anyhow` preference) | 0 | **Not met** |
 
 ## Soft goals
@@ -109,3 +109,9 @@ This was measured on the first-baseline outputs (original prompt). The round 1 a
 Two reviewers, claim by claim, citation status recorded separately (`review-current.md`): 19 faithful, 15 partly faithful, 2 unfaithful, 1 undecided (#9). Rate 17/37 = 45.9% (48.6% if #9 is ruled partial). Not comparable to the 21.1% of the first baseline: this review also counts "the assistant reported success" written as "verified". The three strictness choices that move the number (assistant report vs verified result; "known issue / standard approach" wording; one fix widened to a rule) are listed in the review and need a decision from the user; with the most lenient choice on the first, about 30–32%. Wrong attribution fell to 0. Still present: invented motives and benefits, widened scope, a sandbox workaround as a lasting limitation. New: assistant reports promoted to verified results, a wrong command detail, a diff read as two queries, an invented consequence. Failures are mostly content, not citation: only #33 and #37 are faithful with weak citations. Six candidates that the keyword grader counted as hits are partly unfaithful.
 
 Next step agreed in discussion: a minimal prompt change (drop "must state the why"; assistant reports stay reports; one fix is not a rule), validated on new frozen sessions written before looking at results; only if a clear residue remains, add the attribution check and a second verification pass.
+
+### Rulings on the three strictness choices (user, after seeing the counts)
+
+1. An explicit assistant report may support a candidate that restates it; only "independently verified", a wider result or a stronger conclusion is a deviation (#2, #5, #10, #24 withdrawn; #8 and #17 stay partial). 2. Wording such as "known issue" is judged by what it adds: #9 not counted, #27 and #29 counted. 3. A concrete fix written as a general guarantee is a widened scope: #21 counted.
+
+Final: 24 faithful, 11 partly faithful, 2 unfaithful, 0 undecided; **13/37 = 35.1%**. The rulings were made after the counts were known, so they are post-hoc; they bring the standard closer to the first baseline's (21.1%), which accepted assistant reports as support. The earlier 45.9% / 48.6% figures in this file are superseded by this one.
