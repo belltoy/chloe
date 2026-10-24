@@ -371,7 +371,10 @@ fn context_pack_is_grouped_bounded_and_scoped() {
     let r = session(&store, a, &msgs);
     let small = payload(&r[2]);
     assert!(small["used"].as_u64().unwrap() <= 400, "{small}");
-    assert_eq!(small["mode"], "fts");
+    assert_eq!(
+        (small["mode"].as_str(), small["requested_mode"].as_str()),
+        (Some("fts"), Some("fts"))
+    );
     let full = payload(&r[3]);
     let kinds: Vec<_> = full["groups"]
         .as_array()

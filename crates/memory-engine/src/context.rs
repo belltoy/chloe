@@ -48,7 +48,9 @@ pub struct PackGroup {
 
 #[derive(Debug, Clone, Serialize)]
 pub struct ContextPack {
+    /// The paths that produced the pack, and the ones asked for (differs after a fallback).
     pub mode: SearchMode,
+    pub requested_mode: SearchMode,
     /// Why vectors were skipped, when they were.
     pub degraded: Option<String>,
     pub budget: usize,
@@ -129,6 +131,7 @@ pub fn context_pack<S: MemoryService + EmbeddingStore>(
     groups.retain(|g| !g.items.is_empty());
     Ok(ContextPack {
         mode: found.mode,
+        requested_mode: mode,
         degraded: found.degraded,
         budget,
         used,
