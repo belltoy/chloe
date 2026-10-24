@@ -81,13 +81,19 @@ fn met(c: &Candidate, x: &Value) -> bool {
 #[test]
 fn the_set_is_well_formed() {
     let all = load();
-    assert!(all.len() >= 20);
+    // The frozen validation set (CHLOE_EXTRACTION_SET) is smaller than the main one.
+    let min = if std::env::var("CHLOE_EXTRACTION_SET").is_ok() {
+        8
+    } else {
+        10
+    };
+    assert!(all.len() >= 2 * min);
     let mut ids: Vec<_> = all.iter().map(|s| s["id"].as_str().unwrap()).collect();
     ids.sort();
     ids.dedup();
     assert_eq!(ids.len(), all.len(), "duplicate session ids");
     let groups = |g: &str| all.iter().filter(|s| s["group"] == g).count();
-    assert!(groups("useful") >= 10 && groups("nothing") + groups("trap") >= 10);
+    assert!(groups("useful") >= min && groups("nothing") + groups("trap") >= min);
     for s in &all {
         let id = s["id"].as_str().unwrap();
         assert!(!events(s).is_empty(), "{id}");
