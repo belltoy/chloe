@@ -5,6 +5,7 @@ mod embeddings;
 mod events;
 mod jobs;
 mod project;
+mod segment;
 
 use std::path::Path;
 use std::sync::{Mutex, MutexGuard};
@@ -28,6 +29,7 @@ const MIGRATIONS: &[&str] = &[
     include_str!("migrations/008_memory_links.sql"),
     include_str!("migrations/009_embeddings.sql"),
     include_str!("migrations/010_fts_cjk.sql"),
+    include_str!("migrations/011_fts_segmented.sql"),
 ];
 /// How long `open` keeps retrying a locked initialisation.
 const OPEN_RETRY: Duration = Duration::from_secs(5);
@@ -55,60 +57,6 @@ fn create_private(path: &Path) -> Result<()> {
     }
     file.open(path).map_err(storage)?;
     Ok(())
-}
-
-fn is_cjk(c: char) -> bool {
-    matches!(c,
-        '\u{3040}'..='\u{30FF}' | '\u{3400}'..='\u{4DBF}' | '\u{4E00}'..='\u{9FFF}'
-        | '\u{AC00}'..='\u{D7AF}' | '\u{F900}'..='\u{FAFF}')
-}
-
-/// Terms the trigram index can match: every 3 consecutive CJK characters of each run, and each
-/// run of letters or digits of 3+ characters. Shorter pieces cannot match a trigram index and
-/// are dropped. `None` when the query has no CJK text, or nothing usable is left (the caller
-/// then uses the regular index).
-// shortcut: CJK words of one or two characters are not searchable by keyword, upgrade with a LIKE scan if that matters.
-fn cjk_query(query: &str) -> Option<String> {
-    const MAX_TERMS: usize = 64;
-    if !query.chars().any(is_cjk) {
-        return None;
-    }
-    let mut terms: Vec<String> = vec![];
-    let mut run: Vec<char> = vec![];
-    let mut flush = |run: &mut Vec<char>, cjk: bool| {
-        if cjk {
-            terms.extend(run.windows(3).map(|w| w.iter().collect()));
-        } else if run.len() >= 3 {
-            terms.push(run.iter().collect());
-        }
-        run.clear();
-    };
-    let class = |c: char| match c {
-        c if is_cjk(c) => 2,
-        c if c.is_alphanumeric() || c == '_' => 1,
-        _ => 0,
-    };
-    let mut current = 0;
-    for c in query.chars() {
-        if class(c) != current {
-            flush(&mut run, current == 2);
-            current = class(c);
-        }
-        if current != 0 {
-            run.push(c);
-        }
-    }
-    flush(&mut run, current == 2);
-    let mut seen = std::collections::HashSet::new();
-    terms.retain(|t| seen.insert(t.clone()));
-    terms.truncate(MAX_TERMS);
-    (!terms.is_empty()).then(|| {
-        terms
-            .iter()
-            .map(|t| format!("\"{}\"", t.replace('"', "\"\"")))
-            .collect::<Vec<_>>()
-            .join(" OR ")
-    })
 }
 
 fn storage(e: impl std::fmt::Display) -> Error {
@@ -176,25 +124,25 @@ impl SqliteStore {
             schema_version: schema_version(&conn)?,
             sqlite_ok: integrity == "ok",
             // The command errors out when the index disagrees with `memories`.
-            fts_ok: ["memory_fts", "memory_fts_cjk"].iter().all(|t| {
+            fts_ok: ["memory_fts", "memory_fts_seg"].iter().all(|t| {
                 conn.execute(
                     &format!("INSERT INTO {t}({t}, rank) VALUES ('integrity-check', 1)"),
                     [],
                 )
                 .is_ok()
-            }),
+            }) && segment::in_step(&conn),
             foreign_keys_ok: fk_violation.is_none(),
         })
     }
 
     /// Rebuilds the FTS index from `memories`.
     pub fn reindex(&self) -> Result<()> {
-        let conn = self.conn();
-        for t in ["memory_fts", "memory_fts_cjk"] {
-            conn.execute(&format!("INSERT INTO {t}({t}) VALUES ('rebuild')"), [])
-                .map_err(storage)?;
-        }
-        Ok(())
+        let mut conn = self.conn();
+        conn.execute("INSERT INTO memory_fts(memory_fts) VALUES ('rebuild')", [])
+            .map_err(storage)?;
+        let tx = begin(&mut conn)?;
+        segment::rebuild(&tx)?;
+        tx.commit().map_err(storage)
     }
 
     /// Loads the memory visible to `project`, applies `f`, and bumps the revision via CAS,
@@ -224,6 +172,14 @@ impl SqliteStore {
             params![id.to_string(), tag(&m.kind), m.title, m.content, tag(&m.status), micros(m.updated_at), m.revision],
         )
         .map_err(storage)?;
+        let rowid = tx
+            .query_row(
+                "SELECT rowid FROM memories WHERE id=?1",
+                [id.to_string()],
+                |r| r.get(0),
+            )
+            .map_err(storage)?;
+        segment::write(&tx, rowid, &m.title, &m.content)?;
         write_revision(&tx, &m, cause, &self.actor)?;
         tx.commit().map_err(storage)?;
         Ok(m)
@@ -325,9 +281,9 @@ impl MemoryService for SqliteStore {
     fn search(&self, project: Option<ProjectId>, q: SearchQuery) -> Result<Vec<Hit>> {
         // Quote every token so user input can never be parsed as FTS5 syntax. Tokens are OR-ed:
         // agents send long natural-language queries, and AND returns nothing if one word is absent.
-        // Queries with CJK text go to the trigram index; the table name is a constant.
-        let (table, fts_query) = match cjk_query(&q.query) {
-            Some(fts) => ("memory_fts_cjk", fts),
+        // Queries with CJK text go to the word-segmented index; the table name is a constant.
+        let (table, fts_query) = match segment::query(&q.query) {
+            Some(fts) => ("memory_fts_seg", fts),
             None => (
                 "memory_fts",
                 q.query
@@ -443,6 +399,7 @@ fn migrate(conn: &mut Connection) -> Result<()> {
         tx.pragma_update(None, "user_version", (i + 1) as i64)
             .map_err(storage)?;
     }
+    segment::ensure(&tx)?;
     tx.commit().map_err(storage)
 }
 
@@ -492,6 +449,7 @@ pub(crate) fn insert_memory(tx: &Transaction, m: &Memory, cause: &str, actor: &s
         ],
     )
     .map_err(storage)?;
+    segment::write(tx, tx.last_insert_rowid(), &m.title, &m.content)?;
     write_revision(tx, m, cause, actor)?;
     Ok(())
 }

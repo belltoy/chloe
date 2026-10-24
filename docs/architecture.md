@@ -25,7 +25,7 @@ agent ──► MCP (stdio) / CLI ──► MemoryService ──► hybrid_searc
 ## Retrieval
 
 - Both paths take the top 50 within the caller's project (plus global memories if asked) and the `active` status. Scope and status are hard filters inside each path.
-- FTS: English stop words removed, tokens quoted and OR-ed (`bm25`, title weighted 5×). Queries with CJK text use the trigram index (`memory_fts_cjk`) instead: every 3 consecutive CJK characters becomes a term.
+- FTS: English stop words removed, tokens quoted and OR-ed (`bm25`, title weighted 5×). Queries with CJK text use a second index over text segmented into words by `jieba-rs` (`memory_fts_seg`), with Chinese particles and question words removed from the query.
 - Vector: cosine similarity over the current revision's vector; the index is pinned to one model and dimension (default `qwen3-embedding:0.6b`, 1024).
 - Fusion: reciprocal rank (k = 60), a vector rank weighted twice an FTS rank. Each hit reports `matched_by` and its rank in each path.
 - If the vector path is unavailable (no provider, server down, no vectors, other model) the result is FTS only and says why. Only an FTS failure fails the search.
@@ -48,7 +48,7 @@ Capture and review: `chloe hook install claude`, then `chloe consolidate` and `c
 
 ## Known limitations
 
-- **Chinese keyword search** (B3-07) uses a second, trigram FTS index for queries with CJK text: Chinese-only FTS Recall@5 is 0.71 (was 0.00). CJK words of one or two characters cannot be found by keyword, and such a query drops its Latin tokens under 3 characters. Vector search still carries most Chinese queries.
+- **Chinese keyword search** (B3-07) uses jieba word segmentation for queries with CJK text: Chinese-only FTS Recall@5 is 1.00 (was 0.00). It also made Hybrid slightly worse on cross-language queries (Chinese distractors now give FTS confident but wrong candidates), and adds 3 MB to the binary and about 70 ms the first time a CJK text is segmented.
 - **Hybrid is below Vector** on the current evaluation set (0.93 / 0.86 vs 1.00 / 0.94 Recall@5 / MRR). The set has no exact-identifier queries where keywords should win, so FTS cannot show its value; the fusion weight is a judgement, not a tuned optimum.
 - **Evaluation set is small** (100 memories, 30 queries), labelled by the assistant and not reviewed by a person; a one-query difference is within noise.
 - **Vectors are not created on save**: run `chloe embeddings backfill`. Until then new memories are found by FTS only.

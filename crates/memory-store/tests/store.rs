@@ -411,7 +411,7 @@ fn busy_database_fails_with_storage_error_then_recovers() {
 }
 
 #[test]
-fn chinese_keywords_match_through_the_trigram_index() {
+fn chinese_keywords_match_through_word_segmentation() {
     let (dir, path) = db();
     let store = SqliteStore::open(&path).unwrap();
     let p = project(&store, &dir, "p");
@@ -421,18 +421,18 @@ fn chinese_keywords_match_through_the_trigram_index() {
     store
         .save(new(Some(p), "Other", "nothing about that"))
         .unwrap();
-    // A whole sentence: shares 3-character runs with the body, not a substring of it.
+    // A whole sentence: question words are dropped, the content words match.
     let hits = store.search(Some(p), q("怎样支持并发读写？")).unwrap();
     assert_eq!(hits.len(), 1);
     assert_eq!(hits[0].memory.id, wal.id);
-    // Title matches, mixed script, and an English word inside Chinese text.
+    // Title matches, mixed script, and a two-character word (which a trigram index cannot do).
     assert_eq!(store.search(Some(p), q("并发写入")).unwrap().len(), 1);
     assert_eq!(store.search(Some(p), q("WAL模式")).unwrap().len(), 1);
+    assert_eq!(store.search(Some(p), q("并发")).unwrap().len(), 1);
     // Quotes and FTS syntax in the query stay data.
     assert!(store.search(Some(p), q("\"并发读写\" OR * NEAR(")).is_ok());
-    // A one- or two-character CJK query has no trigram; it falls back to the regular index
-    // instead of failing.
-    assert!(store.search(Some(p), q("并发")).is_ok());
+    // Nothing but question words: falls back to the regular index instead of failing.
+    assert!(store.search(Some(p), q("什么吗")).is_ok());
 
     // Edits and archives keep the index in step, and a rebuild leaves it consistent.
     let m = store
@@ -446,7 +446,7 @@ fn chinese_keywords_match_through_the_trigram_index() {
             },
         )
         .unwrap();
-    assert!(store.search(Some(p), q("支持并发读写")).unwrap().is_empty());
+    assert!(store.search(Some(p), q("读写模式")).unwrap().is_empty());
     assert_eq!(store.search(Some(p), q("改成了别的")).unwrap().len(), 1);
     store.reindex().unwrap();
     assert!(store.doctor().unwrap().fts_ok);
@@ -455,7 +455,7 @@ fn chinese_keywords_match_through_the_trigram_index() {
 }
 
 #[test]
-fn memories_saved_before_the_cjk_index_are_searchable_after_upgrade() {
+fn the_segmented_index_is_built_on_upgrade_and_rebuilt_when_segmentation_changes() {
     let (dir, path) = db();
     let p;
     {
@@ -465,15 +465,25 @@ fn memories_saved_before_the_cjk_index_are_searchable_after_upgrade() {
             .save(new(Some(p), "旧记忆", "升级之前保存的中文内容"))
             .unwrap();
     }
-    // Simulate a database from before migration 010: drop the index and roll the version back.
-    {
-        let conn = rusqlite::Connection::open(&path).unwrap();
-        conn.execute_batch(
-            "DROP TRIGGER memories_cjk_ai; DROP TRIGGER memories_cjk_ad; DROP TRIGGER memories_cjk_au;
-             DROP TABLE memory_fts_cjk; PRAGMA user_version = 9;",
+    let raw = || rusqlite::Connection::open(&path).unwrap();
+    // A database from the trigram version (schema 10): no segmented index yet.
+    raw()
+        .execute_batch(
+            "DROP TABLE memory_fts_seg; DROP TABLE fts_meta;
+             CREATE VIRTUAL TABLE memory_fts_cjk USING fts5(title, content, tokenize='trigram');
+             PRAGMA user_version = 10;",
         )
         .unwrap();
-    }
+    let store = SqliteStore::open(&path).unwrap();
+    assert_eq!(store.search(Some(p), q("升级之前保存")).unwrap().len(), 1);
+    assert!(store.doctor().unwrap().fts_ok);
+    drop(store);
+    // An index built by another segmentation is rebuilt on open.
+    raw()
+        .execute_batch(
+            "DELETE FROM memory_fts_seg; UPDATE fts_meta SET value = 'older-dictionary';",
+        )
+        .unwrap();
     let store = SqliteStore::open(&path).unwrap();
     assert_eq!(store.search(Some(p), q("升级之前保存")).unwrap().len(), 1);
 }

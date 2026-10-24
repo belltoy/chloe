@@ -6,26 +6,26 @@
 
 | lang | mode | n | Recall@5 | MRR | p50 ms | p95 ms |
 |---|---|---|---|---|---|---|
-| en | fts | 7 | 0.71 | 0.66 | 0.5 | 1.6 |
-| en | vector | 7 | 1.00 | 0.89 | 25.7 | 34.3 |
-| en | hybrid | 7 | 0.86 | 0.81 | 25.8 | 34.4 |
-| zh | fts | 7 | 0.71 | 0.64 | 0.3 | 0.5 |
-| zh | vector | 7 | 1.00 | 1.00 | 24.6 | 29.1 |
-| zh | hybrid | 7 | 1.00 | 1.00 | 25.2 | 31.9 |
-| mixed | fts | 7 | 0.71 | 0.75 | 0.4 | 0.6 |
-| mixed | vector | 7 | 1.00 | 1.00 | 25.6 | 31.5 |
-| mixed | hybrid | 7 | 0.93 | 1.00 | 25.3 | 30.0 |
-| cross | fts | 9 | 0.11 | 0.03 | 0.5 | 0.7 |
-| cross | vector | 9 | 1.00 | 0.89 | 25.6 | 31.9 |
-| cross | hybrid | 9 | 0.89 | 0.61 | 26.3 | 30.5 |
-| all | fts | 30 | 0.53 | 0.49 | 0.4 | 0.8 |
-| all | vector | 30 | 1.00 | 0.94 | 25.4 | 32.7 |
-| all | hybrid | 30 | 0.92 | 0.84 | 25.6 | 32.3 |
+| en | fts | 7 | 0.71 | 0.66 | 0.5 | 2.3 |
+| en | vector | 7 | 1.00 | 0.89 | 18.7 | 29.2 |
+| en | hybrid | 7 | 0.86 | 0.81 | 18.7 | 26.6 |
+| zh | fts | 7 | 1.00 | 1.00 | 0.3 | 0.9 |
+| zh | vector | 7 | 1.00 | 1.00 | 17.1 | 24.0 |
+| zh | hybrid | 7 | 1.00 | 1.00 | 18.0 | 25.3 |
+| mixed | fts | 7 | 0.71 | 0.86 | 0.1 | 1.4 |
+| mixed | vector | 7 | 1.00 | 1.00 | 18.7 | 24.9 |
+| mixed | hybrid | 7 | 1.00 | 1.00 | 19.9 | 25.8 |
+| cross | fts | 9 | 0.11 | 0.02 | 0.3 | 1.4 |
+| cross | vector | 9 | 1.00 | 0.89 | 18.2 | 25.9 |
+| cross | hybrid | 9 | 0.78 | 0.48 | 19.6 | 30.4 |
+| all | fts | 30 | 0.60 | 0.59 | 0.3 | 1.4 |
+| all | vector | 30 | 1.00 | 0.94 | 18.0 | 27.1 |
+| all | hybrid | 30 | 0.90 | 0.80 | 19.0 | 28.2 |
 
 
 ## Embedding model comparison (same dataset, same run conditions)
 
-Measured before B3-07: the FTS and Hybrid numbers in this section and in "Repeated run" use the old Chinese-blind FTS. The table at the top and the B3-07 section are current; the model ranking is about the vector path and does not depend on that.
+Measured before B3-07: the FTS and Hybrid numbers in this section and in "Repeated run" use the old Chinese-blind FTS (latency was also measured before the later runs, which show ~18 ms per query). The table at the top and the B3-07 section are current; the model ranking is about the vector path and does not depend on that.
 
 Overall (30 queries), Recall@5 / MRR:
 
@@ -66,18 +66,22 @@ Quality does not change between runs (it is computed once per query). Vector and
 
 ## B3-07: Chinese keyword search
 
-Chosen: a second FTS5 index, `memory_fts_cjk`, with the `trigram` tokenizer, used only for queries that contain CJK characters (migration 010 builds it from `memories`, triggers keep it current, `doctor --reindex` rebuilds both). The query side cuts each run of CJK characters into every overlapping 3-character piece and ORs them, plus any 3+ character run of letters or digits, so a whole Chinese sentence matches memories that share any 3 consecutive characters, ranked by `bm25`. `memory_fts` and English-only queries are untouched.
+Chosen: application-level word segmentation with `jieba-rs` (default dictionary). A second FTS5 index, `memory_fts_seg` (`unicode61` over text already cut into words), is used only for queries that contain CJK characters; `memory_fts` and English-only queries are untouched. The application writes the index in the same transaction as the memory (a trigger cannot segment); `fts_meta` records the segmentation version and the index is rebuilt on open when it changes, which also builds it for memories saved before the upgrade (migration 011). `doctor` checks that the index has one row per memory and the current version, and `doctor --reindex` rebuilds it.
 
-Why not the alternatives named in the plan: replacing `unicode61` by `trigram` everywhere would change English matching (substring matches, and tokens under 3 characters such as `ci` or `db` stop matching). A `LIKE` fallback when FTS finds nothing needs the query to be a substring of a memory, which a natural-language sentence almost never is; this was reasoned, not measured. Only the trigram index was implemented and measured.
+- Index side: `cut_for_search` (fine-grained words plus compounds, so `busy_timeout` is indexed as `busy`, `timeout` and `busy_timeout`). Query side: `cut`, then punctuation and stop words removed, OR-ed and ranked by `bm25`.
+- Stop words (particles, question words, pronouns and a few generic words such as 问题, 使用, 通过) apply to the query only, so editing the list never needs a reindex. Negations (不, 没, 不能) are kept on purpose. The list was extended once after looking at which cross-language queries failed, so it is mildly fitted to this set.
+- A first attempt used a `trigram` tokenizer (migration 010, never released, dropped by migration 011). It could not find one- and two-character words and gave less than jieba.
 
-Same dataset and model, first column from the previous run (`unicode61`), Recall@5 / MRR:
+Recall@5 / MRR on the same dataset and model:
 
-| group | FTS before | FTS now | Hybrid before | Hybrid now |
-|---|---|---|---|---|
-| zh | 0.00 / 0.00 | 0.71 / 0.64 | 1.00 / 1.00 | 1.00 / 1.00 |
-| mixed | 0.57 / 0.62 | 0.71 / 0.75 | 1.00 / 1.00 | 0.93 / 1.00 |
-| cross | 0.11 / 0.03 | 0.11 / 0.03 | 0.89 / 0.68 | 0.89 / 0.61 |
-| all | 0.33 / 0.31 | 0.53 / 0.49 | 0.93 / 0.86 | 0.92 / 0.84 |
+| group | FTS, unicode61 (before) | FTS, trigram | FTS, jieba | Hybrid before | Hybrid, trigram | Hybrid, jieba |
+|---|---|---|---|---|---|---|
+| zh | 0.00 / 0.00 | 0.71 / 0.64 | 1.00 / 1.00 | 1.00 / 1.00 | 1.00 / 1.00 | 1.00 / 1.00 |
+| mixed | 0.57 / 0.62 | 0.71 / 0.75 | 0.71 / 0.86 | 1.00 / 1.00 | 0.93 / 1.00 | 1.00 / 1.00 |
+| cross | 0.11 / 0.03 | 0.11 / 0.03 | 0.11 / 0.02 | 0.89 / 0.68 | 0.89 / 0.61 | 0.78 / 0.48 |
+| all | 0.33 / 0.31 | 0.53 / 0.49 | 0.60 / 0.59 | 0.93 / 0.86 | 0.92 / 0.84 | 0.90 / 0.80 |
 
-- Chinese-only FTS goes from nothing to 0.71. Hybrid does not gain: Vector already answered every Chinese query, and the extra keyword candidates cost one mixed query a second relevant memory in the top 5 (0.93) and a little cross-language MRR. That is one query, within noise, but it is not an improvement.
-- Limits: a CJK word of one or two characters is not searchable by keyword (such a query falls back to the regular index); a query with CJK text drops its Latin tokens shorter than 3 characters; Japanese and Korean are covered by the same trigram rule but not evaluated; the trigram index is larger than the regular one.
+- **Chinese keyword search now works**: zh 0.00 to 1.00, overall FTS 0.33 to 0.60.
+- **Hybrid got slightly worse overall (0.93 / 0.86 to 0.90 / 0.80), entirely in cross-language queries.** A Chinese query against an English memory has no true keyword match, but Chinese distractors now match on shared words (for example 网络, 服务, 数据库 appear in many memories), rank high in FTS, and the fusion lets them overtake the vector's correct first answer. Before B3-07 these queries had no FTS hits at all, so the weakness of the fusion was hidden. Vector alone is unaffected (1.00 / 0.94). Fusion changes (a minimum number of matched terms, or a weaker FTS weight when it disagrees strongly with the vector path) are the next thing to try; they were not tried here.
+- Cost: the release binary grows from 6.4 MB to 9.4 MB; the dictionary loads on first use of a CJK query or write, about 70 ms; English-only commands and hook capture do not load it.
+- Limits: Japanese and Korean go through the same segmenter but are not evaluated; segmentation of technical terms is whatever the default dictionary does; the repeated 20-run benchmark above was taken with the segmented index.

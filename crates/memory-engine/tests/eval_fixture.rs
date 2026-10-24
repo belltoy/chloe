@@ -87,9 +87,9 @@ fn fts_baseline_has_not_drifted() {
             .unwrap()
             .recall_at_5
     };
-    // Chinese keyword search is the trigram index (B3-07); it was 0.00 before.
-    assert!(fts("zh") >= 0.6, "{}", fts("zh"));
+    // Chinese keyword search is the jieba-segmented index (B3-07); it was 0.00 before.
+    assert!(fts("zh") >= 0.8, "{}", fts("zh"));
     assert!(fts("en") >= 0.6, "{}", fts("en"));
-    assert!(fts("all") >= 0.45, "{}", fts("all"));
+    assert!(fts("all") >= 0.55, "{}", fts("all"));
     assert_eq!(report.rows.len(), 15);
 }
