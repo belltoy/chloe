@@ -1,16 +1,16 @@
 //! `CandidateStore` for SQLite: extraction output, its review state and provenance.
 
 use memory_core::extract::{
-    Candidate, CandidateState, CandidateStore, Evidence, MemorySource, Proposal, Resolution,
-    SourceRelation, StoredCandidate,
+    Candidate, CandidateState, CandidateStore, Evidence, LinkRelation, MemoryLink, MemorySource,
+    Proposal, Resolution, SourceRelation, StoredCandidate,
 };
-use memory_core::{Error, Memory, MemoryId, ProjectId, Result, Source, Status};
+use memory_core::{Error, Kind, Memory, MemoryId, ProjectId, Result, Source, Status};
 use rusqlite::{Connection, OptionalExtension, Row, params};
 use uuid::Uuid;
 
 use crate::{
     SqliteStore, begin, conv, from_micros, insert_memory, micros, now, storage, tag, untag,
-    valid_content, valid_title,
+    valid_content, valid_title, write_revision,
 };
 
 const MAX_ROWS: usize = 1000;
@@ -129,6 +129,62 @@ impl CandidateStore for SqliteStore {
                 add_source(&tx, &c, into, SourceRelation::Merged)?;
                 (CandidateState::Merged, Some(into), Some(reason))
             }
+            Resolution::Supersede {
+                target,
+                reason,
+                global,
+                by_human,
+            } => {
+                let new = new_memory(&c, global)?;
+                let mut old = crate::fetch(&tx, c.project_id, target)?;
+                if old.project_id != new.project_id {
+                    return Err(Error::InvalidArgument(
+                        "a memory can only be superseded by one in the same scope".into(),
+                    ));
+                }
+                if old.status != Status::Active {
+                    return Err(Error::InvalidArgument(format!(
+                        "memory {target} is {}; only an active memory can be superseded",
+                        tag(&old.status)
+                    )));
+                }
+                if matches!(old.kind, Kind::Constraint | Kind::Decision) && !by_human {
+                    return Err(Error::InvalidArgument(
+                        "only a person may supersede a constraint or a decision".into(),
+                    ));
+                }
+                insert_memory(&tx, &new, "extracted", &self.actor)?;
+                add_source(&tx, &c, new.id, SourceRelation::Created)?;
+                old.status = Status::Superseded;
+                old.revision += 1;
+                old.updated_at = now();
+                tx.execute(
+                    "UPDATE memories SET status=?2, updated_at=?3, revision=?4 WHERE id=?1",
+                    params![
+                        old.id.to_string(),
+                        tag(&old.status),
+                        micros(old.updated_at),
+                        old.revision
+                    ],
+                )
+                .map_err(storage)?;
+                write_revision(&tx, &old, "superseded", &self.actor)?;
+                tx.execute(
+                    "INSERT INTO memory_links (id, from_id, to_id, relation, created_at) VALUES (?1,?2,?3,'supersedes',?4)",
+                    params![
+                        Uuid::new_v4().to_string(),
+                        new.id.to_string(),
+                        old.id.to_string(),
+                        micros(now())
+                    ],
+                )
+                .map_err(storage)?;
+                (
+                    CandidateState::Accepted,
+                    Some(new.id),
+                    Some(format!("supersedes {target}: {reason}")),
+                )
+            }
             Resolution::Conflict { with, reason } => {
                 if c.state != CandidateState::Pending {
                     return Err(Error::InvalidArgument(format!(
@@ -163,6 +219,27 @@ impl CandidateStore for SqliteStore {
         let out = fetch(&tx, id)?;
         tx.commit().map_err(storage)?;
         Ok(out)
+    }
+
+    fn memory_links(&self, memory: MemoryId) -> Result<Vec<MemoryLink>> {
+        let conn = self.conn();
+        let mut stmt = conn
+            .prepare(
+                "SELECT from_id, to_id, created_at FROM memory_links
+                 WHERE from_id=?1 OR to_id=?1 ORDER BY created_at, rowid",
+            )
+            .map_err(storage)?;
+        let rows = stmt
+            .query_map([memory.to_string()], |r| {
+                Ok(MemoryLink {
+                    from: conv(0, r.get::<_, String>(0)?.parse())?,
+                    to: conv(1, r.get::<_, String>(1)?.parse())?,
+                    relation: LinkRelation::Supersedes,
+                    created_at: conv(2, from_micros(r.get(2)?))?,
+                })
+            })
+            .map_err(storage)?;
+        rows.collect::<rusqlite::Result<_>>().map_err(storage)
     }
 
     fn memory_sources(&self, memory: MemoryId) -> Result<Vec<MemorySource>> {

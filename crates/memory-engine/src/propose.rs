@@ -165,6 +165,13 @@ fn propose_one<S: MemoryService>(
             v.reason,
             similar,
         ),
+        (Relation::Supersedes, Some(t)) => proposal(
+            ProposedAction::Supersede,
+            Some(t),
+            ProposalMethod::Model,
+            v.reason,
+            similar,
+        ),
         (Relation::Unrelated, _) => proposal(
             ProposedAction::Create,
             None,

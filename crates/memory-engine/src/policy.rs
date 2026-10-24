@@ -6,8 +6,9 @@
 //!   neither side a constraint or a decision, and the target still active.
 //! - A `conflict` is applied as a flag only: the candidate moves to `conflict` and waits for a
 //!   person; no memory changes.
-//! - Creating a memory is never automatic, and neither is anything touching a constraint or
-//!   a decision.
+//! - Creating a memory is never automatic, and neither is superseding one (the store itself
+//!   refuses to supersede a constraint or decision unless a person says so), nor anything
+//!   else touching a constraint or a decision.
 
 use memory_core::extract::{
     CandidateState, CandidateStore, Proposal, ProposedAction, Resolution, StoredCandidate,
@@ -41,6 +42,13 @@ pub fn evaluate(c: &StoredCandidate, p: &Proposal, target: Option<&Memory>) -> O
                 Outcome::Human("the conflicting memory is gone")
             }
         }
+        // Replacing a memory hides it from search everywhere, so it is always a person's call.
+        ProposedAction::Supersede => match target {
+            Some(t) if guarded(t.kind) => Outcome::Human(
+                "the existing memory is a constraint or decision; only a person can supersede it",
+            ),
+            _ => Outcome::Human("replacing a memory is always decided by a person"),
+        },
         ProposedAction::Merge => {
             let Some(t) = target else {
                 return Outcome::Human("the merge target is gone");

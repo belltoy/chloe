@@ -97,6 +97,15 @@ pub enum Resolution {
         with: MemoryId,
         reason: String,
     },
+    /// Create a memory from the candidate and mark `target` as superseded by it, linking the
+    /// two. The target must be active and in the same scope as the new memory. A constraint
+    /// or decision is superseded only with `by_human`, which the automatic policy never sets.
+    Supersede {
+        target: MemoryId,
+        reason: String,
+        global: bool,
+        by_human: bool,
+    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -108,6 +117,8 @@ pub enum ProposedAction {
     Merge,
     /// Contradicts `target`.
     Conflict,
+    /// Replaces `target`: a newer version of the same point. Only a person applies it.
+    Supersede,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -147,6 +158,8 @@ pub struct Proposal {
 pub enum Relation {
     Duplicate,
     Contradicts,
+    /// The new note says it replaces the existing one (a changed decision, a corrected fact).
+    Supersedes,
     Unrelated,
 }
 
@@ -202,6 +215,22 @@ pub struct MemorySource {
     pub recorded_at: time::OffsetDateTime,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum LinkRelation {
+    Supersedes,
+}
+
+/// `from` is the newer memory and `to` the one it replaced.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct MemoryLink {
+    pub from: MemoryId,
+    pub to: MemoryId,
+    pub relation: LinkRelation,
+    #[serde(with = "time::serde::rfc3339")]
+    pub created_at: time::OffsetDateTime,
+}
+
 pub trait CandidateStore {
     /// Stores the candidates of one captured session as `pending`; one with the same kind and
     /// title as an earlier one is skipped. Returns how many were new. `NotFound` when the
@@ -226,6 +255,8 @@ pub trait CandidateStore {
     /// other state is `InvalidArgument`. Merge and conflict targets must be visible from the
     /// candidate's project (its own or global), otherwise `NotFound`.
     fn resolve_candidate(&self, id: &str, resolution: Resolution) -> Result<StoredCandidate>;
+    /// Links in which the memory is either end, oldest first.
+    fn memory_links(&self, memory: MemoryId) -> Result<Vec<MemoryLink>>;
     /// The candidates a memory was created from or merged with, oldest first.
     fn memory_sources(&self, memory: MemoryId) -> Result<Vec<MemorySource>>;
 }

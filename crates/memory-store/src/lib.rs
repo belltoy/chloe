@@ -24,6 +24,7 @@ const MIGRATIONS: &[&str] = &[
     include_str!("migrations/005_candidates.sql"),
     include_str!("migrations/006_candidate_review.sql"),
     include_str!("migrations/007_candidate_proposal.sql"),
+    include_str!("migrations/008_memory_links.sql"),
 ];
 /// How long `open` keeps retrying a locked initialisation.
 const OPEN_RETRY: Duration = Duration::from_secs(5);
@@ -429,7 +430,7 @@ pub(crate) fn insert_memory(tx: &Transaction, m: &Memory, cause: &str, actor: &s
     Ok(())
 }
 
-fn write_revision(tx: &Transaction, m: &Memory, cause: &str, actor: &str) -> Result<()> {
+pub(crate) fn write_revision(tx: &Transaction, m: &Memory, cause: &str, actor: &str) -> Result<()> {
     let snapshot = serde_json::to_string(m).map_err(|e| Error::Internal(e.to_string()))?;
     tx.execute(
         "INSERT INTO memory_revisions (memory_id, revision, snapshot, changed_at, cause, actor) VALUES (?1,?2,?3,?4,?5,?6)",

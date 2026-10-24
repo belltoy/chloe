@@ -5,7 +5,8 @@ use memory_core::extract::{
 };
 use memory_core::service::{MemoryService, NewMemory, SearchQuery};
 use memory_core::{
-    AgentEvent, EVENT_SCHEMA_VERSION, Error, EventKind, EventStore, Kind, ProjectId, Source,
+    AgentEvent, EVENT_SCHEMA_VERSION, Error, EventKind, EventStore, Kind, MemoryId, ProjectId,
+    Source,
 };
 use memory_store::SqliteStore;
 use time::OffsetDateTime;
@@ -327,4 +328,164 @@ fn racing_accepts_create_exactly_one_memory() {
         .count();
     assert_eq!(won, 1);
     assert_eq!(w.store.list(Some(w.project), false, 10).unwrap().len(), 1);
+}
+
+fn supersede(target: MemoryId, by_human: bool) -> Resolution {
+    Resolution::Supersede {
+        target,
+        reason: "newer".into(),
+        global: false,
+        by_human,
+    }
+}
+
+#[test]
+fn supersede_replaces_a_memory_and_keeps_the_trail() {
+    let w = world();
+    let old = manual(&w, Some(w.project));
+    let id = add(&w, "newer version");
+    let c = w
+        .store
+        .resolve_candidate(&id, supersede(old.id, false))
+        .unwrap();
+    assert_eq!(c.state, CandidateState::Accepted);
+    assert!(c.reason.unwrap().contains(&old.id.to_string()));
+    let new = w.store.get(Some(w.project), c.memory_id.unwrap()).unwrap();
+    assert_eq!(
+        (new.source, new.status),
+        (Source::Extracted, memory_core::Status::Active)
+    );
+
+    let old_now = w.store.get(Some(w.project), old.id).unwrap();
+    assert_eq!(
+        (old_now.status, old_now.revision),
+        (memory_core::Status::Superseded, 2)
+    );
+    // A revision was appended to both memories.
+    assert_eq!(
+        w.store
+            .history(Some(w.project), old.id)
+            .unwrap()
+            .last()
+            .unwrap()
+            .cause,
+        "superseded"
+    );
+    assert_eq!(
+        w.store.history(Some(w.project), new.id).unwrap()[0].cause,
+        "extracted"
+    );
+    // Both ends see the link.
+    for m in [old.id, new.id] {
+        let links = w.store.memory_links(m).unwrap();
+        assert_eq!(
+            (links.len(), links[0].from, links[0].to),
+            (1, new.id, old.id)
+        );
+    }
+    // Hidden from search by default, still there on request.
+    let q = |inactive| SearchQuery {
+        query: "existing".into(),
+        limit: 5,
+        include_global: false,
+        include_inactive: inactive,
+    };
+    assert!(
+        w.store
+            .search(Some(w.project), q(false))
+            .unwrap()
+            .is_empty()
+    );
+    assert_eq!(w.store.search(Some(w.project), q(true)).unwrap().len(), 1);
+    // The replaced memory cannot be replaced again.
+    let id2 = add(&w, "another version");
+    assert!(matches!(
+        w.store.resolve_candidate(&id2, supersede(old.id, true)),
+        Err(Error::InvalidArgument(_))
+    ));
+    assert_eq!(
+        w.store.candidate(&id2).unwrap().state,
+        CandidateState::Pending
+    );
+}
+
+#[test]
+fn a_constraint_or_decision_is_superseded_only_by_a_person() {
+    for kind in [Kind::Constraint, Kind::Decision] {
+        let w = world();
+        let guarded = w
+            .store
+            .save(NewMemory {
+                project_id: Some(w.project),
+                kind,
+                title: "rule".into(),
+                content: "must".into(),
+                source: Source::Manual,
+            })
+            .unwrap();
+        let id = add(&w, "replacement");
+        let r = w.store.resolve_candidate(&id, supersede(guarded.id, false));
+        assert!(matches!(r, Err(Error::InvalidArgument(_))), "{kind:?}");
+        // Nothing happened.
+        assert_eq!(
+            w.store.candidate(&id).unwrap().state,
+            CandidateState::Pending
+        );
+        let still = w.store.get(Some(w.project), guarded.id).unwrap();
+        assert_eq!(
+            (still.status, still.revision),
+            (memory_core::Status::Active, 1)
+        );
+        assert_eq!(w.store.list(Some(w.project), true, 10).unwrap().len(), 1);
+        assert!(w.store.memory_links(guarded.id).unwrap().is_empty());
+        // A person can.
+        w.store
+            .resolve_candidate(&id, supersede(guarded.id, true))
+            .unwrap();
+        assert_eq!(
+            w.store.get(Some(w.project), guarded.id).unwrap().status,
+            memory_core::Status::Superseded
+        );
+    }
+}
+
+#[test]
+fn only_an_active_memory_in_the_same_scope_can_be_superseded() {
+    let w = world();
+    // Archived.
+    let archived = manual(&w, Some(w.project));
+    w.store.archive(Some(w.project), archived.id, 1).unwrap();
+    let id = add(&w, "x");
+    assert!(matches!(
+        w.store.resolve_candidate(&id, supersede(archived.id, true)),
+        Err(Error::InvalidArgument(_))
+    ));
+    // A global memory cannot be replaced by a project-scoped one.
+    let global = manual(&w, None);
+    assert!(matches!(
+        w.store.resolve_candidate(&id, supersede(global.id, true)),
+        Err(Error::InvalidArgument(_))
+    ));
+    assert_eq!(
+        w.store.get(None, global.id).unwrap().status,
+        memory_core::Status::Active
+    );
+    // ...but a global candidate may replace it.
+    let g = Resolution::Supersede {
+        target: global.id,
+        reason: "r".into(),
+        global: true,
+        by_human: true,
+    };
+    w.store.resolve_candidate(&id, g).unwrap();
+    // Another project's memory is not found.
+    let other = w._dir.path().join("other");
+    std::fs::create_dir(&other).unwrap();
+    let other_project = w.store.resolve_project(&other).unwrap();
+    let foreign = manual(&w, Some(other_project));
+    let id2 = add(&w, "y");
+    assert!(matches!(
+        w.store.resolve_candidate(&id2, supersede(foreign.id, true)),
+        Err(Error::NotFound(_))
+    ));
 }

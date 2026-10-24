@@ -180,6 +180,10 @@ enum MemoryCommand {
     Sources {
         id: MemoryId,
     },
+    /// Show what a memory superseded and what superseded it
+    Links {
+        id: MemoryId,
+    },
     Update(UpdateArgs),
     Archive {
         id: MemoryId,
@@ -393,6 +397,10 @@ fn run(cli: Cli) -> anyhow::Result<bool> {
                 // Checks the memory is visible from this project first.
                 store.get(Some(project()?), id)?;
                 candidates::print_sources(&store.memory_sources(id)?, json)?;
+            }
+            MemoryCommand::Links { id } => {
+                store.get(Some(project()?), id)?;
+                candidates::print_links(id, &store.memory_links(id)?, json)?;
             }
             MemoryCommand::History { id } => {
                 let revs = store.history(Some(project()?), id)?;

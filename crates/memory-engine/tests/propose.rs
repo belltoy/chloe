@@ -243,6 +243,7 @@ fn the_model_decides_between_duplicate_conflict_and_unrelated() {
     for (relation, action) in [
         (Relation::Duplicate, ProposedAction::Merge),
         (Relation::Contradicts, ProposedAction::Conflict),
+        (Relation::Supersedes, ProposedAction::Supersede),
         (Relation::Unrelated, ProposedAction::Create),
     ] {
         let w = world();

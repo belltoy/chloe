@@ -5,7 +5,7 @@
 use clap::Subcommand;
 use memory_core::MemoryId;
 use memory_core::extract::{
-    CandidateState, CandidateStore, MemorySource, Resolution, StoredCandidate,
+    CandidateState, CandidateStore, MemoryLink, MemorySource, Resolution, StoredCandidate,
 };
 use memory_store::SqliteStore;
 
@@ -34,6 +34,17 @@ pub enum CandidatesCommand {
         id: String,
         #[arg(long, default_value = "rejected by reviewer")]
         reason: String,
+    },
+    /// Create a memory from the candidate and mark an existing one as superseded by it
+    Supersede {
+        id: String,
+        /// The memory being replaced (must be active and in the same scope)
+        #[arg(long)]
+        target: MemoryId,
+        #[arg(long, default_value = "superseded by reviewer")]
+        reason: String,
+        #[arg(long)]
+        global: bool,
     },
     /// Keep an existing memory and record the candidate as another source of it
     Merge {
@@ -147,6 +158,23 @@ pub fn run(store: &SqliteStore, command: CandidatesCommand, json: bool) -> anyho
         CandidatesCommand::Reject { id, reason } => {
             decide(store, &id, Resolution::Reject { reason }, json)?
         }
+        CandidatesCommand::Supersede {
+            id,
+            target,
+            reason,
+            global,
+        } => decide(
+            store,
+            &id,
+            // Running this command is the person's approval, also for a constraint or decision.
+            Resolution::Supersede {
+                target,
+                reason,
+                global,
+                by_human: true,
+            },
+            json,
+        )?,
         CandidatesCommand::Merge { id, into, reason } => {
             decide(store, &id, Resolution::Merge { into, reason }, json)?
         }
@@ -193,6 +221,24 @@ pub fn print_sources(sources: &[MemorySource], json: bool) -> anyhow::Result<()>
     }
     if sources.is_empty() {
         println!("no extracted sources (created or edited by hand)");
+    }
+    Ok(())
+}
+
+/// `chloe memory links`: what a memory replaced and what replaced it.
+pub fn print_links(memory: MemoryId, links: &[MemoryLink], json: bool) -> anyhow::Result<()> {
+    if json {
+        return print_json(&links);
+    }
+    for l in links {
+        if l.from == memory {
+            println!("{}  supersedes {}", l.created_at, l.to);
+        } else {
+            println!("{}  superseded by {}", l.created_at, l.from);
+        }
+    }
+    if links.is_empty() {
+        println!("no links");
     }
     Ok(())
 }

@@ -229,3 +229,35 @@ fn a_candidate_without_a_proposal_is_left_alone() {
     w.store.add_candidates("claude_code", "s", &[c]).unwrap();
     assert_eq!(apply_policy(&w.store).unwrap(), PolicyReport::default());
 }
+
+#[test]
+fn superseding_is_never_applied_automatically() {
+    for (mk, guarded) in [
+        (Kind::Fact, false),
+        (Kind::Decision, true),
+        (Kind::Constraint, true),
+    ] {
+        let w = world();
+        let m = memory(&w, mk);
+        let id = candidate(&w, Kind::Fact, ProposedAction::Supersede, Some(m.id));
+        let r = apply_policy(&w.store).unwrap();
+        assert_eq!(
+            r,
+            PolicyReport {
+                merged: 0,
+                flagged: 0,
+                needs_review: 1
+            },
+            "{mk:?}"
+        );
+        let c = w.store.candidate(&id).unwrap();
+        assert_eq!(c.state, CandidateState::Pending);
+        let why = c.proposal.unwrap().needs_review.unwrap();
+        assert_eq!(why.contains("constraint or decision"), guarded, "{why}");
+        let still = w.store.get(Some(w.project), m.id).unwrap();
+        assert_eq!(
+            (still.status, still.revision),
+            (memory_core::Status::Active, 1)
+        );
+    }
+}

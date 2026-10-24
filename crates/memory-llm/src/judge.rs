@@ -18,7 +18,8 @@ You compare one NEW note with EXISTING notes in a project's memory and say how t
 
 Relations:
 - duplicate: the new note states the same knowledge as an existing note; nothing new is added.
-- contradicts: the new note states the opposite of, or a rule or decision incompatible with, an existing note.
+- contradicts: the new note states the opposite of, or a rule or decision incompatible with, an existing note, and nothing says it replaces it.
+- supersedes: the new note clearly says it replaces or changes an existing note (\"now we use X instead of Y\", a corrected fact): a newer version of the same point.
 - unrelated: anything else, including notes that are merely on the same topic or add detail.
 Be conservative: when unsure, answer unrelated.
 
@@ -60,7 +61,7 @@ pub fn schema() -> Value {
     json!({
         "type": "object",
         "properties": {
-            "relation": {"enum": ["duplicate", "contradicts", "unrelated"]},
+            "relation": {"enum": ["duplicate", "contradicts", "supersedes", "unrelated"]},
             "memory": {"type": "string"},
             "reason": {"type": "string"},
         },

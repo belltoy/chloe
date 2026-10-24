@@ -205,3 +205,55 @@ fn unknown_ids_are_not_found() {
     let err: Value = serde_json::from_slice(&out.stdout).unwrap();
     assert_eq!(err["error"]["code"], "not_found");
 }
+
+#[test]
+fn supersede_replaces_a_decision_and_links_both() {
+    let e = env(&["we now use WAL"], true);
+    let old = ok(
+        &e,
+        &[
+            "memory",
+            "add",
+            "--title",
+            "journal mode",
+            "--content",
+            "rollback journal",
+            "--kind",
+            "decision",
+        ],
+    );
+    let old_id = old["id"].as_str().unwrap();
+    let done = ok(
+        &e,
+        &[
+            "candidates",
+            "supersede",
+            &id_of(&e, "we now use WAL"),
+            "--target",
+            old_id,
+            "--reason",
+            "changed in B0",
+        ],
+    );
+    assert_eq!(done["state"], "accepted");
+    let new_id = done["memory_id"].as_str().unwrap();
+
+    assert_eq!(ok(&e, &["memory", "show", old_id])["status"], "superseded");
+    assert_eq!(
+        ok(&e, &["memory", "history", old_id])
+            .as_array()
+            .unwrap()
+            .last()
+            .unwrap()["cause"],
+        "superseded"
+    );
+    let links = ok(&e, &["memory", "links", new_id]);
+    assert_eq!(
+        (links[0]["from"].as_str(), links[0]["to"].as_str()),
+        (Some(new_id), Some(old_id))
+    );
+    assert_eq!(ok(&e, &["memory", "links", old_id]), links);
+    // Default listing shows only the new one.
+    let listed = ok(&e, &["memory", "list"]);
+    assert_eq!(listed.as_array().unwrap().len(), 1);
+}
