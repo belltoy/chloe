@@ -176,8 +176,7 @@ impl Client {
             json!({"kind": "fact", "title": "doctor probe", "content": "doctor probe"}),
         )?;
         let id = saved["id"].clone();
-        if self
-            .call("memory_search", json!({"query": "probe"}))?
+        if self.call("memory_search", json!({"query": "probe"}))?["hits"]
             .as_array()
             .map_or(0, Vec::len)
             != 1

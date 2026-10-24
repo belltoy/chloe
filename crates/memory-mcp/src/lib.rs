@@ -133,7 +133,7 @@ fn tools() -> Value {
         (
             "memory_search",
             schema(
-                "Search memories of the current project (active only by default). Each hit says which retrieval paths found it (matched_by: fts, vector) and its rank in each. Bodies are cut to fit max_chars in total; memory_get returns one in full.",
+                "Search memories of the current project (active only by default). The result says how the search ran (mode: hybrid or fts; degraded: why vectors were skipped, else null) and how many candidates each path returned. Each hit says which retrieval paths found it (matched_by: fts, vector) and its rank in each. Bodies are cut to fit max_chars in total; memory_get returns one in full.",
                 json!({
                     "query": {"type": "string"},
                     "limit": {"type": "integer", "minimum": 1, "maximum": MAX_LIMIT, "default": 10},
@@ -225,7 +225,15 @@ fn call_tool<S: MemoryService + EmbeddingStore>(
                 },
             )?;
             let mut budget = a.max_chars.unwrap_or(DEFAULT_MAX_CHARS).min(MAX_CHARS);
-            found
+            // Without a provider the server was set up for full-text only: not a degradation.
+            let degraded = found.degraded.filter(|_| embedder.is_some());
+            let mode = if embedder.is_some() && degraded.is_none() {
+                "hybrid"
+            } else {
+                "fts"
+            };
+            let (fts_returned, vector_returned) = (found.fts_returned, found.vector_returned);
+            let hits = found
                 .hits
                 .into_iter()
                 .map(|mut h| {
@@ -239,8 +247,13 @@ fn call_tool<S: MemoryService + EmbeddingStore>(
                     v["content_truncated"] = cut.into();
                     Ok(v)
                 })
-                .collect::<Result<Vec<_>>>()
-                .map(Value::Array)
+                .collect::<Result<Vec<_>>>()?;
+            Ok(json!({
+                "mode": mode,
+                "degraded": degraded,
+                "candidates": {"fts": fts_returned, "vector": vector_returned},
+                "hits": hits,
+            }))
         }),
         "memory_get" => parse::<Get>(args).and_then(|a| to_json(&svc.get(p, a.id)?)),
         "memory_update" => parse::<Update>(args).and_then(|a| {

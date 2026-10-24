@@ -82,13 +82,13 @@ fn protocol_and_tool_lifecycle() {
             call(7, "no_such_tool", json!({})),
         ],
     );
-    assert_eq!(payload(&r[0]).as_array().unwrap().len(), 1);
+    assert_eq!(payload(&r[0])["hits"].as_array().unwrap().len(), 1);
     assert_eq!(payload(&r[1])["revision"], 2);
     assert_eq!(r[2]["result"]["isError"], true);
     assert_eq!(payload(&r[2])["code"], "conflict");
     assert_eq!(payload(&r[3])["code"], "invalid_argument");
     assert_eq!(payload(&r[4])["status"], "archived");
-    assert!(payload(&r[5]).as_array().unwrap().is_empty());
+    assert!(payload(&r[5])["hits"].as_array().unwrap().is_empty());
     assert_eq!(r[6]["error"]["code"], -32602);
 
     // Another project cannot see the memory.
@@ -152,8 +152,8 @@ fn global_scope_is_explicit() {
             ),
         ],
     );
-    assert!(payload(&r[0]).as_array().unwrap().is_empty());
-    let hits = payload(&r[1]);
+    assert!(payload(&r[0])["hits"].as_array().unwrap().is_empty());
+    let hits = payload(&r[1])["hits"].clone();
     assert_eq!(hits.as_array().unwrap().len(), 1);
     assert_eq!(hits[0]["memory"]["title"], "G");
     assert_eq!(payload(&r[2])["revision"], 2);
@@ -190,7 +190,7 @@ fn search_results_are_bounded() {
         ],
     );
     let id = payload(&r[0])["id"].as_str().unwrap().to_string();
-    let hits = payload(&r[2]);
+    let hits = payload(&r[2])["hits"].clone();
     let long_hit = hits
         .as_array()
         .unwrap()
@@ -245,7 +245,7 @@ fn search_explains_hits_and_respects_the_total_budget() {
         json!({"query": "needle", "max_chars": 1000}),
     ));
     let r = session(&store, pid, &msgs);
-    let hits = payload(&r[3]);
+    let hits = payload(&r[3])["hits"].clone();
     let hits = hits.as_array().unwrap();
     assert_eq!(hits.len(), 3, "hits are kept, only bodies are cut");
     let total: usize = hits
@@ -258,4 +258,61 @@ fn search_explains_hits_and_respects_the_total_budget() {
     assert_eq!(hits[0]["fts_rank"], 1);
     assert!(hits[0]["vector_rank"].is_null());
     assert_eq!(hits[0]["memory"]["status"], "active");
+}
+
+struct Down;
+impl memory_core::embed::Embedder for Down {
+    fn model_id(&self) -> String {
+        "down".into()
+    }
+    fn embed(&self, _: &[String]) -> memory_core::Result<Vec<Vec<f32>>> {
+        Err(memory_core::Error::Unavailable("connection refused".into()))
+    }
+}
+
+#[test]
+fn search_reports_its_mode_and_why_it_degraded() {
+    let dir = tempfile::tempdir().unwrap();
+    let store = SqliteStore::open(&dir.path().join("t.db")).unwrap();
+    let proj = dir.path().join("p");
+    std::fs::create_dir(&proj).unwrap();
+    let pid = store.resolve_project(&proj).unwrap();
+    let msgs = [
+        call(
+            1,
+            "memory_save",
+            json!({"kind": "fact", "title": "T", "content": "needle"}),
+        ),
+        call(2, "memory_search", json!({"query": "needle"})),
+    ];
+    let run = |embedder: Option<&dyn memory_core::embed::Embedder>| {
+        let input: String = msgs.iter().map(|m| format!("{m}\n")).collect();
+        let mut out = Vec::new();
+        memory_mcp::serve_with(&store, embedder, pid, input.as_bytes(), &mut out).unwrap();
+        let last = String::from_utf8(out)
+            .unwrap()
+            .lines()
+            .last()
+            .unwrap()
+            .to_string();
+        payload(&serde_json::from_str(&last).unwrap())
+    };
+    // Full-text only by configuration: not a degradation.
+    let p = run(None);
+    assert_eq!(
+        (p["mode"].as_str(), p["degraded"].is_null()),
+        (Some("fts"), true)
+    );
+    // Provider outage: hits still come back, with the reason.
+    let p = run(Some(&Down));
+    assert_eq!(p["mode"], "fts");
+    assert!(
+        p["degraded"]
+            .as_str()
+            .unwrap()
+            .contains("connection refused")
+    );
+    assert_eq!(p["candidates"], json!({"fts": 2, "vector": 0}));
+    // (each run saves the memory once more)
+    assert_eq!(p["hits"].as_array().unwrap().len(), 2);
 }
