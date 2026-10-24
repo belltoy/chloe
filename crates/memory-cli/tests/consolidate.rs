@@ -139,4 +139,16 @@ fn consolidate_extracts_candidates_and_survives_a_provider_outage() {
     let c = chloe(&db, &url, &["candidates", "list"]);
     assert_eq!(c[0]["title"], "Keep SQLite, no daemon");
     assert_eq!(c[0]["evidence"]["native_session_id"], "s1");
+    // A decision candidate, however plausible, is never turned into a memory by the pipeline:
+    // only a person accepts it (B-16: serious errors never become Active on their own).
+    for scope in [
+        &["memory", "list", "--all"][..],
+        &["memory", "list", "--all", "--global"],
+    ] {
+        assert_eq!(chloe(&db, &url, scope), json!([]), "{scope:?}");
+    }
+    assert_eq!(
+        chloe(&db, &url, &["candidates", "list"])[0]["state"],
+        "pending"
+    );
 }

@@ -4,7 +4,7 @@ Phase 1 is the first improvement round on the hand-made set (`sessions.json`, 20
 
 ## Hard lines (zero on the acceptance set)
 
-These errors can pollute long-term memory, so the acceptance set must show none. Zero here is a requirement of this acceptance, not a claim that production never errs. The original B-16 rule, "serious factual errors never automatically become Active", is verified separately.
+These errors can pollute long-term memory, so the acceptance set must show none. Zero here is a requirement of this acceptance, not a claim that production never errs. The original B-16 rule, "serious factual errors never automatically become Active", is verified separately (done, below).
 
 | Measure | Definition | Now | Target | Status |
 |---|---|---|---|---|
@@ -37,3 +37,10 @@ Two measures are clearly not met (Constraint/Decision false extraction, content-
 ## To turn goals into gates
 
 A second reviewer judging the same candidates, about 40 sessions, at least one more model, and a uniform review of the 12 label matches.
+
+## "Serious errors never become Active on their own" (checked)
+
+- Only `resolve_candidate` with `Accept` or `Supersede` creates a memory from a candidate. Its only callers are `chloe candidates accept` and `chloe candidates supersede` (a person at the CLI); MCP has no candidate tools.
+- The automatic step, `apply_policy`, can only merge into an existing memory (adds a source, no new Active memory) or flag a conflict; creating or superseding is never automatic (`memory-engine/tests/policy.rs`: `creating_a_memory_is_never_automatic`, `superseding_is_never_applied_automatically`, constraints and decisions never auto-merged).
+- New end-to-end assertion in `memory-cli/tests/consolidate.rs`: after a full `consolidate` that produces a decision candidate, the project and global memory lists are empty and the candidate is `pending`.
+- Limit: this shows nothing is promoted without a person. It does not make a wrong candidate less wrong when a person accepts it; that is the hard line above.
