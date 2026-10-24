@@ -1,0 +1,93 @@
+{
+  "description": "Weak or hostile model output: missing evidence, invented refs, a leaked secret, a credential path and an overlong title. Only the valid candidate survives.",
+  "events": [
+    {
+      "id": "p1",
+      "kind": "user_prompt",
+      "text": "We must never log memory bodies. Constraint for every logger in this repo."
+    },
+    {
+      "id": "t1",
+      "kind": "tool_result_summary",
+      "tool": "Bash",
+      "text": "env check: deploy token is ghp_abcdefghijklmnopqrstuvwxyz0123456789"
+    },
+    {
+      "id": "end",
+      "kind": "session_end"
+    }
+  ],
+  "reply": {
+    "candidates": [
+      {
+        "kind": "constraint",
+        "title": "Never log memory bodies",
+        "content": "No logger may print a memory body.",
+        "evidence": [
+          "@p1"
+        ]
+      },
+      {
+        "kind": "fact",
+        "title": "Looks plausible but cites nothing",
+        "content": "The CI runs on Linux.",
+        "evidence": []
+      },
+      {
+        "kind": "fact",
+        "title": "Cites an event that does not exist",
+        "content": "The cache is in Redis.",
+        "evidence": [
+          "E99"
+        ]
+      },
+      {
+        "kind": "fact",
+        "title": "Repeats the token",
+        "content": "Deploy with ghp_abcdefghijklmnopqrstuvwxyz0123456789",
+        "evidence": [
+          "@t1"
+        ]
+      },
+      {
+        "kind": "gotcha",
+        "title": "Copy the key from the ssh folder",
+        "content": "cp ~/.ssh/id_rsa /tmp/key",
+        "evidence": [
+          "@p1"
+        ]
+      },
+      {
+        "kind": "fact",
+        "title": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "content": "too long a title",
+        "evidence": [
+          "@p1"
+        ]
+      }
+    ]
+  },
+  "expect": {
+    "accepted": [
+      {
+        "kind": "constraint",
+        "title_contains": "Never log",
+        "events": 1
+      }
+    ],
+    "rejected": [
+      "no_evidence",
+      "no_evidence",
+      "secret",
+      "sensitive_path",
+      "bad_title"
+    ]
+  },
+  "live": {
+    "at_least": 1,
+    "at_most": 3,
+    "kinds_include": [
+      "constraint"
+    ]
+  }
+}

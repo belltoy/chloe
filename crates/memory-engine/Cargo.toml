@@ -13,6 +13,7 @@ time.workspace = true
 tracing.workspace = true
 
 [dev-dependencies]
+memory-llm.workspace = true
 memory-store.workspace = true
 tempfile.workspace = true
 

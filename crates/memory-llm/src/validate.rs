@@ -2,10 +2,11 @@
 //! anything that fails is dropped with a reason code (never the text), so a bad reply can
 //! at worst produce fewer candidates.
 
-use memory_core::Kind;
 use memory_core::extract::{Candidate, Evidence, ExtractionInput};
+use memory_core::{Error, Kind, Result};
 use memory_ingest::redact;
 use serde::Deserialize;
+use serde_json::Value;
 
 use crate::prompt::Prompt;
 
@@ -40,6 +41,18 @@ fn valid_commit(c: &str) -> bool {
     (7..=40).contains(&c.len()) && c.chars().all(|ch| ch.is_ascii_hexdigit())
 }
 
+/// A model reply (already parsed JSON) to checked candidates. Provider-independent, so tests
+/// and other providers go through the same checks.
+pub fn from_reply(input: &ExtractionInput, prompt: &Prompt, reply: Value) -> Result<Outcome> {
+    #[derive(Deserialize)]
+    struct Reply {
+        candidates: Vec<Raw>,
+    }
+    let reply: Reply = serde_json::from_value(reply)
+        .map_err(|_| Error::InvalidArgument("model output does not match the schema".into()))?;
+    Ok(validate(input, prompt, reply.candidates))
+}
+
 pub fn validate(input: &ExtractionInput, prompt: &Prompt, raw: Vec<Raw>) -> Outcome {
     let mut out = Outcome::default();
     for r in raw {
@@ -55,7 +68,11 @@ pub fn validate(input: &ExtractionInput, prompt: &Prompt, raw: Vec<Raw>) -> Outc
     out
 }
 
-fn check(input: &ExtractionInput, prompt: &Prompt, r: Raw) -> Result<Candidate, &'static str> {
+fn check(
+    input: &ExtractionInput,
+    prompt: &Prompt,
+    r: Raw,
+) -> std::result::Result<Candidate, &'static str> {
     let title = r.title.split_whitespace().collect::<Vec<_>>().join(" ");
     if title.is_empty() || title.chars().count() > MAX_TITLE_CHARS {
         return Err("bad_title");

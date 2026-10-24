@@ -616,6 +616,7 @@ name = "memory-engine"
 version = "0.1.0"
 dependencies = [
  "memory-core",
+ "memory-llm",
  "memory-store",
  "serde",
  "serde_json",

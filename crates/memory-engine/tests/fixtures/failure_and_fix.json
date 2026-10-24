@@ -1,0 +1,78 @@
+{
+  "description": "A failure and its fix; the file and commit are shown in the events and must be kept.",
+  "events": [
+    {
+      "id": "p1",
+      "kind": "user_prompt",
+      "text": "The spool import loses events when the process is killed halfway."
+    },
+    {
+      "id": "t1",
+      "kind": "tool_result_summary",
+      "tool": "Bash",
+      "text": "Reproduced: kill -9 during 'chloe events import' deleted spool files before the transaction committed."
+    },
+    {
+      "id": "t2",
+      "kind": "tool_result_summary",
+      "tool": "Edit",
+      "text": "crates/chloe-cli/src/events.rs: delete a queue file only after the commit that stores its event. Committed as 4d350c4."
+    },
+    {
+      "id": "p2",
+      "kind": "user_prompt",
+      "text": "Good. Always delete queue files after the commit, never before."
+    },
+    {
+      "id": "end",
+      "kind": "session_end"
+    }
+  ],
+  "reply": {
+    "candidates": [
+      {
+        "kind": "procedure",
+        "title": "Delete spool files only after the commit that stores their events",
+        "content": "Deleting before the commit loses events when the importer is killed. Re-importing after a crash is safe because events are idempotent.",
+        "evidence": [
+          "@t1",
+          "@t2",
+          "@p2"
+        ],
+        "file": "crates/chloe-cli/src/events.rs",
+        "commit": "4d350c4"
+      },
+      {
+        "kind": "gotcha",
+        "title": "A killed import must not lose events",
+        "content": "Order matters.",
+        "evidence": [
+          "@t1"
+        ],
+        "file": "crates/other/never_mentioned.rs",
+        "commit": "deadbeef"
+      }
+    ]
+  },
+  "expect": {
+    "accepted": [
+      {
+        "kind": "procedure",
+        "title_contains": "after the commit",
+        "file": "crates/chloe-cli/src/events.rs",
+        "commit": "4d350c4",
+        "events": 3
+      },
+      {
+        "kind": "gotcha",
+        "title_contains": "killed",
+        "events": 1
+      }
+    ],
+    "rejected": []
+  },
+  "live": {
+    "at_least": 1,
+    "at_most": 4
+  }
+}

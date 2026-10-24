@@ -1,0 +1,43 @@
+{
+  "description": "Ordinary activity with nothing worth remembering: the model should return nothing.",
+  "events": [
+    {
+      "id": "p1",
+      "kind": "user_prompt",
+      "text": "Run the formatter and the tests."
+    },
+    {
+      "id": "t1",
+      "kind": "tool_result_summary",
+      "tool": "Bash",
+      "text": "cargo fmt --all: no changes"
+    },
+    {
+      "id": "t2",
+      "kind": "tool_result_summary",
+      "tool": "Bash",
+      "text": "cargo test --workspace: 84 passed, 0 failed"
+    },
+    {
+      "id": "t3",
+      "kind": "tool_result_summary",
+      "tool": "Read",
+      "text": "Read README.md (120 lines)"
+    },
+    {
+      "id": "end",
+      "kind": "session_end"
+    }
+  ],
+  "reply": {
+    "candidates": []
+  },
+  "expect": {
+    "accepted": [],
+    "rejected": []
+  },
+  "live": {
+    "at_least": 0,
+    "at_most": 0
+  }
+}

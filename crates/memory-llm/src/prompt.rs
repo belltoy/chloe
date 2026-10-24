@@ -20,12 +20,18 @@ const RULES: &str = "\
 You extract durable engineering knowledge from one coding-agent session so that future \
 sessions can reuse it.
 
-Output only items that will still matter after this session: a decision with its reason, a \
-constraint the user stated, a procedure that worked, a gotcha that cost time, or a lasting \
-fact about the project. Kinds: fact, decision, procedure, constraint, gotcha.
-Do NOT output routine activity (reading files, running tests that passed, formatting), \
-anything specific to this one moment, guesses, or anything the events do not support. If \
-nothing qualifies, return an empty list. At most 8 items, fewest that cover it.
+Most sessions contain nothing worth remembering, and an empty list is the correct and \
+expected answer for them. Output an item only when the events show one of these:
+- decision: someone chose an approach and the events give the reason.
+- constraint: the user stated a rule that must hold in future work.
+- procedure: a sequence of steps that was found to work for a real problem.
+- gotcha: something failed or surprised, and the events show the cause or the fix.
+- fact: a lasting property of the project that the events state outright.
+A user message that states a decision or a rule (\"Decision: ...\", \"always\", \"never\", \"must\") is always worth an item, even in a long session of routine work.
+Routine activity is NOT knowledge: formatting, running tests that passed, reading files, \
+\"all tests passed\", \"code is already formatted\". Never turn an observation into a rule \
+nobody stated. Never report the same point under several kinds; pick the one that fits best. \
+At most 8 items, fewest that cover it.
 
 Each item:
 - title: one line, at most 100 characters, so it can be found by search.

@@ -1,0 +1,65 @@
+{
+  "description": "A session far longer than the window. The decision at the end is kept; a point made only at the very start falls outside the window and cannot be cited (known limit).",
+  "filler": {
+    "count": 600,
+    "text": "Edited a file and ran the unit tests; everything passed, nothing to report."
+  },
+  "head": [
+    {
+      "id": "early",
+      "kind": "user_prompt",
+      "text": "Remember: the project name is Chloe, always spelled with a capital C."
+    }
+  ],
+  "events": [
+    {
+      "id": "p9",
+      "kind": "user_prompt",
+      "text": "Decision: candidates stay pending until a human accepts them; the extractor may only propose."
+    },
+    {
+      "id": "end",
+      "kind": "session_end"
+    }
+  ],
+  "reply": {
+    "candidates": [
+      {
+        "kind": "decision",
+        "title": "Candidates stay pending until a human accepts them",
+        "content": "The extractor only proposes; nothing becomes a memory without review.",
+        "evidence": [
+          "@p9"
+        ]
+      },
+      {
+        "kind": "fact",
+        "title": "Project name is spelled Chloe",
+        "content": "Always a capital C.",
+        "evidence": [
+          "@early"
+        ]
+      }
+    ]
+  },
+  "expect": {
+    "accepted": [
+      {
+        "kind": "decision",
+        "title_contains": "pending",
+        "events": 1
+      }
+    ],
+    "rejected": [
+      "no_evidence"
+    ],
+    "seen_at_most": 200
+  },
+  "live": {
+    "at_least": 1,
+    "at_most": 4,
+    "kinds_include": [
+      "decision"
+    ]
+  }
+}

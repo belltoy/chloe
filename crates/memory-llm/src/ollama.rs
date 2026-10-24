@@ -8,8 +8,7 @@ use memory_core::extract::{Candidate, ExtractionInput, MemoryExtractor};
 use memory_core::{Error, Result};
 
 use crate::prompt;
-use crate::validate::{Raw, validate};
-use serde::Deserialize;
+use crate::validate::from_reply;
 use serde_json::{Value, json};
 
 pub const DEFAULT_URL: &str = "http://127.0.0.1:11434";
@@ -137,11 +136,6 @@ fn unavailable(e: ureq::Error) -> Error {
     Error::Unavailable(e.to_string())
 }
 
-#[derive(Deserialize)]
-struct Output {
-    candidates: Vec<Raw>,
-}
-
 impl MemoryExtractor for Ollama {
     fn name(&self) -> String {
         format!("ollama:{}", self.config.model)
@@ -153,9 +147,7 @@ impl MemoryExtractor for Ollama {
         }
         let prompt = prompt::build(input);
         let out = self.generate_json(&prompt.text, &prompt::schema())?;
-        let out: Output = serde_json::from_value(out)
-            .map_err(|_| Error::InvalidArgument("model output does not match the schema".into()))?;
-        let out = validate(input, &prompt, out.candidates);
+        let out = from_reply(input, &prompt, out)?;
         if !out.rejected.is_empty() {
             // Reason codes only: never log what the model wrote.
             tracing::warn!(rejected = ?out.rejected, "dropped extraction candidates");

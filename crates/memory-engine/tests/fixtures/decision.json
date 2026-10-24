@@ -1,0 +1,77 @@
+{
+  "description": "A real technical decision with its reason, stated by the user after a failure.",
+  "events": [
+    {
+      "id": "p1",
+      "kind": "user_prompt",
+      "text": "CI fails with 'database is locked' when several chloe processes open a new database at once."
+    },
+    {
+      "id": "t1",
+      "kind": "tool_result_summary",
+      "tool": "Bash",
+      "text": "cargo test concurrency: 12 processes call SqliteStore::open on a missing file; 3 fail with SQLITE_BUSY during schema creation."
+    },
+    {
+      "id": "p2",
+      "kind": "user_prompt",
+      "text": "Decision: retry init() for up to 5 seconds instead of adding a daemon. A daemon is out of scope for milestone B0 because every hook would then depend on a running process."
+    },
+    {
+      "id": "t2",
+      "kind": "tool_result_summary",
+      "tool": "Edit",
+      "text": "Edited crates/memory-store/src/lib.rs: init() now retries on SQLITE_BUSY for 5s."
+    },
+    {
+      "id": "end",
+      "kind": "session_end"
+    }
+  ],
+  "reply": {
+    "candidates": [
+      {
+        "kind": "decision",
+        "title": "Retry store init for 5 s instead of adding a daemon",
+        "content": "Concurrent first opens of a new database fail with SQLITE_BUSY. init() retries for up to 5 seconds. A daemon is deliberately not added in milestone B0 because every hook would then depend on a running process.",
+        "evidence": [
+          "@p2",
+          "@t1",
+          "@t2"
+        ],
+        "file": "crates/memory-store/src/lib.rs"
+      },
+      {
+        "kind": "gotcha",
+        "title": "Concurrent first open of a new SQLite file fails with SQLITE_BUSY",
+        "content": "Several processes creating the schema at once get 'database is locked'.",
+        "evidence": [
+          "@t1"
+        ]
+      }
+    ]
+  },
+  "expect": {
+    "accepted": [
+      {
+        "kind": "decision",
+        "title_contains": "Retry",
+        "file": "crates/memory-store/src/lib.rs",
+        "events": 3
+      },
+      {
+        "kind": "gotcha",
+        "title_contains": "SQLITE_BUSY",
+        "events": 1
+      }
+    ],
+    "rejected": []
+  },
+  "live": {
+    "at_least": 1,
+    "at_most": 4,
+    "kinds_include": [
+      "decision"
+    ]
+  }
+}
