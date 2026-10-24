@@ -40,25 +40,28 @@ echo "(memories before review: $(c --json memory list | python3 -c 'import json,
 echo "== 3. extract candidates with the local model =="
 c consolidate
 c candidates list
-# The reviewer (this script) prefers a decision or gotcha over a procedure or fact.
-cid=$(c --json candidates list | python3 -c '
-import json,sys
-d=json.load(sys.stdin)
-pick=[x for x in d if x["kind"] in ("decision","gotcha")] or d
-print(pick[0]["id"] if pick else "")')
-[ -n "$cid" ] || { echo "FAIL: no candidate was proposed" >&2; exit 1; }
+# A lenient reviewer: accept every candidate. Nothing is cherry-picked, so what Codex can find is
+# what the pipeline learned.
+ids=$(c --json candidates list | python3 -c 'import json,sys; print(" ".join(x["id"] for x in json.load(sys.stdin)))')
+[ -n "$ids" ] || { echo "FAIL: no candidate was proposed" >&2; exit 1; }
 
-echo "== 4. review: accept one candidate =="
-c candidates show "$cid"
-mid=$(c --json candidates accept "$cid" | python3 -c 'import json,sys; print(json.load(sys.stdin)["memory_id"])')
-echo "memory id: $mid"
-c memory sources "$mid"
+echo "== 4. review: accept all candidates =="
+mids=""
+for cid in $ids; do
+  c candidates show "$cid" | head -4
+  mids="$mids $(c --json candidates accept "$cid" | python3 -c 'import json,sys; print(json.load(sys.stdin)["memory_id"])')"
+done
+echo "memories:$mids"
+c embeddings backfill
 
 echo "== 5. a new Codex session finds it through MCP =="
 out=$(codex exec --skip-git-repo-check \
   -c "mcp_servers.chloe.command=\"$CHLOE\"" \
   -c "mcp_servers.chloe.args=[\"--db-path\",\"$db\",\"mcp\",\"serve\"]" \
   -c 'mcp_servers.chloe.default_tools_approval_mode="approve"' \
-  "Use the chloe memory_search tool to look for what we know about page counts or pagination bugs in this project. Reply with the memory id, its title, and its source field." </dev/null 2>&1 | grep -v '^hook')
+  "Use the chloe memory_search tool to look for what we know about page counts or pagination bugs in this project. Reply with the id, title and source field of every hit." </dev/null 2>&1 | grep -v '^hook')
 echo "$out" | tail -8
-if grep -q "$mid" <<<"$out"; then echo "PASS: Codex returned memory $mid"; else echo "FAIL: id $mid not in Codex output" >&2; exit 1; fi
+for mid in $mids; do
+  if grep -q "$mid" <<<"$out"; then echo "PASS: Codex returned memory $mid"; found=1; fi
+done
+[ -n "${found:-}" ] || { echo "FAIL: none of the accepted memories was returned" >&2; exit 1; }

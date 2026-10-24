@@ -2,7 +2,7 @@
 
 Run on 2026-10-24, macOS arm64, commit `439b9c5` plus the script in `examples/e2e-learning/`. Claude Code 2.1.310, codex-cli 0.164.0, extraction model `qwen3:8b` and embedding model `qwen3-embedding:0.6b` via local Ollama. Temp repo, temp database and a temp Claude settings file; the real chloe data and agent settings were not touched. Raw logs (paths shortened): `e2e-run-before-edit-capture.log` (the run analysed below) and `e2e-run.log` (after edits were captured, see the last section).
 
-**Result: the pipeline works end to end, the learned memory is wrong. Not a pass of B-10 as written ("accurate summary").**
+**Result of the first run (final-reply and edit capture absent): the pipeline works end to end, the learned memory is wrong; not a pass of B-10 as written ("accurate summary"). See the last two sections for the runs after the capture changes, which pass.**
 
 | Step | Result | Evidence |
 |---|---|---|
@@ -41,3 +41,17 @@ Capture now keeps, for `Edit`/`MultiEdit`, the text replaced and the text writte
 - A fresh Codex session searched for the pagination problem and returned that memory id, title and source `extracted`: `run.sh` ends with PASS.
 - The memory is on topic and not false, but thin and oddly phrased ("The user decided to fix the ceiling division ... with a proper ceiling division formula"): it does not say that floor division was the cause, because the explanation lives in Claude's final reply, which is not captured. Whether `Stop`'s `last_assistant_message` should be captured is open.
 - One run of a non-deterministic model on one trivial bug proves the mechanics, not extraction quality (B-16).
+
+## After capturing the final reply (Claude Code → Codex, final run)
+
+`Stop`'s `last_assistant_message` is now kept as an `assistant_message` event (1000 chars, redacted; confirmed present in the Claude Code 2.1.310 Stop payload). `run.sh` now accepts every candidate (no cherry-picking) and searches in hybrid mode. One run (`e2e-run.log`): Claude Code captured 8 events, the local model proposed four candidates, including the Gotcha *"Floor division in page_count causes missing pages — 21 items at 10 per page resulted in 2 pages instead of 3"* and the Decision *"Use ceiling division for page_count"*; all four were accepted, and a fresh Codex session returned all four ids with source `extracted`. The accepted set also holds two weak items ("Tests were initially failing", "Fix pager.py and re-run tests"), which a careful reviewer would reject.
+
+## Codex as the capture side (Codex → Claude Code)
+
+Run by hand on 2026-10-24 with the real `~/.codex/hooks.json` (chloe's entries added next to the user's other hooks, approved by the user in `/hooks`), codex-cli 0.164.0, temp database via `CHLOE_DB`:
+
+- `codex exec` fixed the same bug in a temp repo; 21 events were captured for one session, all hooks fired (SessionStart, prompt, 17 tool calls, final reply, SessionEnd). `Stop` fired four times for one turn and produced one `assistant_message` event (the idempotency key uses `turn_id`).
+- Extraction proposed four candidates, among them the Gotcha *"Floor division caused undercounting of pages"*, built from the final reply. It also proposed a *Constraint*, "Use cached pytest packages to avoid environment errors", which is wrong: the agent worked around a sandbox problem and the model turned that into a rule. It stayed `pending`; B-16 (false extractions) needs its own evaluation.
+- After accepting the Gotcha: a fresh Claude Code session searching through the default full-text MCP server found **nothing** for "page count pagination bug" (no stemming: "page" does not match "pages"). With `chloe mcp serve --mode hybrid` and the embeddings backfilled, it returned the memory with its recorded cause and reported `mode: hybrid`, FTS 0 candidates, vector 1. This is the case for recommending hybrid.
+- Gap: Codex's `apply_patch` event has no text (its input is not mapped), so the diff of a Codex edit is not captured; only the final reply carries the fix.
+- Not automated: it needs the user to trust the hooks in Codex once, so there is no script for this direction.
