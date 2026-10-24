@@ -188,6 +188,8 @@ Reliability strategy: hooks return fast; write small redacted events to a local 
 
 Triggers: SessionEnd (if available), manual `consolidate`, idle timeout (for agents without SessionEnd). Each session defines a maximum input length and a configurable segment-selection strategy. A `MemoryExtractor` trait outputs structured candidates: type/title/content/evidence/notes. Model output must be schema-validated and size-limited. Without an LLM, events are still retained, and the job is `pending_provider` or extraction is skipped, with status reported.
 
+As built (B1-02): `memory_core::extract::MemoryExtractor` returns `Candidate`s (kind, title, content, evidence) and reports an unreachable provider as `Error::Unavailable`, so the caller keeps the events and retries. The `memory-llm` crate implements it for Ollama (`/api/generate` with a JSON-schema `format`, temperature 0, default model `qwen3:8b`, server `http://127.0.0.1:11434`). A non-loopback URL is refused unless `--allow-remote` is given, and only plain `http://` is supported. Model output that is not valid JSON or does not match the schema is rejected, never stored. `chloe llm check` and `chloe llm extract <session>` (prints candidates, saves nothing) demonstrate it; `doctor` reports the provider as informational. Config: `CHLOE_OLLAMA_URL`, `CHLOE_LLM_MODEL`. The prompt and schema are minimal placeholders until B1-03.
+
 ### 6.3 Consolidation
 
 - Use same-project FTS/vector search to find existing memories that may be duplicates.

@@ -2,6 +2,7 @@ mod doctor;
 mod events;
 mod hook;
 mod jobs;
+mod llm;
 
 use std::io::Read;
 use std::path::PathBuf;
@@ -71,6 +72,11 @@ enum Command {
     Jobs {
         #[command(subcommand)]
         command: jobs::JobsCommand,
+    },
+    /// Local model provider: check it, try extraction on a captured session
+    Llm {
+        #[command(subcommand)]
+        command: llm::LlmCommand,
     },
     /// Agent hook capture (Claude Code, Codex)
     Hook {
@@ -302,6 +308,7 @@ fn run(cli: Cli) -> anyhow::Result<bool> {
             std::io::stdout().lock(),
         )?,
         Command::Events { command } => events::run(&store, &config, command, json)?,
+        Command::Llm { command } => llm::run(&store, command, json)?,
         Command::Jobs { command } => jobs::run(&store, command, json)?,
         Command::Doctor { .. } | Command::Hook { .. } => unreachable!(),
         Command::Memory { command } => match command {

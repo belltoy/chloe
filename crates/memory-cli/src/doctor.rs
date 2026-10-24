@@ -71,6 +71,15 @@ pub fn run(db_path: &Path, reindex: bool) -> Vec<Check> {
                     })
                     .map_err(Into::into),
             );
+            // Informational: extraction is optional, so a missing model server is not a failure.
+            let mut cfg = memory_llm::OllamaConfig::default();
+            cfg.base_url = std::env::var("CHLOE_OLLAMA_URL").unwrap_or(cfg.base_url);
+            cfg.model = std::env::var("CHLOE_LLM_MODEL").unwrap_or(cfg.model);
+            cfg.timeout = std::time::Duration::from_secs(3);
+            let provider = memory_llm::Ollama::new(cfg)
+                .and_then(|o| crate::llm::status(&o))
+                .unwrap_or_else(|e| format!("extraction disabled: {e}"));
+            add("llm_provider", Ok(provider));
             match store.doctor() {
                 Ok(d) => {
                     add("schema_version", Ok(d.schema_version.to_string()));

@@ -14,6 +14,9 @@ pub enum Error {
     /// already finished.
     #[error("stale lease: {0}")]
     StaleLease(String),
+    /// An external provider (e.g. the local model server) cannot be reached or refused.
+    #[error("provider unavailable: {0}")]
+    Unavailable(String),
     #[error("storage error: {0}")]
     Storage(String),
     #[error("internal error: {0}")]
@@ -28,6 +31,7 @@ impl Error {
             Error::NotFound(_) => "not_found",
             Error::Conflict { .. } => "conflict",
             Error::StaleLease(_) => "stale_lease",
+            Error::Unavailable(_) => "unavailable",
             Error::Storage(_) => "storage",
             Error::Internal(_) => "internal",
         }
