@@ -4,11 +4,13 @@
 //! through the core traits, and there is no daemon — the caller loops.
 
 mod embed;
+mod eval;
 mod hybrid;
 mod policy;
 mod propose;
 
 pub use embed::{EMBED_JOB_KIND, EmbedDone, EmbedPlan, plan_embeddings, run_next_embedding};
+pub use eval::{Dataset, EvalMemory, EvalQuery, MODES, Report, Row, run_eval};
 pub use hybrid::{HybridHit, HybridResult, hybrid_search};
 pub use policy::{Outcome, PolicyReport, apply_policy, evaluate};
 pub use propose::{ProposeReport, propose_pending};

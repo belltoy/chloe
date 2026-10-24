@@ -321,3 +321,48 @@ fn fts_failure_is_not_degraded_away() {
         Err(Error::InvalidArgument(_))
     ));
 }
+
+#[test]
+fn eval_scores_every_mode_per_language_and_rejects_bad_labels() {
+    use memory_engine::{Dataset, run_eval};
+    let ds = |relevant: &str| -> Dataset {
+        serde_json::from_value(serde_json::json!({
+            "memories": [
+                {"key": "a", "kind": "fact", "title": "WAL", "content": "SQLite journal"},
+                {"key": "b", "kind": "fact", "title": "Port", "content": "never open a network port"},
+            ],
+            "queries": [
+                {"id": "q1", "lang": "en", "text": "journal", "relevant": [relevant]},
+                {"id": "q2", "lang": "cross", "text": "database", "relevant": ["a"]},
+            ],
+        }))
+        .unwrap()
+    };
+    let (d, s) = store();
+    let p = project(&d, "p", &s);
+    let report = run_eval(&s, &Topics, p, &ds("a")).unwrap();
+    // 3 modes x (en, cross, all)
+    assert_eq!(report.rows.len(), 9);
+    let row = |lang: &str, mode: &str| {
+        report
+            .rows
+            .iter()
+            .find(|r| r.lang == lang && r.mode == mode)
+            .unwrap()
+    };
+    assert_eq!(
+        (row("en", "fts").recall_at_5, row("en", "fts").mrr),
+        (1.0, 1.0)
+    );
+    // "database" shares no word with the memory: only the vector path finds it.
+    assert_eq!(row("cross", "fts").recall_at_5, 0.0);
+    assert_eq!(row("cross", "vector").mrr, 1.0);
+    assert_eq!(row("all", "hybrid").queries, 2);
+
+    let (d, s) = store();
+    let p = project(&d, "p", &s);
+    assert!(matches!(
+        run_eval(&s, &Topics, p, &ds("missing")),
+        Err(Error::InvalidArgument(_))
+    ));
+}

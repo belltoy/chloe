@@ -2,6 +2,7 @@ mod candidates;
 mod consolidate;
 mod doctor;
 mod embeddings;
+mod eval;
 mod events;
 mod hook;
 mod jobs;
@@ -96,6 +97,8 @@ enum Command {
         #[command(subcommand)]
         command: embeddings::EmbeddingsCommand,
     },
+    /// Score FTS, Vector and Hybrid retrieval on a labelled dataset (temporary database)
+    Eval(eval::Eval),
     /// Agent hook capture (Claude Code, Codex)
     Hook {
         #[command(subcommand)]
@@ -285,6 +288,11 @@ fn run(cli: Cli) -> anyhow::Result<bool> {
         return Ok(true);
     }
 
+    if let Command::Eval(args) = cli.command {
+        eval::run(args, json)?;
+        return Ok(true);
+    }
+
     if let Command::Hook { command } = cli.command {
         match command {
             HookCommand::Claude | HookCommand::Codex => unreachable!("handled in main"),
@@ -363,7 +371,7 @@ fn run(cli: Cli) -> anyhow::Result<bool> {
         Command::Llm { command } => llm::run(&store, command, json)?,
         Command::Embeddings { command } => embeddings::run(&store, command, json)?,
         Command::Jobs { command } => jobs::run(&store, command, json)?,
-        Command::Doctor { .. } | Command::Hook { .. } => unreachable!(),
+        Command::Doctor { .. } | Command::Hook { .. } | Command::Eval(_) => unreachable!(),
         Command::Memory { command } => match command {
             MemoryCommand::Add {
                 title,

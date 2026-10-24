@@ -1,0 +1,508 @@
+{
+ "memories": [
+  {
+   "key": "e01",
+   "kind": "decision",
+   "title": "Use SQLite WAL mode",
+   "content": "Enable WAL and a 5 second busy timeout so the CLI and MCP server can read and write the same database concurrently."
+  },
+  {
+   "key": "e02",
+   "kind": "constraint",
+   "title": "No network listeners by default",
+   "content": "The service must never bind a TCP port unless the user opts in; MCP runs over stdio only."
+  },
+  {
+   "key": "e03",
+   "kind": "gotcha",
+   "title": "FTS5 query syntax injection",
+   "content": "Always quote each search token before passing it to MATCH, otherwise characters like a colon or a hyphen are parsed as FTS5 operators."
+  },
+  {
+   "key": "e04",
+   "kind": "procedure",
+   "title": "Run the full check before committing",
+   "content": "Run cargo fmt --check, cargo clippy with warnings denied, then cargo test for the whole workspace."
+  },
+  {
+   "key": "e05",
+   "kind": "decision",
+   "title": "Optimistic concurrency for updates",
+   "content": "Updates carry expected_revision; a mismatch returns a conflict error and the caller must re-read before retrying."
+  },
+  {
+   "key": "e06",
+   "kind": "constraint",
+   "title": "Never log memory bodies",
+   "content": "Logs go to stderr and must not contain memory content or secrets; stdout is reserved for command output."
+  },
+  {
+   "key": "e07",
+   "kind": "gotcha",
+   "title": "Cross-project reads leak existence",
+   "content": "Reading another project's memory must return not found, never a permission error, so ids cannot be probed."
+  },
+  {
+   "key": "e08",
+   "kind": "decision",
+   "title": "Jobs use leases with backoff",
+   "content": "Background jobs are leased for a limited time; failed attempts are retried with exponential backoff until they land in the dead letter."
+  },
+  {
+   "key": "e09",
+   "kind": "procedure",
+   "title": "Retry a dead-lettered job",
+   "content": "After fixing the cause, run the jobs retry command with the job id to give it a fresh attempt budget."
+  },
+  {
+   "key": "e10",
+   "kind": "gotcha",
+   "title": "Ollama model must be pulled first",
+   "content": "Embedding or extraction fails with HTTP 404 when the model was not pulled on the local Ollama server."
+  },
+  {
+   "key": "e11",
+   "kind": "decision",
+   "title": "Redact secrets before storing events",
+   "content": "API keys, tokens and passwords are masked in captured agent events before they reach the database."
+  },
+  {
+   "key": "e12",
+   "kind": "fact",
+   "title": "Hook capture always exits zero",
+   "content": "The agent hook entry point swallows errors and exits 0 so a broken memory service can never block the coding agent."
+  },
+  {
+   "key": "e13",
+   "kind": "decision",
+   "title": "Candidates need human review",
+   "content": "Extracted knowledge becomes a candidate; nothing turns into a memory without a person accepting it."
+  },
+  {
+   "key": "e14",
+   "kind": "gotcha",
+   "title": "Resumed sessions are not extracted again",
+   "content": "A session that is resumed after extraction ran is not extracted again, so late events are missed until forced."
+  },
+  {
+   "key": "e15",
+   "kind": "procedure",
+   "title": "Back up the database",
+   "content": "Copy the SQLite file together with its WAL and SHM files while no writer is running, or use the backup API."
+  },
+  {
+   "key": "e16",
+   "kind": "constraint",
+   "title": "Never mix embedding dimensions",
+   "content": "Vectors from different embedding models or sizes must not coexist in one index; changing the model rebuilds it."
+  },
+  {
+   "key": "e17",
+   "kind": "fact",
+   "title": "Default data directory",
+   "content": "On macOS the database lives under ~/.local/share/chloe following XDG, not Application Support."
+  },
+  {
+   "key": "e18",
+   "kind": "decision",
+   "title": "Supersession is proposed, not automatic",
+   "content": "When a new memory replaces an old one, the system proposes a supersedes link and a person applies it."
+  },
+  {
+   "key": "e19",
+   "kind": "procedure",
+   "title": "Add a new schema migration",
+   "content": "Create the next numbered SQL file in migrations and append it to the MIGRATIONS list; migrations are forward only."
+  },
+  {
+   "key": "e20",
+   "kind": "gotcha",
+   "title": "Canonicalize project paths",
+   "content": "Canonicalize project directories before hashing them, otherwise symlinks and worktrees create duplicate projects."
+  },
+  {
+   "key": "z01",
+   "kind": "decision",
+   "title": "评测集固定不变",
+   "content": "检索评测使用固定的记忆和查询，并由人工标注相关记忆，避免每次结果不可比较。"
+  },
+  {
+   "key": "z02",
+   "kind": "gotcha",
+   "title": "中文关键词只能整段匹配",
+   "content": "FTS 的 unicode61 分词器不会切分中文，查询词必须与整段连续文字一致才能命中。"
+  },
+  {
+   "key": "z03",
+   "kind": "fact",
+   "title": "CI 构建缓存",
+   "content": "CI 中使用 cargo 缓存可以把构建时间从十分钟降到两分钟，但缓存键必须包含 Cargo.lock 的哈希。"
+  },
+  {
+   "key": "z04",
+   "kind": "procedure",
+   "title": "发布流程",
+   "content": "发布前先更新版本号和变更日志，打上标签，再由 CI 构建各平台的二进制并上传。"
+  },
+  {
+   "key": "z05",
+   "kind": "constraint",
+   "title": "代码评审规则",
+   "content": "每个合并请求至少需要一位评审者批准，并且所有检查通过之后才允许合并到主分支。"
+  },
+  {
+   "key": "z06",
+   "kind": "gotcha",
+   "title": "时区处理",
+   "content": "数据库里的时间一律保存为 UTC 微秒，只有在展示给用户时才转换成本地时区。"
+  },
+  {
+   "key": "z07",
+   "kind": "gotcha",
+   "title": "导入任务内存泄漏",
+   "content": "长时间运行的导入任务内存持续增长，原因是每批事件的缓冲区没有释放，需要在循环里清空。"
+  },
+  {
+   "key": "z08",
+   "kind": "decision",
+   "title": "配置优先级",
+   "content": "配置的优先级依次是命令行参数、环境变量、配置文件、默认值。"
+  },
+  {
+   "key": "z09",
+   "kind": "decision",
+   "title": "错误码约定",
+   "content": "所有对外错误使用固定的机器可读错误码，例如 not_found 和 conflict，便于脚本判断。"
+  },
+  {
+   "key": "z10",
+   "kind": "decision",
+   "title": "本地嵌入模型选择",
+   "content": "嵌入模型选用 qwen3-embedding 0.6b，因为它体积小，并且同时覆盖中文和英文。"
+  },
+  {
+   "key": "z11",
+   "kind": "procedure",
+   "title": "数据库损坏恢复",
+   "content": "发现数据库损坏时，先停止所有进程，用 integrity_check 确认，再从最近的备份恢复。"
+  },
+  {
+   "key": "z12",
+   "kind": "constraint",
+   "title": "测试数据隔离",
+   "content": "测试必须使用临时目录和显式的数据库路径，绝不能碰用户真实的数据目录。"
+  },
+  {
+   "key": "z13",
+   "kind": "gotcha",
+   "title": "并发初始化冲突",
+   "content": "两个进程同时初始化新数据库会出现 database is locked，需要在打开时重试几秒。"
+  },
+  {
+   "key": "z14",
+   "kind": "constraint",
+   "title": "密钥管理",
+   "content": "仓库里不允许提交任何密钥，凭据通过环境变量传入，扫描工具会在 CI 中拦截。"
+  },
+  {
+   "key": "z15",
+   "kind": "fact",
+   "title": "日志级别",
+   "content": "默认日志级别是 info，调试时通过环境变量 CHLOE_LOG 调到 debug。"
+  },
+  {
+   "key": "z16",
+   "kind": "procedure",
+   "title": "依赖升级",
+   "content": "升级依赖时一次只升一个大版本，运行完整测试并查看变更日志，再合并。"
+  },
+  {
+   "key": "z17",
+   "kind": "decision",
+   "title": "会话采集范围",
+   "content": "只采集用户提示、工具调用摘要和会话结束事件，不保存完整的终端输出。"
+  },
+  {
+   "key": "z18",
+   "kind": "fact",
+   "title": "性能基线",
+   "content": "全文检索在一万条记忆上的 p95 延迟低于十毫秒，作为回归检查的基线。"
+  },
+  {
+   "key": "x01",
+   "kind": "decision",
+   "title": "SQLite busy_timeout 设置",
+   "content": "把 busy_timeout 设为 5 秒，这样多个 agent 同时写入时不会立刻报 SQLITE_BUSY。"
+  },
+  {
+   "key": "x02",
+   "kind": "decision",
+   "title": "MCP 工具命名",
+   "content": "MCP 的工具统一用 memory_ 前缀，比如 memory_search 和 memory_save，方便 agent 识别。"
+  },
+  {
+   "key": "x03",
+   "kind": "gotcha",
+   "title": "Docker 构建缓存",
+   "content": "Docker 镜像构建很慢是因为 COPY 放在依赖安装之前，应该先复制 Cargo.toml 再复制源码。"
+  },
+  {
+   "key": "x04",
+   "kind": "gotcha",
+   "title": "Git worktree 项目识别",
+   "content": "同一个仓库的多个 git worktree 要映射到同一个 project，否则记忆会被拆散。"
+  },
+  {
+   "key": "x05",
+   "kind": "fact",
+   "title": "Redis 会话缓存",
+   "content": "会话缓存放在 Redis 里，TTL 设置为 30 分钟，过期后需要重新登录。"
+  },
+  {
+   "key": "x06",
+   "kind": "constraint",
+   "title": "Rust 编译警告",
+   "content": "CI 里 clippy 的 warning 一律当作 error，本地提交前也要先跑 cargo clippy。"
+  },
+  {
+   "key": "x07",
+   "kind": "procedure",
+   "title": "GitHub Actions 矩阵",
+   "content": "在 GitHub Actions 里用 matrix 同时测试 macOS 和 Linux，并缓存 ~/.cargo 目录。"
+  },
+  {
+   "key": "x08",
+   "kind": "decision",
+   "title": "JSON schema 校验",
+   "content": "LLM 返回的内容必须通过 JSON schema 校验，不合法就丢弃，不能直接入库。"
+  },
+  {
+   "key": "x09",
+   "kind": "fact",
+   "title": "Kubernetes 探针",
+   "content": "服务部署在 Kubernetes 上时，liveness probe 调用 /healthz，readiness probe 调用 /ready。"
+  },
+  {
+   "key": "x10",
+   "kind": "gotcha",
+   "title": "OAuth token 刷新",
+   "content": "OAuth 的 access token 一小时过期，必须用 refresh token 自动刷新，否则长任务会 401。"
+  },
+  {
+   "key": "x11",
+   "kind": "procedure",
+   "title": "PostgreSQL 建索引",
+   "content": "给大表加索引要用 CREATE INDEX CONCURRENTLY，避免锁表阻塞线上写入。"
+  },
+  {
+   "key": "x12",
+   "kind": "gotcha",
+   "title": "Tokio 阻塞调用",
+   "content": "在 tokio 的异步任务里调用阻塞的文件 IO 会卡住 executor，应放到 spawn_blocking。"
+  }
+ ],
+ "queries": [
+  {
+   "id": "q01",
+   "lang": "en",
+   "text": "how do we let the CLI and the MCP server write the same database at once",
+   "relevant": [
+    "e01"
+   ]
+  },
+  {
+   "id": "q02",
+   "lang": "en",
+   "text": "what do I run before committing",
+   "relevant": [
+    "e04"
+   ]
+  },
+  {
+   "id": "q03",
+   "lang": "en",
+   "text": "why does a stale update get rejected",
+   "relevant": [
+    "e05"
+   ]
+  },
+  {
+   "id": "q04",
+   "lang": "en",
+   "text": "model returns 404 when embedding",
+   "relevant": [
+    "e10"
+   ]
+  },
+  {
+   "id": "q05",
+   "lang": "en",
+   "text": "how do I make a failed background job run again",
+   "relevant": [
+    "e09"
+   ]
+  },
+  {
+   "id": "q06",
+   "lang": "en",
+   "text": "can an agent hook block my coding session if the memory service is down",
+   "relevant": [
+    "e12"
+   ]
+  },
+  {
+   "id": "q07",
+   "lang": "zh",
+   "text": "怎么保证评测结果可以前后比较",
+   "relevant": [
+    "z01"
+   ]
+  },
+  {
+   "id": "q08",
+   "lang": "zh",
+   "text": "搜中文词为什么搜不到",
+   "relevant": [
+    "z02"
+   ]
+  },
+  {
+   "id": "q09",
+   "lang": "zh",
+   "text": "时间在数据库里怎么存",
+   "relevant": [
+    "z06"
+   ]
+  },
+  {
+   "id": "q10",
+   "lang": "zh",
+   "text": "为什么选这个嵌入模型",
+   "relevant": [
+    "z10"
+   ]
+  },
+  {
+   "id": "q11",
+   "lang": "zh",
+   "text": "数据库坏了怎么恢复",
+   "relevant": [
+    "z11"
+   ]
+  },
+  {
+   "id": "q12",
+   "lang": "zh",
+   "text": "导入任务内存越来越大怎么回事",
+   "relevant": [
+    "z07"
+   ]
+  },
+  {
+   "id": "q13",
+   "lang": "mixed",
+   "text": "SQLITE_BUSY 怎么避免",
+   "relevant": [
+    "x01",
+    "z13"
+   ]
+  },
+  {
+   "id": "q14",
+   "lang": "mixed",
+   "text": "git worktree 怎么算同一个 project",
+   "relevant": [
+    "x04",
+    "e20"
+   ]
+  },
+  {
+   "id": "q15",
+   "lang": "mixed",
+   "text": "clippy warning 在 CI 里怎么处理",
+   "relevant": [
+    "x06"
+   ]
+  },
+  {
+   "id": "q16",
+   "lang": "mixed",
+   "text": "tool 名字用什么 prefix",
+   "relevant": [
+    "x02"
+   ]
+  },
+  {
+   "id": "q17",
+   "lang": "mixed",
+   "text": "tokio 里阻塞 IO 怎么办",
+   "relevant": [
+    "x12"
+   ]
+  },
+  {
+   "id": "q18",
+   "lang": "mixed",
+   "text": "给 Postgres 大表建索引会不会锁表",
+   "relevant": [
+    "x11"
+   ]
+  },
+  {
+   "id": "q19",
+   "lang": "cross",
+   "text": "不能让服务监听网络端口吗",
+   "relevant": [
+    "e02"
+   ]
+  },
+  {
+   "id": "q20",
+   "lang": "cross",
+   "text": "搜索关键词里有特殊符号会出问题吗",
+   "relevant": [
+    "e03"
+   ]
+  },
+  {
+   "id": "q21",
+   "lang": "cross",
+   "text": "备份 SQLite 要注意什么",
+   "relevant": [
+    "e15"
+   ]
+  },
+  {
+   "id": "q22",
+   "lang": "cross",
+   "text": "how should credentials be handled in the repository",
+   "relevant": [
+    "z14"
+   ]
+  },
+  {
+   "id": "q23",
+   "lang": "cross",
+   "text": "how long does the session cache live before login expires",
+   "relevant": [
+    "x05"
+   ]
+  },
+  {
+   "id": "q24",
+   "lang": "cross",
+   "text": "what is the rule for merging into the main branch",
+   "relevant": [
+    "z05"
+   ]
+  },
+  {
+   "id": "q25",
+   "lang": "cross",
+   "text": "how do we release a new version",
+   "relevant": [
+    "z04"
+   ]
+  }
+ ]
+}
