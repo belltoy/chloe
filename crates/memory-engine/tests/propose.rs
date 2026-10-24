@@ -485,3 +485,48 @@ fn more_pending_candidates_than_one_batch_are_all_proposed() {
             .all(|id| w.store.candidate(id).unwrap().proposal.is_some())
     );
 }
+
+#[test]
+fn a_duplicate_verdict_with_another_day_or_number_becomes_a_conflict() {
+    for (old, new) in [
+        (
+            "The staging database is read-only on Fridays",
+            "The staging database is read-only on Saturdays",
+        ),
+        ("CI runs Python 3.9", "CI runs Python 3.12"),
+    ] {
+        let w = world();
+        let m = memory(&w, Some(w.project), Kind::Fact, old, old);
+        let id = candidate(&w, Kind::Fact, new, new);
+        propose_pending(&w.store, Some(&Judge::new(Relation::Duplicate))).unwrap();
+        let p = proposal(&w, &id);
+        assert_eq!(
+            (p.action, p.target),
+            (ProposedAction::Conflict, Some(m.id)),
+            "{new}"
+        );
+        assert!(
+            p.reason.starts_with("the model saw a duplicate but"),
+            "{}",
+            p.reason
+        );
+    }
+    // The same claims stay a duplicate.
+    let w = world();
+    let m = memory(
+        &w,
+        Some(w.project),
+        Kind::Fact,
+        "Staging is read-only on Fridays",
+        "backup job, 02:00 to 04:00 UTC",
+    );
+    let id = candidate(
+        &w,
+        Kind::Fact,
+        "Staging DB read-only Friday mornings",
+        "backup job, 02:00 to 04:00 UTC",
+    );
+    propose_pending(&w.store, Some(&Judge::new(Relation::Duplicate))).unwrap();
+    let p = proposal(&w, &id);
+    assert_eq!((p.action, p.target), (ProposedAction::Merge, Some(m.id)));
+}

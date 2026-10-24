@@ -1,0 +1,49 @@
+== session 1: extract, then accept everything (the first copy of each fact) ==
+imported 10 events, queued 1 sessions (0 already queued), extracted 1 sessions: 4 new candidates
+proposals: 4 made, 0 deferred (model unavailable)
+review them with `chloe candidates list`
+   f1607bce decision | Sign before publishing
+   8b790392 gotcha | SQLite ADD COLUMN NOT NULL requires DEFAULT
+   3c4f2c8b fact | Staging DB is read-only on Fridays
+   294cc9f5 constraint | CI uses Python 3.9
+== session 2: same facts again, other words; one contradiction ==
+imported 10 events, queued 1 sessions (0 already queued), extracted 1 sessions: 4 new candidates
+proposals: 4 made, 0 deferred (model unavailable)
+policy: 1 duplicates auto-merged, 0 conflicts flagged, 2 need a person
+review them with `chloe candidates list`
+-- candidates after the automatic step (state, proposal) --
+   pending | supersede model | decision | CI image upgraded to Python 3.12
+   merged | merge model | fact | Staging is read-only on Saturdays
+   pending | create model | gotcha | SQLite version mismatch causes ALTER TABLE issues
+   pending | merge model | gotcha | Signing must be done before publishing
+-- active memories now (nothing was accepted from session 2 yet) --
+   f1607bce decision | Sign before publishing
+   8b790392 gotcha | SQLite ADD COLUMN NOT NULL requires DEFAULT
+   3c4f2c8b fact | Staging DB is read-only on Fridays
+   294cc9f5 constraint | CI uses Python 3.9
+== a person follows the model's proposal for what is still pending (merge / create); conflicts are left ==
+   98d2757a gotcha | SQLite version mismatch causes ALTER TABLE issues
+   f1607bce decision | Sign before publishing
+   8b790392 gotcha | SQLite ADD COLUMN NOT NULL requires DEFAULT
+   3c4f2c8b fact | Staging DB is read-only on Fridays
+   294cc9f5 constraint | CI uses Python 3.9
+== checks ==
+Active memories about signing before publish: 1 (wanted 1)
+PASS A: no two equivalent Active memories
+PASS B: both sqlite points kept
+FAIL C staging day: the new value was merged away as a duplicate
+PASS D python version: the new value is kept or open for a person
+-- provenance of each memory --
+memory 98d2757a:
+    2026-10-24 7:48:40.210921 +00:00:00  Created  ec701356-1c08-4203-b6b5-96bc1f575be4  claude_code session s2, 3 event(s)
+memory f1607bce:
+    2026-10-24 7:48:21.155733 +00:00:00  Created  c0770929-eed2-4c9b-ad53-ab1c1d54cfd3  claude_code session s1, 3 event(s)
+    2026-10-24 7:48:40.221625 +00:00:00  Merged  5fa7f319-b9db-4d36-861d-2660f466731d  claude_code session s2, 4 event(s)
+memory 8b790392:
+    2026-10-24 7:48:21.147763 +00:00:00  Created  b97bc57c-84eb-4c73-aea9-4676b3c15f15  claude_code session s1, 3 event(s)
+memory 3c4f2c8b:
+    2026-10-24 7:48:21.139118 +00:00:00  Created  a2abd835-86ff-4087-adbf-1ca85412a7d4  claude_code session s1, 1 event(s)
+    2026-10-24 7:48:40.08577 +00:00:00  Merged  fce3ddf2-6f48-47d7-a6c4-47ec9ce72158  claude_code session s2, 1 event(s)
+memory 294cc9f5:
+    2026-10-24 7:48:21.127568 +00:00:00  Created  45a14826-d9a9-404a-ac41-9bc6dbd0f27f  claude_code session s1, 1 event(s)
+(memories after session 1: 4; after the automatic step of session 2: 4)

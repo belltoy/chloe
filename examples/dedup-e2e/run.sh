@@ -2,10 +2,12 @@
 # Scenario B-08: the same fact in two sessions must not become two Active memories.
 # Session 1 and session 2 are hand-written event streams (no agent is run), fed through the real
 # capture spool, the local model (extraction + duplicate judgement) and the real review commands.
-# Three cases, each stated in session 1 and again, worded differently, in session 2:
+# Four cases, each stated in session 1 and again, worded differently, in session 2:
 #   A same fact            -> should merge into the first memory (no second Active memory)
 #   B similar topic, other detail -> must stay a separate memory
-#   C same subject, contradicting detail -> should be flagged as a conflict, never merged
+#   C same subject, contradicting detail (a day) -> never merged away as a duplicate
+#   D same subject, a changed value (a version)  -> never merged away as a duplicate
+# VARIANT=1|2|3 picks the wording of the C correction.
 # Temp dir and temp database; your real chloe data is not touched. Needs Ollama with qwen3:8b.
 # Usage: CHLOE=/path/to/chloe ./run.sh   (default: `chloe` on PATH)
 set -euo pipefail
@@ -34,6 +36,12 @@ for i, (kind, tool, text) in enumerate(json.loads(events)):
 PY
 }
 
+# Wording of the staging correction in session 2 (VARIANT=1..3) so the result is not tied to one phrasing.
+case "${VARIANT:-1}" in
+  1) CORRECTION="Correction on staging: the database is read-only on Saturdays from 02:00 to 04:00 UTC (backup job), not Fridays." ;;
+  2) CORRECTION="Heads up, staging is actually read-only on Saturdays, 02:00-04:00 UTC, because of the backup job. Please update what we know about Fridays." ;;
+  3) CORRECTION="The staging database goes read-only for the backup every Saturday between 02:00 and 04:00 UTC, so imports fail then." ;;
+esac
 S1='[
 ["user_prompt",null,"Publishing the release fails with: unsigned artifact. What is going on?"],
 ["tool_result_summary","Bash","make publish: error unsigned artifact"],
@@ -43,6 +51,7 @@ S1='[
 ["tool_result_summary","Edit","migrations/014.sql\n- ALTER TABLE jobs ADD COLUMN owner TEXT NOT NULL;\n+ ALTER TABLE jobs ADD COLUMN owner TEXT NOT NULL DEFAULT '"'"''"'"';"],
 ["assistant_message",null,"SQLite refuses ALTER TABLE ... ADD COLUMN with NOT NULL unless the column has a non-null DEFAULT. Adding DEFAULT empty string fixed the migration."],
 ["user_prompt",null,"For your information: the staging database is read-only every Friday between 02:00 and 04:00 UTC because of the backup job, so imports fail in that window."],
+["user_prompt",null,"FYI the CI image runs Python 3.9, so do not use match statements in the scripts."],
 ["session_end",null,null]
 ]'
 S2='[
@@ -53,7 +62,8 @@ S2='[
 ["user_prompt",null,"Another one: dropping a column in sqlite with ALTER TABLE ... DROP COLUMN gives a syntax error on our CI image."],
 ["tool_result_summary","Bash","sqlite3 --version: 3.31.1"],
 ["assistant_message",null,"DROP COLUMN only exists since SQLite 3.35.0; the CI image has 3.31.1, so we have to rebuild the table instead."],
-["user_prompt",null,"Correction on staging: the database is read-only on Saturdays from 02:00 to 04:00 UTC (backup job), not Fridays."],
+["user_prompt",null,"'"$CORRECTION"'"],
+["user_prompt",null,"Update: the CI image was upgraded and now runs Python 3.12, not 3.9, so match statements are fine."],
 ["session_end",null,null]
 ]'
 
@@ -111,13 +121,17 @@ import json,sys
 t=" ".join((m["title"]+m["content"]).lower() for m in json.load(sys.stdin))
 print("PASS B: both sqlite points kept" if "default" in t and ("3.35" in t or "drop column" in t) else "FAIL B: a sqlite point is missing")'
 python3 - <<PY
-import json, subprocess, os
-out = subprocess.run(["$CHLOE", "--dir", "$tmp/repo", "--json", "memory", "list"], capture_output=True, text=True).stdout
-mem = [m for m in json.loads(out) if "staging" in (m["title"] + m["content"]).lower()]
-text = " ".join((m["title"] + " " + m["content"]).lower() for m in mem)
-cands = subprocess.run(["$CHLOE", "--dir", "$tmp/repo", "--json", "candidates", "list", "--state", "all"], capture_output=True, text=True).stdout
-open_conflict = any(x["state"] in ("conflict", "pending") and "staging" in x["title"].lower() for x in json.loads(cands))
-print("PASS C: the contradiction was kept for a person (conflict/pending) or stored" if open_conflict or "saturday" in text else "FAIL C: the Saturday correction was merged away and is not visible in any memory text")
+import json, subprocess
+def run(*a):
+    return json.loads(subprocess.run(["$CHLOE", "--dir", "$tmp/repo", "--json", *a], capture_output=True, text=True).stdout)
+mem = run("memory", "list")
+cands = run("candidates", "list", "--state", "all")
+for name, subject, new in [("C staging day", "staging", "saturday"), ("D python version", "python", "3.12")]:
+    text = " ".join((m["title"] + " " + m["content"]).lower() for m in mem if subject in (m["title"] + m["content"]).lower())
+    new_in = lambda x: new in (x["title"] + " " + x["content"]).lower()
+    merged = [x for x in cands if x["state"] == "merged" and new_in(x)]
+    kept = new in text or any(x["state"] in ("conflict", "pending", "accepted") and new_in(x) for x in cands)
+    print(("PASS " if kept and not merged else "FAIL ") + name + (": the new value is kept or open for a person" if kept and not merged else ": the new value was merged away as a duplicate"))
 PY
 echo "-- provenance of each memory --"
 for id in $(c --json memory list | python3 -c 'import json,sys; print(" ".join(m["id"] for m in json.load(sys.stdin)))'); do

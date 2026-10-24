@@ -17,9 +17,9 @@ const RULES: &str = "\
 You compare one NEW note with EXISTING notes in a project's memory and say how they relate.
 
 Relations:
-- duplicate: the new note states the same knowledge as an existing note; nothing new is added.
+- duplicate: the new note states the same knowledge as an existing note; nothing new is added and every value (a day, number, version, name, limit) is the same. The same subject with a different value is never a duplicate.
 - contradicts: the new note states the opposite of, or a rule or decision incompatible with, an existing note, and nothing says it replaces it.
-- supersedes: the new note clearly says it replaces or changes an existing note (\"now we use X instead of Y\", a corrected fact): a newer version of the same point.
+- supersedes: the new note clearly says it replaces or changes an existing note (\"now we use X instead of Y\", a corrected fact or value, such as another day or version for the same thing): a newer version of the same point.
 - unrelated: anything else, including notes that are merely on the same topic or add detail.
 Be conservative: when unsure, answer unrelated.
 

@@ -77,6 +77,27 @@ fn similarity(a: &str, b: &str) -> f64 {
     }
 }
 
+const DATE_WORDS: &[&str] = &[
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday",
+    "january",
+    "february",
+    "march",
+    "april",
+    "june",
+    "july",
+    "august",
+    "september",
+    "october",
+    "november",
+    "december",
+];
+
 /// Numbers and negations decide what a sentence claims, and barely move a similarity score:
 /// "pool size is 8" and "pool size is 16", "is allowed" and "is not allowed".
 fn claims(s: &str) -> (Vec<String>, bool) {
@@ -109,9 +130,25 @@ fn claims(s: &str) -> (Vec<String>, bool) {
         .filter(|w| w.chars().any(|c| c.is_ascii_digit()))
         .map(str::to_lowercase)
         .collect();
+    let lower = s.to_lowercase().replace('\'', "");
+    // Days and months are values too: "read-only on Fridays" and "on Saturdays" differ by
+    // nothing a score or a digit check would see.
+    numbers.extend(
+        words(&lower)
+            .into_iter()
+            .map(|w| w.trim_end_matches('s').to_string())
+            .filter(|w| DATE_WORDS.contains(&w.as_str())),
+    );
+    numbers.extend(
+        [
+            "周一", "周二", "周三", "周四", "周五", "周六", "周日", "星期",
+        ]
+        .iter()
+        .filter(|d| lower.contains(*d))
+        .map(|d| d.to_string()),
+    );
     numbers.sort();
     numbers.dedup();
-    let lower = s.to_lowercase().replace('\'', "");
     let negated = NEGATIONS.iter().any(|n| {
         if n.is_ascii() {
             words(&lower).iter().any(|w| w == n)
@@ -237,7 +274,27 @@ fn propose_one<S: MemoryService>(
     };
     // The target must be one of the memories we showed; otherwise the verdict is ignored.
     let target = v.memory.filter(|m| hits.iter().any(|h| h.memory.id == *m));
+    // A model that calls two notes the same while their numbers or days differ has missed the
+    // one detail that matters (a corrected value is not a duplicate): a person looks. Polarity
+    // is not compared here: a paraphrase ("alone does not sign" vs "must sign") flips it
+    // without changing the point, and the judge itself is asked about opposites.
+    let claims_differ = |t: &memory_core::MemoryId| {
+        hits.iter().find(|h| h.memory.id == *t).is_some_and(|h| {
+            claims(&format!("{} {}", c.candidate.title, c.candidate.content)).0
+                != claims(&format!("{} {}", h.memory.title, h.memory.content)).0
+        })
+    };
     Ok(Some(match (v.relation, target) {
+        (Relation::Duplicate, Some(t)) if claims_differ(&t) => proposal(
+            ProposedAction::Conflict,
+            Some(t),
+            ProposalMethod::Model,
+            format!(
+                "the model saw a duplicate but numbers or days differ: {}",
+                v.reason
+            ),
+            similar,
+        ),
         (Relation::Duplicate, Some(t)) => proposal(
             ProposedAction::Merge,
             Some(t),

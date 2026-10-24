@@ -1,0 +1,48 @@
+== session 1: extract, then accept everything (the first copy of each fact) ==
+imported 10 events, queued 1 sessions (0 already queued), extracted 1 sessions: 4 new candidates
+proposals: 4 made, 0 deferred (model unavailable)
+review them with `chloe candidates list`
+   9ea10a7e decision | Sign before publishing
+   19b82e7d gotcha | SQLite ADD COLUMN NOT NULL requires DEFAULT
+   ec20aad8 fact | Staging DB is read-only on Fridays
+   25c27268 constraint | CI uses Python 3.9
+== session 2: same facts again, other words; one contradiction ==
+imported 10 events, queued 1 sessions (0 already queued), extracted 1 sessions: 4 new candidates
+proposals: 4 made, 0 deferred (model unavailable)
+policy: 0 duplicates auto-merged, 0 conflicts flagged, 3 need a person
+review them with `chloe candidates list`
+-- candidates after the automatic step (state, proposal) --
+   pending | supersede model | decision | CI image upgraded to Python 3.12
+   pending | supersede model | fact | Database is read-only on Saturday mornings
+   pending | create model | gotcha | SQLite version mismatch causes ALTER TABLE issues
+   pending | merge model | gotcha | Signing must be done before publishing
+-- active memories now (nothing was accepted from session 2 yet) --
+   9ea10a7e decision | Sign before publishing
+   19b82e7d gotcha | SQLite ADD COLUMN NOT NULL requires DEFAULT
+   ec20aad8 fact | Staging DB is read-only on Fridays
+   25c27268 constraint | CI uses Python 3.9
+== a person follows the model's proposal for what is still pending (merge / create); conflicts are left ==
+   98d4bfe6 gotcha | SQLite version mismatch causes ALTER TABLE issues
+   9ea10a7e decision | Sign before publishing
+   19b82e7d gotcha | SQLite ADD COLUMN NOT NULL requires DEFAULT
+   ec20aad8 fact | Staging DB is read-only on Fridays
+   25c27268 constraint | CI uses Python 3.9
+== checks ==
+Active memories about signing before publish: 1 (wanted 1)
+PASS A: no two equivalent Active memories
+PASS B: both sqlite points kept
+PASS C staging day: the new value is kept or open for a person
+PASS D python version: the new value is kept or open for a person
+-- provenance of each memory --
+memory 98d4bfe6:
+    2026-10-24 7:55:48.935221 +00:00:00  Created  9472faed-0b47-4403-9f70-b5d0f839e198  claude_code session s2, 3 event(s)
+memory 9ea10a7e:
+    2026-10-24 7:55:29.584071 +00:00:00  Created  a94d7690-28c6-4def-ad4e-c7f3e5277cce  claude_code session s1, 3 event(s)
+    2026-10-24 7:55:48.944011 +00:00:00  Merged  4a827b60-24c6-4199-a01d-e92544db3971  claude_code session s2, 4 event(s)
+memory 19b82e7d:
+    2026-10-24 7:55:29.575502 +00:00:00  Created  88a930cc-c07f-4c07-a462-2978d3d7213c  claude_code session s1, 3 event(s)
+memory ec20aad8:
+    2026-10-24 7:55:29.56555 +00:00:00  Created  c23fc02a-5a2e-4984-b8b7-a25094e70213  claude_code session s1, 1 event(s)
+memory 25c27268:
+    2026-10-24 7:55:29.555459 +00:00:00  Created  251db62f-89ad-4885-b57c-36d0e58a8e10  claude_code session s1, 1 event(s)
+(memories after session 1: 4; after the automatic step of session 2: 4)
