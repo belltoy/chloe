@@ -115,3 +115,20 @@ Next step agreed in discussion: a minimal prompt change (drop "must state the wh
 1. An explicit assistant report may support a candidate that restates it; only "independently verified", a wider result or a stronger conclusion is a deviation (#2, #5, #10, #24 withdrawn; #8 and #17 stay partial). 2. Wording such as "known issue" is judged by what it adds: #9 not counted, #27 and #29 counted. 3. A concrete fix written as a general guarantee is a widened scope: #21 counted.
 
 Final: 24 faithful, 11 partly faithful, 2 unfaithful, 0 undecided; **13/37 = 35.1%**. The rulings were made after the counts were known, so they are post-hoc; they bring the standard closer to the first baseline's (21.1%), which accepted assistant reports as support. The earlier 45.9% / 48.6% figures in this file are superseded by this one.
+
+## Frozen validation of the prompt change (17 new sessions)
+
+`sessions-frozen.json` (9 useful, 8 nothing) was written and committed (`b8fb370`) before the prompt change (`d1e2e0bf…` → `58b5d66d…`, commit `8775331`); the prompt was changed once and not tuned on these results. Same model (qwen3:8b, temp 0), validator and window. Review: `review-frozen.md` (39 distinct candidates, two reviewers; one disagreement, #33, ruled partial: the cause is the candidate's inference, no event states it).
+
+| measure | before | after |
+|---|---|---|
+| expected items found | 9/9 | 9/9 |
+| candidates | 20 | 20 |
+| faithful / partial / unfaithful | 11 / 9 / 0 | 14 / 6 / 0 |
+| hallucination candidate rate | 9/20 = 45% | 6/20 = 30% |
+| false extractions (no-knowledge sessions) | 5 | 3 |
+| silent no-knowledge sessions | 5/8 | 5/8 |
+
+Deviations (before/after): invented motive/benefit 4/0, wrong attribution 1/0, widened scope 4/3, generalisation 2/1, inferred unstated fact 1/3, wrong command/number 2/1; citation errors (faithful but incomplete citations) 1/3. The three changes aimed at motive, attribution and scope worked on those tags; what remains is scope (titles dropping a stated limit), inferred causes, and a retry count read wrong.
+
+Verdict: the direction is right (45% → 30%, with a second reviewer 40% → 25%) but the **hallucination hard line (0) is still not met**, and 20 candidates from one model and one run do not show a stable gain. Per the agreed plan the prompt is not tuned further on this set; next options are the deterministic attribution check and a verification pass, preferably with a different model.
