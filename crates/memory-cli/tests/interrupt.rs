@@ -36,7 +36,7 @@ fn run_json(db: &Path, url: &str, args: &[&str]) -> Value {
 }
 
 fn capture(db: &Path) {
-    let dir = db.parent().unwrap().join("spool/pending");
+    let dir = memory_ingest::spool::dir_for(db).join("pending");
     std::fs::create_dir_all(&dir).unwrap();
     let e = |i: u32, kind: &str, text: Option<&str>| {
         json!({"schema_version":1,"native_agent":"claude_code","native_session_id":"s1",
@@ -155,7 +155,7 @@ fn kill_9_during_extraction_loses_nothing_and_recovers() {
     assert_eq!(doctor["healthy"], true, "{doctor}");
     let s = SqliteStore::open(&db).unwrap();
     assert_eq!(
-        memory_core::EventStore::session_events(&s, "s1", 10)
+        memory_core::EventStore::session_events(&s, "claude_code", "s1", 10)
             .unwrap()
             .len(),
         2

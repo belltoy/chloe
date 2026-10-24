@@ -56,6 +56,9 @@ pub enum LlmCommand {
     Extract {
         /// The agent's own session id
         session: String,
+        /// The agent, when several used the same session id
+        #[arg(long)]
+        agent: Option<String>,
         #[arg(long, default_value_t = 200)]
         limit: usize,
         #[command(flatten)]
@@ -90,10 +93,12 @@ pub fn run(store: &SqliteStore, command: LlmCommand, json: bool) -> anyhow::Resu
         }
         LlmCommand::Extract {
             session,
+            agent,
             limit,
             provider,
         } => {
-            let events = store.session_events(&session, limit)?;
+            let agent = crate::events::resolve_agent(store, &session, agent)?;
+            let events = store.session_events(&agent, &session, limit)?;
             let Some(first) = events.first() else {
                 return Err(memory_core::Error::NotFound(format!("session {session}")).into());
             };

@@ -131,10 +131,21 @@ pub trait EventStore {
     fn ingest(&self, events: &[AgentEvent]) -> Result<IngestReport>;
     /// Most recently active sessions first.
     fn sessions(&self, limit: usize) -> Result<Vec<SessionInfo>>;
-    /// Events of one session in arrival order.
-    fn session_events(&self, native_session_id: &str, limit: usize) -> Result<Vec<AgentEvent>>;
+    /// Events of one session in arrival order. A session is `(agent, native id)`: two agents
+    /// may use the same native id.
+    fn session_events(
+        &self,
+        agent: &str,
+        native_session_id: &str,
+        limit: usize,
+    ) -> Result<Vec<AgentEvent>>;
     /// The last `limit` events of a session, still in arrival order.
-    fn session_tail(&self, native_session_id: &str, limit: usize) -> Result<Vec<AgentEvent>>;
+    fn session_tail(
+        &self,
+        agent: &str,
+        native_session_id: &str,
+        limit: usize,
+    ) -> Result<Vec<AgentEvent>>;
 }
 
 #[cfg(test)]

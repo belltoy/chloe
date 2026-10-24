@@ -139,7 +139,7 @@ fn provider_down_keeps_events_and_retries_later() {
             .unwrap()
             .is_empty()
     );
-    assert_eq!(s.session_events("a", 10).unwrap().len(), 3);
+    assert_eq!(s.session_events("claude_code", "a", 10).unwrap().len(), 3);
     // Still backing off.
     assert!(run_next(&s, &x, "w", t(21)).unwrap().is_none());
     // Provider back after the backoff.

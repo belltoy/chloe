@@ -168,7 +168,7 @@ fn a_crash_after_storing_candidates_but_before_completing_adds_no_duplicates() {
     let input = ExtractionInput {
         native_agent: "claude_code".into(),
         native_session_id: "a".into(),
-        events: s.session_events("a", 10).unwrap(),
+        events: s.session_events("claude_code", "a", 10).unwrap(),
     };
     s.add_candidates("claude_code", "a", &Fixed.extract(&input).unwrap())
         .unwrap();

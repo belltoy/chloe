@@ -150,12 +150,22 @@ impl EventStore for SqliteStore {
         rows.collect::<rusqlite::Result<_>>().map_err(storage)
     }
 
-    fn session_events(&self, native_session_id: &str, limit: usize) -> Result<Vec<AgentEvent>> {
-        self.events_of(native_session_id, limit, "ASC")
+    fn session_events(
+        &self,
+        agent: &str,
+        native_session_id: &str,
+        limit: usize,
+    ) -> Result<Vec<AgentEvent>> {
+        self.events_of(agent, native_session_id, limit, "ASC")
     }
 
-    fn session_tail(&self, native_session_id: &str, limit: usize) -> Result<Vec<AgentEvent>> {
-        let mut events = self.events_of(native_session_id, limit, "DESC")?;
+    fn session_tail(
+        &self,
+        agent: &str,
+        native_session_id: &str,
+        limit: usize,
+    ) -> Result<Vec<AgentEvent>> {
+        let mut events = self.events_of(agent, native_session_id, limit, "DESC")?;
         events.reverse();
         Ok(events)
     }
@@ -165,6 +175,7 @@ impl SqliteStore {
     /// `order` is one of two constants below, never user input.
     fn events_of(
         &self,
+        agent: &str,
         native_session_id: &str,
         limit: usize,
         order: &str,
@@ -175,12 +186,12 @@ impl SqliteStore {
             .prepare(&format!(
                 "SELECT s.agent, s.native_id, e.native_event_id, e.kind, e.occurred_at, s.cwd, e.tool_name, e.text, e.redactions, e.schema_version
                  FROM events e JOIN sessions s ON s.id = e.session_id
-                 WHERE s.native_id = ?1 ORDER BY e.seq {order} LIMIT ?2"
+                 WHERE s.agent = ?1 AND s.native_id = ?2 ORDER BY e.seq {order} LIMIT ?3"
             ))
             .map_err(storage)?;
         let rows = stmt
             .query_map(
-                params![native_session_id, limit.clamp(1, MAX_ROWS) as i64],
+                params![agent, native_session_id, limit.clamp(1, MAX_ROWS) as i64],
                 to_event,
             )
             .map_err(storage)?;

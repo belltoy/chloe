@@ -166,7 +166,7 @@ where
         Err(_) => return fail(job.dedup_key.clone(), "unreadable job payload".into()),
     };
     let events = select(
-        store.session_tail(&p.session, p.window.max_events)?,
+        store.session_tail(&p.agent, &p.session, p.window.max_events)?,
         p.window,
     );
     let has_text = events

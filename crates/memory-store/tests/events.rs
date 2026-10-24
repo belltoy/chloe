@@ -54,7 +54,7 @@ fn importing_the_same_capture_twice_stores_nothing_new() {
     );
     let again = s.ingest(&batch).unwrap();
     assert_eq!((again.inserted, again.duplicates), (0, 4));
-    assert_eq!(s.session_events("s1", 100).unwrap().len(), 4);
+    assert_eq!(s.session_events("claude_code", "s1", 100).unwrap().len(), 4);
     assert_eq!(s.sessions(100).unwrap().len(), 1);
     assert_eq!(session(&s, "s1").events, 4);
 }
@@ -104,7 +104,7 @@ fn bad_events_are_counted_and_do_not_sink_the_batch() {
             (2, "too_long")
         ]
     );
-    assert_eq!(s.session_events("s1", 100).unwrap().len(), 1);
+    assert_eq!(s.session_events("claude_code", "s1", 100).unwrap().len(), 1);
 }
 
 #[test]
@@ -153,7 +153,7 @@ fn events_keep_their_fields_and_survive_a_restart() {
         .unwrap();
     let back = SqliteStore::open(&path)
         .unwrap()
-        .session_events("s1", 10)
+        .session_events("claude_code", "s1", 10)
         .unwrap();
     assert_eq!(back, vec![e]);
 }
@@ -186,4 +186,29 @@ fn project_is_linked_only_when_the_directory_is_registered() {
     gone.cwd = Some("/definitely/not/here".into());
     s.ingest(&[gone]).unwrap();
     assert_eq!(session(&s, "s2").project_id, None);
+}
+
+#[test]
+fn a_session_id_shared_by_two_agents_never_mixes_their_events() {
+    let (_d, path) = db();
+    let s = SqliteStore::open(&path).unwrap();
+    let mut other = ev("same", EventKind::UserPrompt, Some("p1"), 1);
+    other.native_agent = "codex".into();
+    other.text = Some("codex said this".into());
+    let mut mine = ev("same", EventKind::UserPrompt, Some("p2"), 2);
+    mine.text = Some("claude said this".into());
+    s.ingest(&[mine, other]).unwrap();
+    assert_eq!(s.sessions(10).unwrap().len(), 2);
+    for (agent, text) in [
+        ("claude_code", "claude said this"),
+        ("codex", "codex said this"),
+    ] {
+        for events in [
+            s.session_events(agent, "same", 10).unwrap(),
+            s.session_tail(agent, "same", 10).unwrap(),
+        ] {
+            assert_eq!(events.len(), 1, "{agent}");
+            assert_eq!(events[0].text.as_deref(), Some(text));
+        }
+    }
 }

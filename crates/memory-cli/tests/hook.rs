@@ -413,8 +413,8 @@ fn hook_queues_even_when_the_database_is_unusable() {
         std::fs::set_permissions(&ro, std::fs::Permissions::from_mode(0o700)).unwrap();
         assert!(out.status.success() && out.stdout.is_empty());
         assert!(
-            !ro.join("spool").exists()
-                || std::fs::read_dir(ro.join("spool"))
+            !memory_ingest::spool::dir_for(&ro.join("t.db")).exists()
+                || std::fs::read_dir(memory_ingest::spool::dir_for(&ro.join("t.db")))
                     .unwrap()
                     .next()
                     .is_none()
@@ -461,4 +461,23 @@ fn doctor_reports_the_queue() {
         .unwrap();
     assert_eq!(q["ok"], true);
     assert!(q["detail"].as_str().unwrap().starts_with("1 waiting"));
+}
+
+#[test]
+fn two_databases_in_one_directory_do_not_share_a_queue() {
+    let dir = tempfile::tempdir().unwrap();
+    let (a, b) = (dir.path().join("a.db"), dir.path().join("b.db"));
+    let p = br#"{"hook_event_name":"UserPromptSubmit","session_id":"s","cwd":"/x","prompt":"only for a"}"#;
+    assert!(run_hook(&a, p, None).status.success());
+    assert_eq!(queued_files(&a).len(), 1);
+    assert!(queued_files(&b).is_empty());
+    // Importing into b finds nothing; a's event stays queued for a.
+    let out = chloe()
+        .arg("--db-path")
+        .arg(&b)
+        .args(["--json", "events", "import"])
+        .output()
+        .unwrap();
+    assert!(out.status.success());
+    assert_eq!(queued_files(&a).len(), 1);
 }

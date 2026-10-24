@@ -30,9 +30,15 @@ const STALE_TMP: Duration = Duration::from_secs(600);
 /// Keeps two events queued by one process apart even if they share a capture time.
 static SEQ: AtomicU64 = AtomicU64::new(0);
 
-/// The queue lives next to the database: `<db dir>/spool`.
+/// The queue belongs to one database, next to it. The default database keeps the original
+/// `<dir>/spool`; any other file `x.db` gets `<dir>/x.db.spool`, so two databases in one
+/// directory never share (and never drain) each other's events.
 pub fn dir_for(db_path: &Path) -> PathBuf {
-    db_path.parent().unwrap_or(Path::new(".")).join("spool")
+    let dir = db_path.parent().unwrap_or(Path::new("."));
+    match db_path.file_name().and_then(|n| n.to_str()) {
+        Some(memory_core::config::DB_FILE) | None => dir.join("spool"),
+        Some(name) => dir.join(format!("{name}.spool")),
+    }
 }
 
 fn private_dir(path: &Path) -> std::io::Result<()> {
@@ -176,6 +182,16 @@ mod tests {
             text: None,
             redactions: vec![],
         }
+    }
+
+    #[test]
+    fn each_database_has_its_own_queue() {
+        let default = dir_for(Path::new("/d/memory.db"));
+        assert_eq!(default, Path::new("/d/spool"));
+        let (a, b) = (dir_for(Path::new("/d/a.db")), dir_for(Path::new("/d/b.db")));
+        assert_ne!(a, b);
+        assert_ne!(a, default);
+        assert_eq!(a, Path::new("/d/a.db.spool"));
     }
 
     #[test]

@@ -26,9 +26,40 @@ pub enum EventsCommand {
     /// Events of one session, by the agent's own session id
     List {
         session: String,
+        /// The agent, when several used the same session id
+        #[arg(long)]
+        agent: Option<String>,
         #[arg(long, default_value_t = 200)]
         limit: usize,
     },
+}
+
+/// The agent a session id belongs to. Ids are only unique per agent, so an id used by several
+/// agents needs `--agent`.
+pub fn resolve_agent(
+    store: &SqliteStore,
+    session: &str,
+    agent: Option<String>,
+) -> memory_core::Result<String> {
+    if let Some(a) = agent {
+        return Ok(a);
+    }
+    let mut agents: Vec<String> = store
+        .sessions(1000)?
+        .into_iter()
+        .filter(|s| s.native_session_id == session)
+        .map(|s| s.native_agent)
+        .collect();
+    agents.sort();
+    agents.dedup();
+    match agents.len() {
+        0 => Err(memory_core::Error::NotFound(format!("session {session}"))),
+        1 => Ok(agents.remove(0)),
+        _ => Err(memory_core::Error::InvalidArgument(format!(
+            "session {session} exists for several agents ({}); pass --agent",
+            agents.join(", ")
+        ))),
+    }
 }
 
 /// Files handled per run (and per transaction below); the rest wait for the next run.
@@ -124,8 +155,13 @@ pub fn run(
                 );
             }
         }
-        EventsCommand::List { session, limit } => {
-            let events = store.session_events(&session, limit)?;
+        EventsCommand::List {
+            session,
+            agent,
+            limit,
+        } => {
+            let agent = resolve_agent(store, &session, agent)?;
+            let events = store.session_events(&agent, &session, limit)?;
             if json {
                 crate::print_json(&events)?;
             }
