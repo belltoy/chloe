@@ -12,9 +12,11 @@ cd your-project
 chloe init                               # registers this project in the local database
 chloe doctor                             # database + a real MCP round trip
 
-claude mcp add chloe -- chloe mcp serve  # Claude Code
-codex mcp add chloe -- chloe mcp serve   # Codex (add default_tools_approval_mode = "approve" for `codex exec`)
+claude mcp add chloe -- chloe mcp serve --mode hybrid  # Claude Code
+codex mcp add chloe -- chloe mcp serve --mode hybrid   # Codex (add default_tools_approval_mode = "approve" for `codex exec`)
 ```
+
+**Recommended: `--mode hybrid`.** Plain full-text search has no stemming ("page" does not find "pages") and no cross-language matching; hybrid adds embeddings from a local [Ollama](https://ollama.com) model (`ollama pull qwen3-embedding:0.6b`, then `chloe embeddings backfill` once, and again after bulk changes). If Ollama is down the search falls back to full-text and says so in the result (`degraded`), so the flag is safe to set; without Ollama at all, drop it (the default is `--mode fts`).
 
 **Required:** paste the snippet from [`docs/agents/memory-instructions.md`](docs/agents/memory-instructions.md) into your `CLAUDE.md` / `AGENTS.md`. Without it, Claude Code and Codex did not search or save on their own in our control run, even though the server sends the same text as MCP `instructions`. Both agents share one database, so what one saves the other can search. Details, verified versions and a runnable two-way demo: [`docs/mcp-clients.md`](docs/mcp-clients.md).
 
@@ -25,7 +27,7 @@ chloe hook install claude                # capture sessions (also: codex); event
 chloe consolidate                        # extract memory candidates from captured sessions
 chloe candidates list                    # review them; nothing becomes a memory without you
 chloe embeddings backfill                # embed memories (default model qwen3-embedding:0.6b)
-chloe mcp serve --mode hybrid            # full-text + vector search (fts is the default; vector also exists)
+chloe mcp serve --mode hybrid            # full-text + vector search (recommended; fts is the default, vector also exists)
 chloe eval                               # score FTS / Vector / Hybrid on a labelled set
 ```
 

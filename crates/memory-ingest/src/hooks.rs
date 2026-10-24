@@ -132,7 +132,7 @@ pub fn parse_hook(
                 if mentions_sensitive_path(&raw) {
                     ev.redactions.push("sensitive_path".into());
                 } else {
-                    let limit = if matches!(tool, Some("Edit" | "MultiEdit")) {
+                    let limit = if matches!(tool, Some("Edit" | "MultiEdit" | "apply_patch")) {
                         EDIT_CHARS
                     } else {
                         SUMMARY_CHARS
@@ -160,7 +160,8 @@ fn tool_summary(tool: &str, input: Option<&Value>) -> Option<String> {
         return edit_summary(input?);
     }
     let key = match tool {
-        "Bash" => "command",
+        // Codex's patch tool: the whole patch (`-`/`+` lines), the counterpart of an Edit.
+        "Bash" | "apply_patch" => "command",
         "Read" | "Edit" | "Write" | "MultiEdit" | "NotebookEdit" => "file_path",
         "Glob" | "Grep" => "pattern",
         "WebFetch" => "url",
@@ -581,5 +582,25 @@ mod tests {
                 .text
                 .is_none()
         );
+    }
+
+    fn parse_codex(v: Value) -> Option<AgentEvent> {
+        parse_hook(&CODEX, v.to_string().as_bytes(), NOW).unwrap()
+    }
+
+    #[test]
+    fn a_codex_patch_is_kept_like_an_edit() {
+        // Shape copied from a payload captured on codex-cli 0.164.0.
+        let patch = "*** Begin Patch\n*** Update File: /p/pager.py\n@@\n-    return n // k\n+    return (n + k - 1) // k\n*** End Patch";
+        let e = parse_codex(json!({"session_id":"c1","turn_id":"t1","hook_event_name":"PostToolUse","tool_name":"apply_patch",
+            "tool_input":{"command":patch},"tool_response":"Exit code: 0\nOutput:\nSuccess. Updated: M /p/pager.py","tool_use_id":"u1"})).unwrap();
+        assert_eq!(e.text.as_deref(), Some(patch));
+        assert_eq!(e.tool_name.as_deref(), Some("apply_patch"));
+        let env = parse_codex(
+            json!({"session_id":"c1","hook_event_name":"PostToolUse","tool_name":"apply_patch",
+            "tool_input":{"command":"*** Update File: /p/.env\n-A=1\n+A=2"},"tool_use_id":"u2"}),
+        )
+        .unwrap();
+        assert!(env.text.is_none());
     }
 }

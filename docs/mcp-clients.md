@@ -4,11 +4,13 @@
 
 Tools: `memory_save`, `memory_search`, `memory_get`, `memory_update`, `memory_archive`.
 
+Recommended: add `--mode hybrid` to every `chloe mcp serve` below (also in the TOML `args`). It needs a local Ollama embedding model and `chloe embeddings backfill`; if Ollama is down the search falls back to full-text and reports `degraded`. The default `--mode fts` has no stemming ("page" misses "pages") and no cross-language matching.
+
 ## Claude Code
 
 ```sh
-claude mcp add chloe -- chloe mcp serve                 # local scope, this project
-claude mcp add -s project chloe -- chloe mcp serve      # writes .mcp.json (shareable)
+claude mcp add chloe -- chloe mcp serve --mode hybrid  # local scope, this project
+claude mcp add -s project chloe -- chloe mcp serve --mode hybrid  # writes .mcp.json (shareable)
 ```
 
 Tool calls prompt for approval; allow them with the permission rule `mcp__chloe` (or `--allowedTools "mcp__chloe__memory_save,mcp__chloe__memory_search"`).
@@ -16,7 +18,7 @@ Tool calls prompt for approval; allow them with the permission rule `mcp__chloe`
 ## Codex
 
 ```sh
-codex mcp add chloe -- chloe mcp serve
+codex mcp add chloe -- chloe mcp serve --mode hybrid
 ```
 
 or in `~/.codex/config.toml`:
@@ -24,7 +26,7 @@ or in `~/.codex/config.toml`:
 ```toml
 [mcp_servers.chloe]
 command = "chloe"
-args = ["mcp", "serve"]
+args = ["mcp", "serve", "--mode", "hybrid"]
 default_tools_approval_mode = "approve"   # without this, `codex exec` (approval policy never) rejects every call
 ```
 
