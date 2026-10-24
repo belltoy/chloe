@@ -14,8 +14,11 @@ use serde_json::Value;
 use time::{Duration, OffsetDateTime};
 
 fn load() -> Vec<Value> {
+    // CHLOE_EXTRACTION_SET picks another set (the frozen validation sessions), same format.
+    let name = std::env::var("CHLOE_EXTRACTION_SET").unwrap_or_else(|_| "sessions.json".into());
     let p = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../docs/evidence/milestone-b/extraction/sessions.json");
+        .join("../../docs/evidence/milestone-b/extraction")
+        .join(name);
     let v: Value = serde_json::from_slice(&std::fs::read(p).unwrap()).unwrap();
     v["sessions"].as_array().unwrap().clone()
 }

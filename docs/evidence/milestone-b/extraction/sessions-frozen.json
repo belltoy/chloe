@@ -1,0 +1,803 @@
+{
+ "description": "Frozen validation sessions for B-16: written before the next prompt change and never used to choose a prompt. Same format as sessions.json.",
+ "sessions": [
+  {
+   "id": "g01-rule-with-incident",
+   "group": "useful",
+   "title": "User states a layering rule and why",
+   "events": [
+    {
+     "id": "p1",
+     "kind": "user_prompt",
+     "text": "add an endpoint GET /orders/:id. Rule for this service: handlers never touch sql.DB directly, every query goes through the repo package. We leaked connections from handlers once and had an outage."
+    },
+    {
+     "id": "r1",
+     "kind": "tool_result_summary",
+     "tool": "Read",
+     "text": "Read internal/repo/orders.go (60 lines)"
+    },
+    {
+     "id": "e1",
+     "kind": "tool_result_summary",
+     "tool": "Edit",
+     "text": "/svc/internal/handlers/orders.go\n+ order, err := h.repo.GetOrder(ctx, id)"
+    },
+    {
+     "id": "b1",
+     "kind": "tool_result_summary",
+     "tool": "Bash",
+     "text": "go test ./internal/handlers: ok"
+    },
+    {
+     "id": "a1",
+     "kind": "assistant_message",
+     "text": "Added GET /orders/:id; the handler calls repo.GetOrder."
+    },
+    {
+     "id": "end",
+     "kind": "session_end"
+    }
+   ],
+   "expect": [
+    {
+     "kind_any": [
+      "constraint",
+      "decision"
+     ],
+     "terms": [
+      [
+       "repo"
+      ],
+      [
+       "handler"
+      ]
+     ],
+     "note": "handlers go through the repo package, never sql.DB, because of leaked connections"
+    }
+   ],
+   "traps": []
+  },
+  {
+   "id": "g02-naive-aware-datetime",
+   "group": "useful",
+   "title": "Cause of a TypeError is explained in the reply",
+   "events": [
+    {
+     "id": "p1",
+     "kind": "user_prompt",
+     "text": "the expiry check raises TypeError in production but passes locally"
+    },
+    {
+     "id": "b1",
+     "kind": "tool_result_summary",
+     "tool": "Bash",
+     "text": "python -m pytest tests/test_expiry.py -q: 1 passed"
+    },
+    {
+     "id": "b2",
+     "kind": "tool_result_summary",
+     "tool": "Bash",
+     "text": "python expiry_check.py: TypeError: can't compare offset-naive and offset-aware datetimes"
+    },
+    {
+     "id": "e1",
+     "kind": "tool_result_summary",
+     "tool": "Edit",
+     "text": "/app/expiry.py\n- now = datetime.utcnow()\n+ now = datetime.now(timezone.utc)"
+    },
+    {
+     "id": "a1",
+     "kind": "assistant_message",
+     "text": "Cause: datetime.utcnow() returns a naive datetime, while the expiry timestamps from the database are timezone-aware, so comparing them raises TypeError. The tests passed locally because the fixture used naive dates. I switched to datetime.now(timezone.utc)."
+    },
+    {
+     "id": "end",
+     "kind": "session_end"
+    }
+   ],
+   "expect": [
+    {
+     "kind_any": [
+      "gotcha",
+      "fact"
+     ],
+     "terms": [
+      [
+       "utcnow",
+       "naive"
+      ],
+      [
+       "aware",
+       "timezone",
+       "compare"
+      ]
+     ],
+     "note": "naive utcnow vs aware db timestamps"
+    }
+   ],
+   "traps": []
+  },
+  {
+   "id": "g03-decision-env-flags",
+   "group": "useful",
+   "title": "A decision with its reason, stated by the user",
+   "events": [
+    {
+     "id": "p1",
+     "kind": "user_prompt",
+     "text": "for feature flags just read them from environment variables. I decided against a config service, we are three developers and I do not want another service to run and monitor."
+    },
+    {
+     "id": "e1",
+     "kind": "tool_result_summary",
+     "tool": "Edit",
+     "text": "/app/flags.py\n+ def enabled(name):\n+     return os.environ.get(f\"FLAG_{name.upper()}\") == \"1\""
+    },
+    {
+     "id": "a1",
+     "kind": "assistant_message",
+     "text": "Flags are read from FLAG_<NAME> environment variables."
+    },
+    {
+     "id": "end",
+     "kind": "session_end"
+    }
+   ],
+   "expect": [
+    {
+     "kind_any": [
+      "decision",
+      "constraint"
+     ],
+     "terms": [
+      [
+       "environment",
+       "env"
+      ],
+      [
+       "service"
+      ]
+     ],
+     "note": "flags from env vars, no config service, small team"
+    }
+   ],
+   "traps": []
+  },
+  {
+   "id": "g04-procedure-db-reset",
+   "group": "useful",
+   "title": "A working procedure with the reason for the order",
+   "events": [
+    {
+     "id": "p1",
+     "kind": "user_prompt",
+     "text": "my local database is in a weird state, help me reset it"
+    },
+    {
+     "id": "b1",
+     "kind": "tool_result_summary",
+     "tool": "Bash",
+     "text": "make seed: error: relation \"users\" already exists"
+    },
+    {
+     "id": "b2",
+     "kind": "tool_result_summary",
+     "tool": "Bash",
+     "text": "make db-reset && make seed: ok, 120 rows"
+    },
+    {
+     "id": "a1",
+     "kind": "assistant_message",
+     "text": "Reset works only in this order: make db-reset first, then make seed. The seed script assumes an empty schema, so running it on its own against an existing database fails with 'relation already exists'."
+    },
+    {
+     "id": "end",
+     "kind": "session_end"
+    }
+   ],
+   "expect": [
+    {
+     "kind_any": [
+      "procedure",
+      "gotcha"
+     ],
+     "terms": [
+      [
+       "db-reset"
+      ],
+      [
+       "seed"
+      ]
+     ],
+     "note": "db-reset before seed"
+    }
+   ],
+   "traps": []
+  },
+  {
+   "id": "g05-fact-region",
+   "group": "useful",
+   "title": "A lasting fact about the deployment",
+   "events": [
+    {
+     "id": "p1",
+     "kind": "user_prompt",
+     "text": "before you write the deploy script: everything we run is in eu-west-1 only. Do not assume us-east-1, the S3 buckets and the cluster are all in eu-west-1."
+    },
+    {
+     "id": "e1",
+     "kind": "tool_result_summary",
+     "tool": "Edit",
+     "text": "/ops/deploy.sh\n+ export AWS_REGION=eu-west-1"
+    },
+    {
+     "id": "a1",
+     "kind": "assistant_message",
+     "text": "The deploy script sets AWS_REGION=eu-west-1."
+    },
+    {
+     "id": "end",
+     "kind": "session_end"
+    }
+   ],
+   "expect": [
+    {
+     "kind_any": [
+      "fact",
+      "constraint"
+     ],
+     "terms": [
+      [
+       "eu-west-1"
+      ],
+      [
+       "s3",
+       "bucket",
+       "cluster",
+       "region"
+      ]
+     ],
+     "note": "all infrastructure is in eu-west-1"
+    }
+   ],
+   "traps": []
+  },
+  {
+   "id": "g06-jest-esm",
+   "group": "useful",
+   "title": "Chinese session: a test setup gotcha",
+   "events": [
+    {
+     "id": "p1",
+     "kind": "user_prompt",
+     "text": "前端 npm test 报错 SyntaxError: Cannot use import statement outside a module,帮我看一下"
+    },
+    {
+     "id": "b1",
+     "kind": "tool_result_summary",
+     "tool": "Bash",
+     "text": "npm test: SyntaxError: Cannot use import statement outside a module (node_modules/lodash-es/lodash.js)"
+    },
+    {
+     "id": "e1",
+     "kind": "tool_result_summary",
+     "tool": "Edit",
+     "text": "/web/jest.config.js\n+ transformIgnorePatterns: ['/node_modules/(?!lodash-es)'],"
+    },
+    {
+     "id": "b2",
+     "kind": "tool_result_summary",
+     "tool": "Bash",
+     "text": "npm test: 14 passed"
+    },
+    {
+     "id": "a1",
+     "kind": "assistant_message",
+     "text": "原因是 lodash-es 只发布 ESM,jest 默认不转换 node_modules,所以解析 import 时报错。在 jest.config.js 里用 transformIgnorePatterns 放行 lodash-es 后,测试通过。"
+    },
+    {
+     "id": "end",
+     "kind": "session_end"
+    }
+   ],
+   "expect": [
+    {
+     "kind_any": [
+      "gotcha",
+      "fact"
+     ],
+     "terms": [
+      [
+       "lodash",
+       "jest"
+      ],
+      [
+       "esm",
+       "transformignorepatterns",
+       "转换"
+      ]
+     ],
+     "note": "jest must transform lodash-es"
+    }
+   ],
+   "traps": []
+  },
+  {
+   "id": "g07-never-amend-pushed",
+   "group": "useful",
+   "title": "A working-style rule with a reason",
+   "events": [
+    {
+     "id": "p1",
+     "kind": "user_prompt",
+     "text": "fix the typo in the README and commit it"
+    },
+    {
+     "id": "b1",
+     "kind": "tool_result_summary",
+     "tool": "Bash",
+     "text": "git commit -am 'fix typo'"
+    },
+    {
+     "id": "p2",
+     "kind": "user_prompt",
+     "text": "one more thing for the future: never amend or force-push commits that are already pushed, make a new commit instead. Reviewers lose their place in the diff otherwise."
+    },
+    {
+     "id": "a1",
+     "kind": "assistant_message",
+     "text": "Committed the typo fix as a new commit."
+    },
+    {
+     "id": "end",
+     "kind": "session_end"
+    }
+   ],
+   "expect": [
+    {
+     "kind_any": [
+      "constraint",
+      "decision"
+     ],
+     "terms": [
+      [
+       "amend",
+       "force"
+      ],
+      [
+       "new commit",
+       "pushed",
+       "reviewers"
+      ]
+     ],
+     "note": "no amend/force-push of pushed commits"
+    }
+   ],
+   "traps": []
+  },
+  {
+   "id": "g08-flaky-port",
+   "group": "useful",
+   "title": "Buried among routine work: a flaky test explained",
+   "events": [
+    {
+     "id": "p1",
+     "kind": "user_prompt",
+     "text": "tidy the test suite"
+    },
+    {
+     "id": "n1",
+     "kind": "tool_result_summary",
+     "tool": "Bash",
+     "text": "cargo fmt --all: no changes"
+    },
+    {
+     "id": "n2",
+     "kind": "tool_result_summary",
+     "tool": "Read",
+     "text": "Read tests/case2.rs (70 lines)"
+    },
+    {
+     "id": "n3",
+     "kind": "tool_result_summary",
+     "tool": "Bash",
+     "text": "cargo fmt --all: no changes"
+    },
+    {
+     "id": "n4",
+     "kind": "tool_result_summary",
+     "tool": "Read",
+     "text": "Read tests/case4.rs (70 lines)"
+    },
+    {
+     "id": "n5",
+     "kind": "tool_result_summary",
+     "tool": "Bash",
+     "text": "cargo fmt --all: no changes"
+    },
+    {
+     "id": "n6",
+     "kind": "tool_result_summary",
+     "tool": "Read",
+     "text": "Read tests/case6.rs (70 lines)"
+    },
+    {
+     "id": "n7",
+     "kind": "tool_result_summary",
+     "tool": "Bash",
+     "text": "cargo fmt --all: no changes"
+    },
+    {
+     "id": "n8",
+     "kind": "tool_result_summary",
+     "tool": "Read",
+     "text": "Read tests/case8.rs (70 lines)"
+    },
+    {
+     "id": "n9",
+     "kind": "tool_result_summary",
+     "tool": "Bash",
+     "text": "cargo fmt --all: no changes"
+    },
+    {
+     "id": "n10",
+     "kind": "tool_result_summary",
+     "tool": "Read",
+     "text": "Read tests/case10.rs (70 lines)"
+    },
+    {
+     "id": "t1",
+     "kind": "tool_result_summary",
+     "tool": "Bash",
+     "text": "cargo test: 1 failed (server_starts), 40 passed"
+    },
+    {
+     "id": "t2",
+     "kind": "tool_result_summary",
+     "tool": "Bash",
+     "text": "cargo test server_starts: ok"
+    },
+    {
+     "id": "e1",
+     "kind": "tool_result_summary",
+     "tool": "Edit",
+     "text": "/repo/tests/server.rs\n- let listener = TcpListener::bind(\"127.0.0.1:8080\")?;\n+ let listener = TcpListener::bind(\"127.0.0.1:0\")?;"
+    },
+    {
+     "id": "a1",
+     "kind": "assistant_message",
+     "text": "server_starts was flaky because two tests bound the fixed port 8080 and collided when run in parallel (address already in use). Binding to port 0 lets the OS pick a free port."
+    },
+    {
+     "id": "end",
+     "kind": "session_end"
+    }
+   ],
+   "expect": [
+    {
+     "kind_any": [
+      "gotcha",
+      "fact"
+     ],
+     "terms": [
+      [
+       "port"
+      ],
+      [
+       "collid",
+       "already in use",
+       "parallel",
+       "flaky"
+      ]
+     ],
+     "note": "fixed port in tests collides; bind to port 0"
+    }
+   ],
+   "traps": []
+  },
+  {
+   "id": "g09-deploy-freeze",
+   "group": "useful",
+   "title": "A schedule fact",
+   "events": [
+    {
+     "id": "p1",
+     "kind": "user_prompt",
+     "text": "remember when you plan the release: deploys are frozen every Thursday from 14:00 to 18:00 CET because of the weekly batch job."
+    },
+    {
+     "id": "a1",
+     "kind": "assistant_message",
+     "text": "Noted, I will not schedule the release in that window."
+    },
+    {
+     "id": "end",
+     "kind": "session_end"
+    }
+   ],
+   "expect": [
+    {
+     "kind_any": [
+      "fact",
+      "constraint"
+     ],
+     "terms": [
+      [
+       "thursday"
+      ],
+      [
+       "freeze",
+       "frozen",
+       "14:00",
+       "batch"
+      ]
+     ],
+     "note": "deploy freeze Thursdays 14:00-18:00 CET"
+    }
+   ],
+   "traps": []
+  },
+  {
+   "id": "h01-lint-clean",
+   "group": "nothing",
+   "title": "Routine linting",
+   "events": [
+    {
+     "id": "p1",
+     "kind": "user_prompt",
+     "text": "run the linter"
+    },
+    {
+     "id": "b1",
+     "kind": "tool_result_summary",
+     "tool": "Bash",
+     "text": "eslint . : 0 problems"
+    },
+    {
+     "id": "a1",
+     "kind": "assistant_message",
+     "text": "The linter reports no problems."
+    },
+    {
+     "id": "end",
+     "kind": "session_end"
+    }
+   ],
+   "expect": [],
+   "traps": []
+  },
+  {
+   "id": "h02-rename-request",
+   "group": "nothing",
+   "title": "A plain rename request",
+   "events": [
+    {
+     "id": "p1",
+     "kind": "user_prompt",
+     "text": "rename getUser to fetchUser everywhere"
+    },
+    {
+     "id": "e1",
+     "kind": "tool_result_summary",
+     "tool": "Edit",
+     "text": "/app/api.py\n- def getUser(uid):\n+ def fetchUser(uid):"
+    },
+    {
+     "id": "e2",
+     "kind": "tool_result_summary",
+     "tool": "Edit",
+     "text": "/app/views.py\n- user = getUser(uid)\n+ user = fetchUser(uid)"
+    },
+    {
+     "id": "a1",
+     "kind": "assistant_message",
+     "text": "Renamed getUser to fetchUser in api.py and views.py."
+    },
+    {
+     "id": "end",
+     "kind": "session_end"
+    }
+   ],
+   "expect": [],
+   "traps": []
+  },
+  {
+   "id": "h03-generic-question",
+   "group": "nothing",
+   "title": "General knowledge question",
+   "events": [
+    {
+     "id": "p1",
+     "kind": "user_prompt",
+     "text": "what is the difference between TCP and UDP?"
+    },
+    {
+     "id": "a1",
+     "kind": "assistant_message",
+     "text": "TCP is connection-oriented and reliable with ordering and retransmission; UDP is connectionless and has no delivery guarantee but lower overhead."
+    },
+    {
+     "id": "end",
+     "kind": "session_end"
+    }
+   ],
+   "expect": [],
+   "traps": []
+  },
+  {
+   "id": "h04-todo-state",
+   "group": "nothing",
+   "title": "End-of-day state",
+   "events": [
+    {
+     "id": "p1",
+     "kind": "user_prompt",
+     "text": "I am done for today. Tomorrow: finish the invoice export on branch feature/export-v2 and ask Dana about the CSV format."
+    },
+    {
+     "id": "b1",
+     "kind": "tool_result_summary",
+     "tool": "Bash",
+     "text": "git status --short"
+    },
+    {
+     "id": "a1",
+     "kind": "assistant_message",
+     "text": "Noted: invoice export on feature/export-v2 is unfinished."
+    },
+    {
+     "id": "end",
+     "kind": "session_end"
+    }
+   ],
+   "expect": [],
+   "traps": []
+  },
+  {
+   "id": "h05-fix-without-cause",
+   "group": "nothing",
+   "title": "A fix with no stated cause and an assistant success report",
+   "events": [
+    {
+     "id": "p1",
+     "kind": "user_prompt",
+     "text": "fix the failing test test_parse_empty"
+    },
+    {
+     "id": "b1",
+     "kind": "tool_result_summary",
+     "tool": "Bash",
+     "text": "pytest tests/test_parse.py::test_parse_empty -q: 1 failed"
+    },
+    {
+     "id": "e1",
+     "kind": "tool_result_summary",
+     "tool": "Edit",
+     "text": "/app/parse.py\n+ if not s:\n+     return []"
+    },
+    {
+     "id": "b2",
+     "kind": "tool_result_summary",
+     "tool": "Bash",
+     "text": "pytest tests/test_parse.py -q: 6 passed"
+    },
+    {
+     "id": "a1",
+     "kind": "assistant_message",
+     "text": "Fixed. test_parse_empty passes now."
+    },
+    {
+     "id": "end",
+     "kind": "session_end"
+    }
+   ],
+   "expect": [],
+   "traps": []
+  },
+  {
+   "id": "h06-offline-go-test",
+   "group": "nothing",
+   "title": "An offline workaround in a sandbox",
+   "events": [
+    {
+     "id": "p1",
+     "kind": "user_prompt",
+     "text": "run the go tests"
+    },
+    {
+     "id": "b1",
+     "kind": "tool_result_summary",
+     "tool": "Bash",
+     "text": "go test ./...: dial tcp: lookup proxy.golang.org: no such host"
+    },
+    {
+     "id": "b2",
+     "kind": "tool_result_summary",
+     "tool": "Bash",
+     "text": "GOFLAGS=-mod=mod GOPROXY=off go test ./...: ok"
+    },
+    {
+     "id": "a1",
+     "kind": "assistant_message",
+     "text": "The tests pass when run with GOPROXY=off; the sandbox has no network access so the module proxy could not be reached."
+    },
+    {
+     "id": "end",
+     "kind": "session_end"
+    }
+   ],
+   "expect": [],
+   "traps": []
+  },
+  {
+   "id": "h07-dependency-bump",
+   "group": "nothing",
+   "title": "A dependency bump requested without a reason",
+   "events": [
+    {
+     "id": "p1",
+     "kind": "user_prompt",
+     "text": "bump serde to 1.0.200"
+    },
+    {
+     "id": "e1",
+     "kind": "tool_result_summary",
+     "tool": "Edit",
+     "text": "/repo/Cargo.toml\n- serde = \"1.0.188\"\n+ serde = \"1.0.200\""
+    },
+    {
+     "id": "b1",
+     "kind": "tool_result_summary",
+     "tool": "Bash",
+     "text": "cargo check: ok"
+    },
+    {
+     "id": "a1",
+     "kind": "assistant_message",
+     "text": "Bumped serde to 1.0.200."
+    },
+    {
+     "id": "end",
+     "kind": "session_end"
+    }
+   ],
+   "expect": [],
+   "traps": []
+  },
+  {
+   "id": "h08-unadopted-suggestion",
+   "group": "nothing",
+   "title": "The assistant suggests a practice the user ignores",
+   "events": [
+    {
+     "id": "p1",
+     "kind": "user_prompt",
+     "text": "add a retry to fetch_report()"
+    },
+    {
+     "id": "e1",
+     "kind": "tool_result_summary",
+     "tool": "Edit",
+     "text": "/app/report.py\n+ for _ in range(3):\n+     try: return fetch()\n+     except Timeout: continue"
+    },
+    {
+     "id": "a1",
+     "kind": "assistant_message",
+     "text": "Added three retries. It might be worth adding a pre-commit hook for formatting at some point, but I did not touch that."
+    },
+    {
+     "id": "p2",
+     "kind": "user_prompt",
+     "text": "ok thanks"
+    },
+    {
+     "id": "end",
+     "kind": "session_end"
+    }
+   ],
+   "expect": [],
+   "traps": []
+  }
+ ]
+}
