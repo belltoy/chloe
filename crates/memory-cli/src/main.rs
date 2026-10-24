@@ -1,3 +1,4 @@
+mod candidates;
 mod consolidate;
 mod doctor;
 mod events;
@@ -10,6 +11,7 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 
 use clap::{Args, Parser, Subcommand};
+use memory_core::extract::CandidateStore;
 use memory_core::service::{MemoryChanges, MemoryService, NewMemory, SearchQuery};
 use memory_core::{Config, Kind, Memory, MemoryId, ProjectId, Source};
 use memory_store::SqliteStore;
@@ -74,7 +76,7 @@ enum Command {
     /// Memory candidates waiting for review
     Candidates {
         #[command(subcommand)]
-        command: CandidatesCommand,
+        command: candidates::CandidatesCommand,
     },
     /// Background jobs: list the queue, inspect failures, retry them
     Jobs {
@@ -117,14 +119,6 @@ enum HookCommand {
         agent: hook::Agent,
         #[arg(long)]
         settings: Option<PathBuf>,
-    },
-}
-
-#[derive(Subcommand)]
-enum CandidatesCommand {
-    List {
-        #[arg(long, default_value_t = 50)]
-        limit: usize,
     },
 }
 
@@ -180,6 +174,10 @@ enum MemoryCommand {
     },
     /// Show the append-only audit trail of a memory
     History {
+        id: MemoryId,
+    },
+    /// Show which extracted candidates a memory was created from or merged with
+    Sources {
         id: MemoryId,
     },
     Update(UpdateArgs),
@@ -325,9 +323,7 @@ fn run(cli: Cli) -> anyhow::Result<bool> {
         )?,
         Command::Events { command } => events::run(&store, &config, command, json)?,
         Command::Consolidate(args) => consolidate::run(&store, &config, args, json)?,
-        Command::Candidates {
-            command: CandidatesCommand::List { limit },
-        } => consolidate::list(&store, limit, json)?,
+        Command::Candidates { command } => candidates::run(&store, command, json)?,
         Command::Llm { command } => llm::run(&store, command, json)?,
         Command::Jobs { command } => jobs::run(&store, command, json)?,
         Command::Doctor { .. } | Command::Hook { .. } => unreachable!(),
@@ -392,6 +388,11 @@ fn run(cli: Cli) -> anyhow::Result<bool> {
                 } else {
                     println!("{}\n\n{}", line(&m), m.content);
                 }
+            }
+            MemoryCommand::Sources { id } => {
+                // Checks the memory is visible from this project first.
+                store.get(Some(project()?), id)?;
+                candidates::print_sources(&store.memory_sources(id)?, json)?;
             }
             MemoryCommand::History { id } => {
                 let revs = store.history(Some(project()?), id)?;
