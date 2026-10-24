@@ -1,0 +1,42 @@
+== session 1: extract, then accept everything (the first copy of each fact) ==
+imported 9 events, queued 1 sessions (0 already queued), extracted 1 sessions: 3 new candidates
+proposals: 3 made, 0 deferred (model unavailable)
+review them with `chloe candidates list`
+   ab2cfc6e decision | Must sign artifacts before publishing
+   e41970a6 gotcha | SQLite requires DEFAULT for NOT NULL columns
+   1110bcd5 fact | Staging DB is read-only on Fridays
+== session 2: same facts again, other words; one contradiction ==
+imported 9 events, queued 1 sessions (0 already queued), extracted 1 sessions: 3 new candidates
+proposals: 3 made, 0 deferred (model unavailable)
+policy: 1 duplicates auto-merged, 0 conflicts flagged, 1 need a person
+review them with `chloe candidates list`
+-- candidates after the automatic step (state, proposal) --
+   merged | merge model | fact | Staging database is read-only on Saturday mornings
+   pending | create model | gotcha | SQLite version mismatch causes ALTER TABLE issues
+   pending | merge model | gotcha | Signing must precede publishing
+-- active memories now (nothing was accepted from session 2 yet) --
+   ab2cfc6e decision | Must sign artifacts before publishing
+   e41970a6 gotcha | SQLite requires DEFAULT for NOT NULL columns
+   1110bcd5 fact | Staging DB is read-only on Fridays
+== a person follows the model's proposal for what is still pending (merge / create); conflicts are left ==
+   71d5f428 gotcha | SQLite version mismatch causes ALTER TABLE issues
+   ab2cfc6e decision | Must sign artifacts before publishing
+   e41970a6 gotcha | SQLite requires DEFAULT for NOT NULL columns
+   1110bcd5 fact | Staging DB is read-only on Fridays
+== checks ==
+Active memories about signing before publish: 1 (wanted 1)
+PASS A: no two equivalent Active memories
+PASS B: both sqlite points kept
+FAIL C: the Saturday correction was merged away and is not visible in any memory text
+-- provenance of each memory --
+memory 71d5f428:
+    2026-10-24 7:44:09.335225 +00:00:00  Created  bf0eaacc-e594-4342-95a2-ed267e6a820d  claude_code session s2, 3 event(s)
+memory ab2cfc6e:
+    2026-10-24 7:43:54.955249 +00:00:00  Created  ded907fc-112f-4970-a075-dcf40e1cdc78  claude_code session s1, 4 event(s)
+    2026-10-24 7:44:09.343403 +00:00:00  Merged  436a55df-5cf6-4cf2-9aa0-cceca392176e  claude_code session s2, 4 event(s)
+memory e41970a6:
+    2026-10-24 7:43:54.945401 +00:00:00  Created  2a25e025-3781-4741-98da-9ffd84e637c9  claude_code session s1, 3 event(s)
+memory 1110bcd5:
+    2026-10-24 7:43:54.937125 +00:00:00  Created  11aa64f7-72c5-492e-b3ee-f5816814e69e  claude_code session s1, 1 event(s)
+    2026-10-24 7:44:09.20235 +00:00:00  Merged  69575953-c7d3-4230-a7df-1eee2e6f5cdb  claude_code session s2, 1 event(s)
+(memories after session 1: 3; after the automatic step of session 2: 3)
