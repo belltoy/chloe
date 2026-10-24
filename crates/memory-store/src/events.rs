@@ -52,14 +52,14 @@ fn session_id(conn: &Connection, e: &AgentEvent) -> Result<String> {
         .optional()
         .map_err(storage)?;
     if let Some((id, current)) = existing {
-        if current.is_none() {
-            if let Some(p) = project() {
-                conn.execute(
-                    "UPDATE sessions SET project_id=?1 WHERE id=?2",
-                    params![p, id],
-                )
-                .map_err(storage)?;
-            }
+        if current.is_none()
+            && let Some(p) = project()
+        {
+            conn.execute(
+                "UPDATE sessions SET project_id=?1 WHERE id=?2",
+                params![p, id],
+            )
+            .map_err(storage)?;
         }
         return Ok(id);
     }

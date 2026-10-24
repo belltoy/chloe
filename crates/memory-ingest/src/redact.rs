@@ -145,19 +145,22 @@ fn sensitive_name(name: &str) -> bool {
 }
 
 fn redact_inline(w: &str) -> Option<String> {
-    if let Some((name, val)) = w.split_once('=') {
-        if !name.is_empty() && !val.is_empty() && val != MARK && sensitive_name(name) {
-            return Some(format!("{name}={MARK}"));
-        }
+    if let Some((name, val)) = w.split_once('=')
+        && !name.is_empty()
+        && !val.is_empty()
+        && val != MARK
+        && sensitive_name(name)
+    {
+        return Some(format!("{name}={MARK}"));
     }
     if let Some(i) = w.find("://") {
         let rest = &w[i + 3..];
         let authority = rest.split('/').next().unwrap_or("");
-        if let Some((userinfo, _)) = authority.split_once('@') {
-            if let Some((user, _)) = userinfo.split_once(':') {
-                let tail = &rest[userinfo.len()..];
-                return Some(format!("{}{user}:{MARK}{tail}", &w[..i + 3]));
-            }
+        if let Some((userinfo, _)) = authority.split_once('@')
+            && let Some((user, _)) = userinfo.split_once(':')
+        {
+            let tail = &rest[userinfo.len()..];
+            return Some(format!("{}{user}:{MARK}{tail}", &w[..i + 3]));
         }
     }
     let secret_like = if w.starts_with("AKIA") {

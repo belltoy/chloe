@@ -481,3 +481,24 @@ fn two_databases_in_one_directory_do_not_share_a_queue() {
     assert!(out.status.success());
     assert_eq!(queued_files(&a).len(), 1);
 }
+
+#[test]
+fn install_warns_only_when_a_db_path_would_be_lost() {
+    let dir = tempfile::tempdir().unwrap();
+    let install = |with_db: bool, settings: &str| {
+        let mut c = chloe();
+        if with_db {
+            c.arg("--db-path").arg(dir.path().join("t.db"));
+        }
+        c.args(["hook", "install", "claude", "--settings"])
+            .arg(dir.path().join(settings))
+            .output()
+            .unwrap()
+    };
+    let with = install(true, "a.json");
+    assert!(with.status.success());
+    assert!(String::from_utf8_lossy(&with.stderr).contains("--db-path is not recorded"));
+    let without = install(false, "b.json");
+    assert!(without.status.success());
+    assert!(!String::from_utf8_lossy(&without.stderr).contains("--db-path"));
+}

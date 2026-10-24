@@ -204,10 +204,11 @@ pub fn uninstall(spec: &Spec, settings: &mut Value) -> bool {
     }
     let emptied = |v: &Value| v.as_array().is_some_and(Vec::is_empty);
     hooks.retain(|_, v| !(changed && emptied(v)));
-    if changed && hooks.is_empty() {
-        if let Some(root) = settings.as_object_mut() {
-            root.remove("hooks");
-        }
+    if changed
+        && hooks.is_empty()
+        && let Some(root) = settings.as_object_mut()
+    {
+        root.remove("hooks");
     }
     changed
 }
