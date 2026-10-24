@@ -12,8 +12,38 @@ use serde::Serialize;
 
 /// Candidates taken from each path before fusion.
 const TOP_N: usize = 50;
+/// English function words. FTS ORs the query tokens, so in a natural-language question they
+/// match half the memories and bury the real hits; the vector path covers meaning anyway.
+const STOP_WORDS: &[&str] = &[
+    "a", "an", "the", "and", "or", "of", "to", "in", "on", "at", "for", "with", "by", "from", "as",
+    "about", "into", "is", "are", "was", "were", "be", "been", "do", "does", "did", "can", "could",
+    "should", "would", "how", "what", "why", "when", "where", "which", "who", "we", "you", "i",
+    "it", "this", "that", "my", "our", "your", "there", "if", "so", "not", "no",
+];
+
+/// The query without stop words; unchanged when nothing else would be left.
+fn fts_text(query: &str) -> String {
+    let kept: Vec<&str> = query
+        .split_whitespace()
+        .filter(|t| {
+            let t = t
+                .trim_matches(|c: char| !c.is_alphanumeric())
+                .to_lowercase();
+            !STOP_WORDS.contains(&t.as_str())
+        })
+        .collect();
+    if kept.is_empty() {
+        query.to_string()
+    } else {
+        kept.join(" ")
+    }
+}
+
 /// Standard RRF damping constant.
 const RRF_K: f64 = 60.0;
+/// Keyword matches are noisy on natural-language questions (and absent for unsegmented CJK),
+/// so a vector rank counts for more than the same FTS rank.
+const VECTOR_WEIGHT: f64 = 2.0;
 
 #[derive(Debug, Clone, Serialize)]
 pub struct HybridHit {
@@ -48,7 +78,13 @@ pub fn hybrid_search<S: MemoryService + EmbeddingStore>(
         limit: TOP_N.max(limit),
         ..query.clone()
     };
-    let fts = store.search(project, wide.clone())?;
+    let fts = store.search(
+        project,
+        SearchQuery {
+            query: fts_text(&query.query),
+            ..wide.clone()
+        },
+    )?;
     let (vector, degraded) = match embedder {
         None => (vec![], Some("no embedding provider".to_string())),
         Some(e) => match vector_hits(store, e, project, &wide) {
@@ -76,7 +112,7 @@ pub fn hybrid_search<S: MemoryService + EmbeddingStore>(
     }
     for (rank, h) in vector.into_iter().enumerate() {
         let rank = rank + 1;
-        let add = 1.0 / (RRF_K + rank as f64);
+        let add = VECTOR_WEIGHT / (RRF_K + rank as f64);
         fused
             .entry(h.memory.id)
             .and_modify(|f| {
@@ -121,4 +157,20 @@ fn vector_hits<S: EmbeddingStore>(
 ) -> Result<Vec<Hit>> {
     let mut v = embedder.embed(std::slice::from_ref(&q.query))?;
     store.vector_search(project, &embedder.model_id(), &v.remove(0), q)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn stop_words_are_dropped_unless_nothing_else_is_left() {
+        assert_eq!(
+            fts_text("How do we release a new version?"),
+            "release new version?"
+        );
+        assert_eq!(fts_text("What is THE rule"), "rule");
+        assert_eq!(fts_text("how do we"), "how do we");
+        assert_eq!(fts_text("busy_timeout 怎么设置"), "busy_timeout 怎么设置");
+    }
 }
