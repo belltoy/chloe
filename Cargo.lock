@@ -626,8 +626,11 @@ name = "memory-llm"
 version = "0.1.0"
 dependencies = [
  "memory-core",
+ "memory-ingest",
  "serde",
  "serde_json",
+ "time",
+ "tracing",
  "ureq",
 ]
 

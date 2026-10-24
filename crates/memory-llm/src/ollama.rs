@@ -6,6 +6,9 @@ use std::time::Duration;
 
 use memory_core::extract::{Candidate, ExtractionInput, MemoryExtractor};
 use memory_core::{Error, Result};
+
+use crate::prompt;
+use crate::validate::{Raw, validate};
 use serde::Deserialize;
 use serde_json::{Value, json};
 
@@ -13,8 +16,6 @@ pub const DEFAULT_URL: &str = "http://127.0.0.1:11434";
 pub const DEFAULT_MODEL: &str = "qwen3:8b";
 /// A local 8B model on a long session is slow; extraction runs in the background.
 const DEFAULT_TIMEOUT_SECS: u64 = 120;
-/// Per event, so one huge tool summary cannot crowd out the rest of the session.
-const MAX_EVENT_CHARS: usize = 1000;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct OllamaConfig {
@@ -136,47 +137,9 @@ fn unavailable(e: ureq::Error) -> Error {
     Error::Unavailable(e.to_string())
 }
 
-// shortcut: minimal prompt and schema so the provider is demonstrable; B1-03 replaces them
-// with the restricted, evidence-bearing versions.
-fn prompt(input: &ExtractionInput) -> String {
-    let mut p = String::from(
-        "You extract durable engineering knowledge from a coding-agent session. \
-Return only lasting decisions, constraints, procedures, gotchas or facts worth remembering \
-in future sessions; ignore routine activity. Return an empty list if there is none. \
-Never include secrets.\n\nSession events:\n",
-    );
-    for e in &input.events {
-        let text: String = e
-            .text
-            .as_deref()
-            .unwrap_or("")
-            .chars()
-            .take(MAX_EVENT_CHARS)
-            .collect();
-        p.push_str(&format!("- [{}] {text}\n", e.kind.as_str()));
-    }
-    p
-}
-
-fn schema() -> Value {
-    json!({
-        "type": "object",
-        "properties": {"candidates": {"type": "array", "items": {
-            "type": "object",
-            "properties": {
-                "kind": {"enum": ["fact", "decision", "procedure", "constraint", "gotcha"]},
-                "title": {"type": "string"},
-                "content": {"type": "string"},
-            },
-            "required": ["kind", "title", "content"],
-        }}},
-        "required": ["candidates"],
-    })
-}
-
 #[derive(Deserialize)]
 struct Output {
-    candidates: Vec<Candidate>,
+    candidates: Vec<Raw>,
 }
 
 impl MemoryExtractor for Ollama {
@@ -185,10 +148,19 @@ impl MemoryExtractor for Ollama {
     }
 
     fn extract(&self, input: &ExtractionInput) -> Result<Vec<Candidate>> {
-        let out = self.generate_json(&prompt(input), &schema())?;
+        if input.events.is_empty() {
+            return Ok(vec![]);
+        }
+        let prompt = prompt::build(input);
+        let out = self.generate_json(&prompt.text, &prompt::schema())?;
         let out: Output = serde_json::from_value(out)
             .map_err(|_| Error::InvalidArgument("model output does not match the schema".into()))?;
-        Ok(out.candidates)
+        let out = validate(input, &prompt, out.candidates);
+        if !out.rejected.is_empty() {
+            // Reason codes only: never log what the model wrote.
+            tracing::warn!(rejected = ?out.rejected, "dropped extraction candidates");
+        }
+        Ok(out.accepted)
     }
 }
 

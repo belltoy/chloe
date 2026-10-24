@@ -95,7 +95,22 @@ pub fn run(store: &SqliteStore, command: LlmCommand, json: bool) -> anyhow::Resu
                 return print_json(&candidates);
             }
             for c in &candidates {
-                println!("{:?}  {}\n  {}", c.kind, c.title, c.content);
+                let e = &c.evidence;
+                println!(
+                    "{:?}  {}\n  {}\n  evidence: {} event(s){}{}",
+                    c.kind,
+                    c.title,
+                    c.content,
+                    e.events.len(),
+                    e.file
+                        .as_ref()
+                        .map(|f| format!(", file {f}"))
+                        .unwrap_or_default(),
+                    e.commit
+                        .as_ref()
+                        .map(|c| format!(", commit {c}"))
+                        .unwrap_or_default(),
+                );
             }
             if candidates.is_empty() {
                 println!("no candidates");

@@ -34,11 +34,26 @@ fn client(url: String) -> Ollama {
     .unwrap()
 }
 
+fn event(text: &str) -> memory_core::AgentEvent {
+    memory_core::AgentEvent {
+        schema_version: memory_core::EVENT_SCHEMA_VERSION,
+        native_agent: "claude_code".into(),
+        native_session_id: "s".into(),
+        native_event_id: Some("e1".into()),
+        kind: memory_core::EventKind::UserPrompt,
+        occurred_at: time::OffsetDateTime::UNIX_EPOCH,
+        cwd: None,
+        tool_name: None,
+        text: Some(text.into()),
+        redactions: vec![],
+    }
+}
+
 fn input() -> ExtractionInput {
     ExtractionInput {
         native_agent: "claude_code".into(),
         native_session_id: "s".into(),
-        events: vec![],
+        events: vec![event("Use WAL because of concurrency")],
     }
 }
 
@@ -49,11 +64,12 @@ fn reply(inner: &str) -> (&'static str, String) {
 #[test]
 fn extracts_candidates_from_model_output() {
     let url = server(vec![reply(
-        r#"{"candidates":[{"kind":"decision","title":"Use WAL","content":"Because of concurrency"}]}"#,
+        r#"{"candidates":[{"kind":"decision","title":"Use WAL","content":"Because of concurrency","evidence":["E1"]}]}"#,
     )]);
     let c = client(url).extract(&input()).unwrap();
     assert_eq!((c.len(), c[0].kind), (1, Kind::Decision));
-    assert!(c[0].evidence.is_empty());
+    assert_eq!(c[0].evidence.events.len(), 1);
+    assert_eq!(c[0].evidence.native_session_id, "s");
 }
 
 #[test]
@@ -67,7 +83,7 @@ fn lists_models() {
 fn bad_output_is_rejected_not_trusted() {
     for bad in [
         "not json",
-        r#"{"candidates":[{"kind":"secret","title":"t","content":"c"}]}"#,
+        r#"{"candidates":[{"kind":"secret","title":"t","content":"c","evidence":["E1"]}]}"#,
     ] {
         let url = server(vec![reply(bad)]);
         let e = client(url).extract(&input()).unwrap_err();

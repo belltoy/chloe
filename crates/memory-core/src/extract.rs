@@ -14,14 +14,27 @@ pub struct ExtractionInput {
     pub events: Vec<AgentEvent>,
 }
 
+/// Where a candidate came from. `session` and `events` are filled in by us from the input,
+/// never taken from the model; `file` and `commit` are kept only when the cited events
+/// actually mention them.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Evidence {
+    pub native_agent: String,
+    pub native_session_id: String,
+    /// Idempotency keys of the cited events (see `AgentEvent::idempotency_key`).
+    pub events: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub file: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub commit: Option<String>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Candidate {
     pub kind: Kind,
     pub title: String,
     pub content: String,
-    /// Idempotency keys of the events the candidate is based on.
-    #[serde(default)]
-    pub evidence: Vec<String>,
+    pub evidence: Evidence,
 }
 
 pub trait MemoryExtractor {
