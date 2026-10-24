@@ -529,6 +529,8 @@
    "tag": "plain",
    "text": "内存涨得很快怎么查",
    "relevant": [
+    "e11",
+    "x17",
     "z03"
    ],
    "note": ""
@@ -629,7 +631,8 @@
    "tag": "plain",
    "text": "gen_server:call 默认超时多久，怎么配置",
    "relevant": [
-    "x02"
+    "x02",
+    "z12"
    ],
    "note": ""
   },

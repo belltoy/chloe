@@ -95,3 +95,11 @@ Next options for the last decision false extraction: a second verification pass 
 ## Decision (user, 2026-10-24)
 
 The residue of decision false extractions that are only a request (n07) is accepted for phase 1; review of each candidate is the safeguard. The Decision hard line therefore stays "not met" on this set rather than being re-defined.
+
+## Hallucination review of the first baseline, completed
+
+`review.md` covered 17 extras (0 hallucinated); `review-rest.md` covers the other 21 candidates (checked by the user together with a second AI): 13 faithful, **8 partial**, 0 unfaithful. The partial ones are: an invented motive or benefit (u08 feature choice, n02 rename "for readability", t05 `?` and `anyhow` motives), a wrong attribution (t01 "the user fixed" what the assistant did; u10 "the team decided" what the assistant changed), a rule widened from one fix (u10 "use UTC for all date calculations"), and a one-off command turned into a general procedure (n02, t01 cache constraint).
+
+So the hallucination hard line is **not met** on the first baseline: 8 of 38 candidates (about 21%) state something the events do not support, and none of them is a pure fabrication. The 17 earlier ones count as 0 by the earlier review. Dominant failure: the model explains *why* when the events only show *what*, and attributes agent actions to the user or "the team". The prompt already says "do not add reasons, causes or details they do not give"; the 8B model does not follow it reliably.
+
+This was measured on the first-baseline outputs (original prompt). The round 1 and 2 prompts changed what is produced; the same review has not been done for them.
