@@ -22,7 +22,7 @@ const STOP_WORDS: &[&str] = &[
 ];
 
 /// The query without stop words; unchanged when nothing else would be left.
-fn fts_text(query: &str) -> String {
+pub fn fts_text(query: &str) -> String {
     let kept: Vec<&str> = query
         .split_whitespace()
         .filter(|t| {

@@ -66,22 +66,16 @@ pub(crate) fn for_query(query: &str) -> Vec<String> {
         .collect()
 }
 
-/// FTS query over the segmented index for a query that contains CJK text; `None` when it has
-/// none, or no usable word is left (the regular index is used then).
-pub(crate) fn query(q: &str) -> Option<String> {
+/// Terms for the segmented index when the query contains CJK text; `None` when it has none, or
+/// no usable word is left (the regular index is used then).
+pub(crate) fn terms(q: &str) -> Option<Vec<String>> {
     const MAX_TERMS: usize = 64;
     if !has_cjk(q) {
         return None;
     }
-    let terms = for_query(q);
-    (!terms.is_empty()).then(|| {
-        terms
-            .iter()
-            .take(MAX_TERMS)
-            .map(|t| format!("\"{}\"", t.replace('"', "\"\"")))
-            .collect::<Vec<_>>()
-            .join(" OR ")
-    })
+    let mut terms = for_query(q);
+    terms.truncate(MAX_TERMS);
+    (!terms.is_empty()).then_some(terms)
 }
 
 /// Replaces the index row of the memory at `rowid`.

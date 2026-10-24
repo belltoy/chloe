@@ -30,6 +30,9 @@ pub struct EvalMemory {
 #[derive(Debug, Clone, Deserialize)]
 pub struct EvalQuery {
     pub id: String,
+    /// Optional kind of query (`ident`, `para`, `hardneg`, ...), shown in diagnostics.
+    #[serde(default)]
+    pub tag: String,
     /// `en`, `zh`, `mixed` or `cross` (query and memory in different languages).
     pub lang: String,
     pub text: String,
@@ -61,6 +64,9 @@ pub struct Report {
     pub dimension: Option<usize>,
     pub memories: usize,
     pub queries: usize,
+    /// Dataset memory key to the id it was saved under (for diagnostics).
+    #[serde(skip)]
+    pub ids: HashMap<String, MemoryId>,
     /// Timed runs per query and mode behind the latency columns.
     pub runs: usize,
     pub rows: Vec<Row>,
@@ -207,6 +213,7 @@ pub fn run_eval<S: MemoryService + EmbeddingStore + JobQueue>(
         memories: ds.memories.len(),
         queries: ds.queries.len(),
         runs: runs.max(1),
+        ids: ids.into_iter().map(|(k, v)| (k.to_string(), v)).collect(),
         rows,
     })
 }

@@ -11,7 +11,7 @@ mod propose;
 
 pub use embed::{EMBED_JOB_KIND, EmbedDone, EmbedPlan, plan_embeddings, run_next_embedding};
 pub use eval::{Dataset, EvalMemory, EvalQuery, MODES, Report, Row, run_eval};
-pub use hybrid::{HybridHit, HybridResult, hybrid_search};
+pub use hybrid::{HybridHit, HybridResult, fts_text, hybrid_search};
 pub use policy::{Outcome, PolicyReport, apply_policy, evaluate};
 pub use propose::{ProposeReport, propose_pending};
 

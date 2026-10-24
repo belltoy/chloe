@@ -59,6 +59,33 @@ fn create_private(path: &Path) -> Result<()> {
     Ok(())
 }
 
+/// The index a query is searched in and the terms that are OR-ed. The table name is a constant.
+fn fts_plan(query: &str) -> (&'static str, Vec<String>) {
+    match segment::terms(query) {
+        Some(terms) => ("memory_fts_seg", terms),
+        None => (
+            "memory_fts",
+            query.split_whitespace().map(String::from).collect(),
+        ),
+    }
+}
+
+/// Every term quoted, so user input can never be parsed as FTS5 syntax.
+fn or_query(terms: &[String]) -> String {
+    terms
+        .iter()
+        .map(|t| format!("\"{}\"", t.replace('"', "\"\"")))
+        .collect::<Vec<_>>()
+        .join(" OR ")
+}
+
+/// For diagnostics: the terms a search ORs together, and the ones that match one memory.
+#[derive(Debug, Clone, Serialize)]
+pub struct FtsCoverage {
+    pub terms: Vec<String>,
+    pub matched: Vec<String>,
+}
+
 fn storage(e: impl std::fmt::Display) -> Error {
     Error::Storage(e.to_string())
 }
@@ -133,6 +160,31 @@ impl SqliteStore {
             }) && segment::in_step(&conn),
             foreign_keys_ok: fk_violation.is_none(),
         })
+    }
+
+    /// Which terms of `query` (as `search` would use them) the memory matches. For diagnostics;
+    /// one FTS probe per term.
+    pub fn fts_coverage(&self, query: &str, id: MemoryId) -> Result<FtsCoverage> {
+        let (table, terms) = fts_plan(query);
+        let conn = self.conn();
+        let mut matched = vec![];
+        for t in &terms {
+            let hit = conn
+                .query_row(
+                    &format!(
+                        "SELECT 1 FROM {table} WHERE {table} MATCH ?1 \
+                         AND rowid = (SELECT rowid FROM memories WHERE id=?2)"
+                    ),
+                    params![or_query(std::slice::from_ref(t)), id.to_string()],
+                    |_| Ok(()),
+                )
+                .optional()
+                .map_err(storage)?;
+            if hit.is_some() {
+                matched.push(t.clone());
+            }
+        }
+        Ok(FtsCoverage { terms, matched })
     }
 
     /// Rebuilds the FTS index from `memories`.
@@ -282,17 +334,8 @@ impl MemoryService for SqliteStore {
         // Quote every token so user input can never be parsed as FTS5 syntax. Tokens are OR-ed:
         // agents send long natural-language queries, and AND returns nothing if one word is absent.
         // Queries with CJK text go to the word-segmented index; the table name is a constant.
-        let (table, fts_query) = match segment::query(&q.query) {
-            Some(fts) => ("memory_fts_seg", fts),
-            None => (
-                "memory_fts",
-                q.query
-                    .split_whitespace()
-                    .map(|t| format!("\"{}\"", t.replace('"', "\"\"")))
-                    .collect::<Vec<_>>()
-                    .join(" OR "),
-            ),
-        };
+        let (table, terms) = fts_plan(&q.query);
+        let fts_query = or_query(&terms);
         if fts_query.is_empty() {
             return Err(Error::InvalidArgument("empty query".into()));
         }
