@@ -416,7 +416,7 @@
    "id": "h06",
    "lang": "en",
    "tag": "para",
-   "text": "what stops a call from running forever",
+   "text": "what happens on the server when a call's deadline passes",
    "relevant": [
     "e02"
    ],
@@ -541,7 +541,7 @@
    "relevant": [
     "z05"
    ],
-   "note": "hard negatives: z04, e23, e01 (other pools)"
+   "note": "hard negatives: e23 (gRPC pool size), e01 (per-upstream pools), z04 (same topic, but a constraint about borrowing from the pool, not its size)"
   },
   {
    "id": "h19",
@@ -626,12 +626,12 @@
   {
    "id": "h27",
    "lang": "mixed",
-   "tag": "hardneg",
-   "text": "gen_server:call 超时",
+   "tag": "plain",
+   "text": "gen_server:call 默认超时多久，怎么配置",
    "relevant": [
     "x02"
    ],
-   "note": "hard negative: e06 (gen_server callbacks)"
+   "note": ""
   },
   {
    "id": "h28",
@@ -646,8 +646,8 @@
   {
    "id": "h29",
    "lang": "mixed",
-   "tag": "ident",
-   "text": "supervisor intensity 设多少",
+   "tag": "plain",
+   "text": "supervisor intensity 设得太小有什么风险",
    "relevant": [
     "x05"
    ],
@@ -757,7 +757,7 @@
    "id": "h40",
    "lang": "cross",
    "tag": "para",
-   "text": "客户端已经走了服务端还在发怎么办",
+   "text": "客户端断开之后服务端为什么还在消耗 CPU",
    "relevant": [
     "e20"
    ],
@@ -777,7 +777,7 @@
    "id": "h42",
    "lang": "cross",
    "tag": "plain",
-   "text": "为什么不能把用户输入转成 atom",
+   "text": "把请求数据转成 atom 有什么限制，应该怎么做",
    "relevant": [
     "e19"
    ],
@@ -857,7 +857,7 @@
    "id": "h50",
    "lang": "cross",
    "tag": "plain",
-   "text": "who gets paged at night",
+   "text": "which faults page the on-call person",
    "relevant": [
     "z09"
    ],
