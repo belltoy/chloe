@@ -488,3 +488,37 @@ fn the_segmented_index_is_built_on_upgrade_and_rebuilt_when_segmentation_changes
     let store = SqliteStore::open(&path).unwrap();
     assert_eq!(store.search(Some(p), q("升级之前保存")).unwrap().len(), 1);
 }
+
+#[test]
+fn doctor_catches_stale_missing_and_extra_segmented_rows() {
+    let (dir, path) = db();
+    let store = SqliteStore::open(&path).unwrap();
+    let p = project(&store, &dir, "p");
+    let m = store.save(new(Some(p), "并发", "数据库并发读写")).unwrap();
+    store.save(new(Some(p), "second", "second body")).unwrap();
+    assert!(store.doctor().unwrap().fts_ok);
+    let raw = rusqlite::Connection::open(&path).unwrap();
+    for (name, sql) in [
+        (
+            "stale content, same row count",
+            "UPDATE memory_fts_seg SET content = '过期 内容' WHERE content LIKE '%数据库%'",
+        ),
+        (
+            "missing row",
+            "DELETE FROM memory_fts_seg WHERE title = 'second'",
+        ),
+        (
+            "extra row",
+            "INSERT INTO memory_fts_seg(rowid, title, content) VALUES (999, 'x', 'y')",
+        ),
+    ] {
+        raw.execute(sql, []).unwrap();
+        assert!(!store.doctor().unwrap().fts_ok, "{name}");
+        store.reindex().unwrap();
+        assert!(store.doctor().unwrap().fts_ok, "{name} after reindex");
+    }
+    assert_eq!(
+        store.search(Some(p), q("数据库")).unwrap()[0].memory.id,
+        m.id
+    );
+}

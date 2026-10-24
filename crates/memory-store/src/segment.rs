@@ -130,13 +130,9 @@ pub(crate) fn ensure(conn: &Connection) -> Result<()> {
     rebuild(conn)
 }
 
-/// The index has one row per memory and was built by the current segmentation.
+/// The index was built by the current segmentation and holds, for every memory, exactly the
+/// words its current title and content segment into (no stale, missing or extra rows).
 pub(crate) fn in_step(conn: &Connection) -> bool {
-    let count = |t: &str| {
-        conn.query_row(&format!("SELECT count(*) FROM {t}"), [], |r| {
-            r.get::<_, i64>(0)
-        })
-    };
     let built: Option<String> = conn
         .query_row(
             "SELECT value FROM fts_meta WHERE key='segment_version'",
@@ -144,8 +140,24 @@ pub(crate) fn in_step(conn: &Connection) -> bool {
             |r| r.get(0),
         )
         .ok();
-    built.as_deref() == Some(SEGMENT_VERSION)
-        && matches!((count("memories"), count("memory_fts_seg")), (Ok(a), Ok(b)) if a == b)
+    if built.as_deref() != Some(SEGMENT_VERSION) {
+        return false;
+    }
+    let check = || -> rusqlite::Result<bool> {
+        let rows = |sql: &str| -> rusqlite::Result<Vec<(i64, String, String)>> {
+            conn.prepare(sql)?
+                .query_map([], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)))?
+                .collect()
+        };
+        let memories = rows("SELECT rowid, title, content FROM memories ORDER BY rowid")?;
+        let indexed = rows("SELECT rowid, title, content FROM memory_fts_seg ORDER BY rowid")?;
+        Ok(memories.len() == indexed.len()
+            && memories
+                .iter()
+                .zip(&indexed)
+                .all(|(m, i)| m.0 == i.0 && for_index(&m.1) == i.1 && for_index(&m.2) == i.2))
+    };
+    check().unwrap_or(false)
 }
 
 #[cfg(test)]
