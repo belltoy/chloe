@@ -31,7 +31,7 @@ Overall (30 queries), Recall@5 / MRR:
 | `qwen3-embedding:0.6b` (default) | 1.00 / 0.94 | 0.93 / 0.86 | 1.00 / 0.89 | 0.89 / 0.68 |
 | `bge-m3` | 0.98 / 0.92 | 0.95 / 0.82 | 1.00 / 0.79 | 0.89 / 0.60 |
 
-Both are 1024-dimensional and answer in about 25–30 ms per query on this machine. `bge-m3` misses one mixed-language query in the top 5 and ranks cross-language answers lower; `qwen3-embedding:0.6b` is equal or better in every group and stays the default. One `bge-m3` p95 of 133 ms (en, vector) looks like a one-off stall, not a trend; latency comparisons need repeated runs (B3-05). Differences of one query are within noise at this size.
+Both are 1024-dimensional and answer in about 25–30 ms per query on this machine. `bge-m3` misses one mixed-language query in the top 5 and ranks cross-language answers lower; `qwen3-embedding:0.6b` is better on overall vector and cross-language ranking, while `bge-m3` is slightly better on English MRR (0.93 vs 0.89) and overall hybrid Recall@5 (0.95 vs 0.93); `qwen3-embedding:0.6b` stays the default. One `bge-m3` p95 of 133 ms (en, vector) looks like a one-off stall, not a trend; latency comparisons need repeated runs (B3-05). Differences of one query are within noise at this size.
 
 ## Reading the numbers
 
