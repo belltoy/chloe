@@ -49,11 +49,13 @@ At most 8 items, fewest that cover it.
 
 Each item:
 - title: one line, at most 100 characters, so it can be found by search.
-- content: at most 1500 characters, self-contained, stating the why.
+- content: at most 1500 characters, self-contained. State the why only when an event gives it; if none does, leave it out rather than guess one.
 - evidence: the event refs (like E3) that support it; at least one, only refs that appear below.
 - file / commit: only when an event literally shows that path or commit hash; otherwise omit.
 - An assistant_message event is the agent's own explanation of what it did and why: a good source for causes and fixes, but not a rule the user stated.
-- State only what the events say: do not add reasons, causes or details they do not give, and do not repeat one point as several items.
+- State only what the events say: do not add reasons, causes, benefits or details they do not give, and do not repeat one point as several items.
+- Keep who said or did it as the events show it: what the assistant did or reported is the assistant's, not the user's or \"the team's\". A result the assistant reports (\"tests pass\", \"fixed\") stays a report of that one run; do not turn it into a guarantee.
+- Keep the scope the events show: one fix, one file or one run is not a rule for everything. Do not call something standard, known or required unless an event says so.
 - Write in the language the session uses.
 
 Never include secrets, tokens, passwords, keys or credentials, even if they appear in the \
