@@ -1,0 +1,27 @@
+{
+ "spec": "claude",
+ "source": "synthetic: made up to test tolerance, not captured from any agent",
+ "note": "",
+ "payload": {
+  "session_id": "s",
+  "hook_event_name": "UserPromptSubmit",
+  "prompt": "hello",
+  "prompt_id": "p",
+  "brand_new_field": {
+   "a": [
+    1,
+    2,
+    3
+   ]
+  },
+  "effort": {
+   "level": "max",
+   "extra": true
+  }
+ },
+ "expect": {
+  "kind": "user_prompt",
+  "text": "hello",
+  "native_event_id": "p"
+ }
+}

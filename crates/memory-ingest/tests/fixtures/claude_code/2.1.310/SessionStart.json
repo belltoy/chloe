@@ -1,0 +1,15 @@
+{
+ "spec": "claude",
+ "source": "captured with a probe command hook on 2026-10-24 (paths replaced)",
+ "note": "",
+ "payload": {
+  "session_id": "b4435b33-95f0-4248-bc9f-f4a96d663209",
+  "transcript_path": "/home/u/.claude/projects/-project/b4435b33-95f0-4248-bc9f-f4a96d663209.jsonl",
+  "cwd": "/project",
+  "hook_event_name": "SessionStart",
+  "source": "startup"
+ },
+ "expect": {
+  "kind": "session_start"
+ }
+}

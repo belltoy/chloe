@@ -1,0 +1,15 @@
+{
+ "spec": "claude",
+ "source": "synthetic: made up to test tolerance, not captured from any agent",
+ "note": "",
+ "payload": {
+  "session_id": "s",
+  "hook_event_name": "PostToolUse",
+  "tool_name": "Bash"
+ },
+ "expect": {
+  "kind": "tool_result_summary",
+  "tool": "Bash",
+  "text": null
+ }
+}

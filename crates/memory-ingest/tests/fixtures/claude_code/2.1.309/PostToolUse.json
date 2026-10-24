@@ -1,0 +1,23 @@
+{
+ "spec": "claude",
+ "source": "copied from the payloads captured on 2026-10-23 (see docs/agent-events.md)",
+ "note": "",
+ "payload": {
+  "session_id": "s1",
+  "hook_event_name": "PostToolUse",
+  "tool_name": "Bash",
+  "tool_input": {
+   "command": "echo hi"
+  },
+  "tool_response": {
+   "stdout": "SECRET-OUTPUT"
+  },
+  "tool_use_id": "toolu_1"
+ },
+ "expect": {
+  "kind": "tool_result_summary",
+  "tool": "Bash",
+  "text": "echo hi",
+  "native_event_id": "toolu_1"
+ }
+}

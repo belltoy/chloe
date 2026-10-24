@@ -1,0 +1,16 @@
+{
+ "spec": "codex",
+ "source": "copied from the payloads captured on 2026-10-23 (see docs/agent-events.md)",
+ "note": "",
+ "payload": {
+  "session_id": "c1",
+  "turn_id": "t1",
+  "hook_event_name": "UserPromptSubmit",
+  "prompt": "fix it"
+ },
+ "expect": {
+  "kind": "user_prompt",
+  "text": "fix it",
+  "native_event_id": "t1"
+ }
+}

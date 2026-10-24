@@ -1,0 +1,15 @@
+{
+ "spec": "claude",
+ "source": "copied from the payloads captured on 2026-10-23 (see docs/agent-events.md)",
+ "note": "",
+ "payload": {
+  "session_id": "s1",
+  "transcript_path": "/t",
+  "cwd": "/p",
+  "hook_event_name": "SessionStart",
+  "source": "startup"
+ },
+ "expect": {
+  "kind": "session_start"
+ }
+}

@@ -1,0 +1,12 @@
+{
+ "spec": "claude",
+ "source": "synthetic: made up to test tolerance, not captured from any agent",
+ "note": "",
+ "payload": {
+  "session_id": 42,
+  "hook_event_name": "SessionStart"
+ },
+ "expect": {
+  "error": "session_id"
+ }
+}

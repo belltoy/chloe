@@ -1,0 +1,22 @@
+{
+ "spec": "codex",
+ "source": "copied from the payloads captured on 2026-10-23 (see docs/agent-events.md)",
+ "note": "",
+ "payload": {
+  "session_id": "c1",
+  "turn_id": "t1",
+  "hook_event_name": "PostToolUse",
+  "tool_name": "Bash",
+  "tool_input": {
+   "command": "echo hi"
+  },
+  "tool_response": "SECRET-OUTPUT\n",
+  "tool_use_id": "exec-1"
+ },
+ "expect": {
+  "kind": "tool_result_summary",
+  "tool": "Bash",
+  "text": "echo hi",
+  "native_event_id": "exec-1"
+ }
+}

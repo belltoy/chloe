@@ -1,0 +1,13 @@
+{
+ "spec": "claude",
+ "source": "synthetic: made up to test tolerance, not captured from any agent",
+ "note": "",
+ "payload": {
+  "session_id": "s",
+  "hook_event_name": "SomeFutureEvent",
+  "x": 1
+ },
+ "expect": {
+  "ignored": true
+ }
+}

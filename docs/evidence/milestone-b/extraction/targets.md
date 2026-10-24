@@ -91,3 +91,7 @@ Status of the hard lines on this 28-session set after round 2:
 Caveats: one model, one run per attempt, temperature 0. One added sentence moved found items from 14 to 16 and a session from empty to non-empty, so the numbers are sensitive to wording and 16/16 is not a stable property. The u04 hit appeared without a change aimed at it. The examples in the prompt were written to differ from the set, but the set was used to choose between attempts, so these figures are no longer a held-out measure; new sessions are needed to check them. Attempt 3 was chosen after seeing attempt 2's loss on u01.
 
 Next options for the last decision false extraction: a second verification pass over each decision ("is this a task or a choice with a reason?"), or accept the residue and rely on review (decisions are never auto-merged and every candidate waits for a person).
+
+## Decision (user, 2026-10-24)
+
+The residue of decision false extractions that are only a request (n07) is accepted for phase 1; review of each candidate is the safeguard. The Decision hard line therefore stays "not met" on this set rather than being re-defined.

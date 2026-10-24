@@ -1,0 +1,23 @@
+{
+ "spec": "codex",
+ "source": "synthetic: made up to test tolerance, not captured from any agent",
+ "note": "",
+ "payload": {
+  "session_id": "s",
+  "hook_event_name": "PostToolUse",
+  "tool_name": "Bash",
+  "tool_input": {
+   "command": "ls"
+  },
+  "tool_response": [
+   1,
+   2
+  ],
+  "tool_use_id": "x"
+ },
+ "expect": {
+  "kind": "tool_result_summary",
+  "tool": "Bash",
+  "text": "ls"
+ }
+}

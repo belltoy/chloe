@@ -1,0 +1,12 @@
+{
+ "spec": "codex",
+ "source": "copied from the payloads captured on 2026-10-23 (see docs/agent-events.md)",
+ "note": "payload never seen on Codex; not captured",
+ "payload": {
+  "session_id": "c1",
+  "hook_event_name": "PostCompact"
+ },
+ "expect": {
+  "ignored": true
+ }
+}

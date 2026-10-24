@@ -1,0 +1,16 @@
+{
+ "spec": "claude",
+ "source": "copied from the payloads captured on 2026-10-23 (see docs/agent-events.md)",
+ "note": "",
+ "payload": {
+  "session_id": "s1",
+  "prompt_id": "p1",
+  "hook_event_name": "UserPromptSubmit",
+  "prompt": "fix the bug"
+ },
+ "expect": {
+  "kind": "user_prompt",
+  "text": "fix the bug",
+  "native_event_id": "p1"
+ }
+}
