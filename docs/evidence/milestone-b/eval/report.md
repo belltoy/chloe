@@ -31,7 +31,7 @@ Overall (30 queries), Recall@5 / MRR:
 | `qwen3-embedding:0.6b` (default) | 1.00 / 0.94 | 0.93 / 0.86 | 1.00 / 0.89 | 0.89 / 0.68 |
 | `bge-m3` | 0.98 / 0.92 | 0.95 / 0.82 | 1.00 / 0.79 | 0.89 / 0.60 |
 
-Both are 1024-dimensional and answer in about 25–30 ms per query on this machine. `bge-m3` misses one mixed-language query in the top 5 and ranks cross-language answers lower; `qwen3-embedding:0.6b` is better on overall vector and cross-language ranking, while `bge-m3` is slightly better on English MRR (0.93 vs 0.89) and overall hybrid Recall@5 (0.95 vs 0.93); `qwen3-embedding:0.6b` stays the default. One `bge-m3` p95 of 133 ms (en, vector) looks like a one-off stall, not a trend; latency comparisons need repeated runs (B3-05). Differences of one query are within noise at this size.
+Both are 1024-dimensional and answer in about 25–30 ms per query on this machine. `bge-m3` misses one mixed-language query in the top 5 and ranks cross-language answers lower; `qwen3-embedding:0.6b` is better on overall vector and cross-language ranking, while `bge-m3` is slightly better on English MRR (0.93 vs 0.89) and overall hybrid Recall@5 (0.95 vs 0.93); `qwen3-embedding:0.6b` stays the default. The 133 ms p95 `bge-m3` showed in the single run was a one-off stall: with a warm-up call and 20 timed runs per query (below) it is gone. Differences of one query are within noise at this size.
 
 ## Reading the numbers
 
@@ -45,3 +45,18 @@ Both are 1024-dimensional and answer in about 25–30 ms per query on this machi
 ## History: first hybrid fix
 
 First run (50 memories, 25 queries): Hybrid 0.84 / 0.82 overall, below Vector, because FTS ORs every token so function words returned 12–15 weak candidates. English stop words are now removed from the FTS query (0.96 / 0.92 on that set) and a vector rank counts twice an FTS rank (0.96 / 0.94).
+
+## Repeated run (B3-05)
+
+`chloe eval --runs 20` (one untimed warm-up embedding, then 20 timed runs per query and mode; 600 samples per row), same machine (Apple M1 Max, 10 cores, local Ollama, nothing else running). Overall:
+
+| model | mode | Recall@5 | MRR | p50 ms | p95 ms |
+|---|---|---|---|---|---|
+| `qwen3-embedding:0.6b` | fts | 0.33 | 0.31 | 0.2 | 0.6 |
+| `qwen3-embedding:0.6b` | vector | 1.00 | 0.94 | 24.8 | 31.1 |
+| `qwen3-embedding:0.6b` | hybrid | 0.93 | 0.86 | 25.2 | 32.5 |
+| `bge-m3` | fts | 0.33 | 0.31 | 0.2 | 0.7 |
+| `bge-m3` | vector | 0.98 | 0.92 | 27.0 | 34.1 |
+| `bge-m3` | hybrid | 0.95 | 0.82 | 27.3 | 34.2 |
+
+Quality does not change between runs (it is computed once per query). Vector and Hybrid latency is almost entirely the query embedding (about 25 ms); the vector scan over 100 memories and the fusion are well under a millisecond. This is a single machine and a single session, not a controlled lab: no pinned CPU frequency, no cold-cache runs, and the Ollama build was whatever was installed.

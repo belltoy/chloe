@@ -340,7 +340,7 @@ fn eval_scores_every_mode_per_language_and_rejects_bad_labels() {
     };
     let (d, s) = store();
     let p = project(&d, "p", &s);
-    let report = run_eval(&s, &Topics, p, &ds("a")).unwrap();
+    let report = run_eval(&s, &Topics, p, &ds("a"), 1).unwrap();
     // 3 modes x (en, cross, all)
     assert_eq!(report.rows.len(), 9);
     let row = |lang: &str, mode: &str| {
@@ -362,7 +362,7 @@ fn eval_scores_every_mode_per_language_and_rejects_bad_labels() {
     let (d, s) = store();
     let p = project(&d, "p", &s);
     assert!(matches!(
-        run_eval(&s, &Topics, p, &ds("missing")),
+        run_eval(&s, &Topics, p, &ds("missing"), 1),
         Err(Error::InvalidArgument(_))
     ));
 }

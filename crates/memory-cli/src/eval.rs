@@ -15,6 +15,9 @@ pub struct Eval {
     /// Dataset JSON: `memories` and `queries` with human-labelled `relevant` keys
     #[arg(long, default_value = "docs/evidence/milestone-b/eval/dataset.json")]
     dataset: PathBuf,
+    /// Timed runs per query and mode (latency percentiles are taken over all of them)
+    #[arg(long, default_value_t = 1)]
+    runs: usize,
     /// Free text recorded in the report, e.g. the machine
     #[arg(long, default_value = "")]
     note: String,
@@ -33,7 +36,7 @@ pub fn run(args: Eval, json: bool) -> anyhow::Result<()> {
     let result = (|| -> anyhow::Result<Report> {
         let store = SqliteStore::open(&dir.join("eval.db"))?;
         let project = store.resolve_project(&dir)?;
-        Ok(run_eval(&store, &embedder, project, &ds)?)
+        Ok(run_eval(&store, &embedder, project, &ds, args.runs)?)
     })();
     let _ = std::fs::remove_dir_all(&dir);
     let report = result?;
@@ -48,11 +51,12 @@ pub fn run(args: Eval, json: bool) -> anyhow::Result<()> {
     }
     println!("# Retrieval evaluation\n");
     println!(
-        "- model: {} ({} dimensions)\n- data: {} memories, {} queries\n- host: {}/{}, {} cpus{}\n",
+        "- model: {} ({} dimensions)\n- data: {} memories, {} queries, {} timed run(s) each\n- host: {}/{}, {} cpus{}\n",
         report.model_id,
         report.dimension.map_or("?".into(), |d| d.to_string()),
         report.memories,
         report.queries,
+        report.runs,
         std::env::consts::OS,
         std::env::consts::ARCH,
         std::thread::available_parallelism().map_or(0, |n| n.get()),

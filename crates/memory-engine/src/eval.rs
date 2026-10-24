@@ -61,11 +61,13 @@ pub struct Report {
     pub dimension: Option<usize>,
     pub memories: usize,
     pub queries: usize,
+    /// Timed runs per query and mode behind the latency columns.
+    pub runs: usize,
     pub rows: Vec<Row>,
 }
 
-/// (lang, mode) -> per query (recall, reciprocal rank, ms).
-type Samples = BTreeMap<(String, &'static str), Vec<(f64, f64, f64)>>;
+/// (lang, mode) -> per query (recall, reciprocal rank), and every timed run in ms.
+type Samples = BTreeMap<(String, &'static str), (Vec<(f64, f64)>, Vec<f64>)>;
 
 fn percentile(sorted: &[f64], p: f64) -> f64 {
     // Nearest rank.
@@ -92,6 +94,7 @@ pub fn run_eval<S: MemoryService + EmbeddingStore + JobQueue>(
     embedder: &dyn Embedder,
     project: ProjectId,
     ds: &Dataset,
+    runs: usize,
 ) -> Result<Report> {
     let mut ids: HashMap<&str, MemoryId> = HashMap::new();
     for m in &ds.memories {
@@ -114,6 +117,8 @@ pub fn run_eval<S: MemoryService + EmbeddingStore + JobQueue>(
         }
     }
     let model_id = embedder.model_id();
+    // The first call can load the model; keep that out of the latency samples.
+    embedder.embed(&["warm-up".to_string()])?;
 
     let mut samples: Samples = BTreeMap::new();
     for q in &ds.queries {
@@ -139,36 +144,39 @@ pub fn run_eval<S: MemoryService + EmbeddingStore + JobQueue>(
             include_inactive: false,
         };
         for mode in MODES {
-            let start = Instant::now();
-            let ranked: Vec<MemoryId> = match mode {
-                "fts" => store
-                    .search(Some(project), sq.clone())?
-                    .into_iter()
-                    .map(|h| h.memory.id)
-                    .collect(),
-                "vector" => {
-                    let v = embedder.embed(std::slice::from_ref(&q.text))?.remove(0);
-                    store
-                        .vector_search(Some(project), &model_id, &v, &sq)?
+            let mut times = vec![];
+            let mut ranked: Vec<MemoryId> = vec![];
+            for _ in 0..runs.max(1) {
+                let start = Instant::now();
+                ranked = match mode {
+                    "fts" => store
+                        .search(Some(project), sq.clone())?
                         .into_iter()
                         .map(|h| h.memory.id)
-                        .collect()
-                }
-                _ => {
-                    let r = hybrid_search(store, Some(embedder), Some(project), sq.clone())?;
-                    if let Some(why) = r.degraded {
-                        return Err(Error::Unavailable(format!("hybrid degraded: {why}")));
+                        .collect(),
+                    "vector" => {
+                        let v = embedder.embed(std::slice::from_ref(&q.text))?.remove(0);
+                        store
+                            .vector_search(Some(project), &model_id, &v, &sq)?
+                            .into_iter()
+                            .map(|h| h.memory.id)
+                            .collect()
                     }
-                    r.hits.into_iter().map(|h| h.hit.memory.id).collect()
-                }
-            };
-            let ms = start.elapsed().as_secs_f64() * 1000.0;
+                    _ => {
+                        let r = hybrid_search(store, Some(embedder), Some(project), sq.clone())?;
+                        if let Some(why) = r.degraded {
+                            return Err(Error::Unavailable(format!("hybrid degraded: {why}")));
+                        }
+                        r.hits.into_iter().map(|h| h.hit.memory.id).collect()
+                    }
+                };
+                times.push(start.elapsed().as_secs_f64() * 1000.0);
+            }
             let (recall, rr) = score(&ranked, &relevant);
             for lang in [q.lang.clone(), "all".into()] {
-                samples
-                    .entry((lang, mode))
-                    .or_default()
-                    .push((recall, rr, ms));
+                let s = samples.entry((lang, mode)).or_default();
+                s.0.push((recall, rr));
+                s.1.extend(&times);
             }
         }
     }
@@ -178,16 +186,16 @@ pub fn run_eval<S: MemoryService + EmbeddingStore + JobQueue>(
         .iter()
         .flat_map(|l| MODES.iter().map(move |m| (l.to_string(), *m)))
         .filter_map(|key| {
-            let s = samples.get(&key)?;
-            let n = s.len() as f64;
-            let mut ms: Vec<f64> = s.iter().map(|x| x.2).collect();
+            let (quality, times) = samples.get(&key)?;
+            let n = quality.len() as f64;
+            let mut ms = times.clone();
             ms.sort_by(f64::total_cmp);
             Some(Row {
                 lang: key.0,
                 mode: key.1,
-                queries: s.len(),
-                recall_at_5: s.iter().map(|x| x.0).sum::<f64>() / n,
-                mrr: s.iter().map(|x| x.1).sum::<f64>() / n,
+                queries: quality.len(),
+                recall_at_5: quality.iter().map(|x| x.0).sum::<f64>() / n,
+                mrr: quality.iter().map(|x| x.1).sum::<f64>() / n,
                 p50_ms: percentile(&ms, 0.50),
                 p95_ms: percentile(&ms, 0.95),
             })
@@ -198,6 +206,7 @@ pub fn run_eval<S: MemoryService + EmbeddingStore + JobQueue>(
         dimension: store.embedding_index()?.and_then(|i| i.dimension),
         memories: ds.memories.len(),
         queries: ds.queries.len(),
+        runs: runs.max(1),
         rows,
     })
 }
