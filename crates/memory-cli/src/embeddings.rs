@@ -77,6 +77,10 @@ pub fn run(store: &SqliteStore, command: EmbeddingsCommand, json: bool) -> anyho
             );
             if remaining > 0 && done + failed.len() >= limit {
                 println!("limit {limit} reached: run `chloe embeddings backfill` again");
+            } else if remaining > 0 {
+                println!(
+                    "{remaining} job(s) are leased by an interrupted run or waiting to retry: see `chloe jobs list`; a lease expires after 5 minutes, then run this again"
+                );
             }
             for (m, e) in &failed {
                 println!("  {m}: {e} (will retry, or `chloe jobs list`)");
