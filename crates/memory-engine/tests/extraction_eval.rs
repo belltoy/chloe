@@ -142,6 +142,7 @@ fn extraction_against_a_live_model() {
     let mut per = String::new();
     for s in load() {
         let id = s["id"].as_str().unwrap();
+        let all_events = events(&s);
         let got = model
             .extract(&ExtractionInput {
                 native_agent: "claude_code".into(),
@@ -190,6 +191,19 @@ fn extraction_against_a_live_model() {
                 c.title,
                 c.content.replace('\n', " ")
             );
+            let cited: Vec<String> = c
+                .evidence
+                .events
+                .iter()
+                .map(|k| {
+                    all_events
+                        .iter()
+                        .find(|e| &e.idempotency_key() == k)
+                        .and_then(|e| e.native_event_id.clone())
+                        .unwrap_or_else(|| "?".into())
+                })
+                .collect();
+            let _ = writeln!(per, "    evidence: {}", cited.join(", "));
         }
         if expect.is_empty() {
             empty_sessions.0 += 1;
