@@ -8,7 +8,7 @@ These errors can pollute long-term memory, so the acceptance set must show none.
 
 | Measure | Definition | Now | Target | Status |
 |---|---|---|---|---|
-| Hallucination | Candidate content has no support in the session, or a number, negation or scope is altered. Judged by a person over all candidates, including TRAP and UNEXPECTED ones | first baseline (original prompt, 38 candidates, all reviewed): 8 partly unsupported (about 21%), 0 fully unfaithful; current prompt (28 sessions, 37 candidates): **not reviewed** | 0 | **Not met** on the first baseline; **unknown** for the current prompt |
+| Hallucination | Candidate content has no support in the session, or a number, negation or scope is altered. Judged by a person over all candidates, including TRAP and UNEXPECTED ones | first baseline (original prompt, 38 candidates, all reviewed): 8 partly unsupported (about 21%), 0 fully unfaithful; current prompt (28 sessions, 37 candidates, two reviewers, `review-current.md`): 17 of 37 partly or wholly unsupported (45.9%; 18 if the one disputed item is ruled against), 1 undecided | 0 | **Not met** on both; the two reviews differ in strictness (see `review-current.md`) |
 | Constraint/Decision false extraction | A constraint or decision that records an environment workaround, an assistant preference, or an abandoned approach | 2 (t01 cache workaround, t05 `anyhow` preference) | 0 | **Not met** |
 
 ## Soft goals
@@ -103,3 +103,9 @@ The residue of decision false extractions that are only a request (n07) is accep
 So the hallucination hard line is **not met** on the first baseline: 8 of 38 candidates (about 21%) state something the events do not support, and none of them is a pure fabrication. The 17 earlier ones count as 0 by the earlier review. Dominant failure: the model explains *why* when the events only show *what*, and attributes agent actions to the user or "the team". The prompt already says "do not add reasons, causes or details they do not give"; the 8B model does not follow it reliably.
 
 This was measured on the first-baseline outputs (original prompt). The round 1 and 2 prompts changed what is produced; the same review has not been done for them.
+
+## Hallucination review of the current prompt (37 candidates)
+
+Two reviewers, claim by claim, citation status recorded separately (`review-current.md`): 19 faithful, 15 partly faithful, 2 unfaithful, 1 undecided (#9). Rate 17/37 = 45.9% (48.6% if #9 is ruled partial). Not comparable to the 21.1% of the first baseline: this review also counts "the assistant reported success" written as "verified". The three strictness choices that move the number (assistant report vs verified result; "known issue / standard approach" wording; one fix widened to a rule) are listed in the review and need a decision from the user; with the most lenient choice on the first, about 30–32%. Wrong attribution fell to 0. Still present: invented motives and benefits, widened scope, a sandbox workaround as a lasting limitation. New: assistant reports promoted to verified results, a wrong command detail, a diff read as two queries, an invented consequence. Failures are mostly content, not citation: only #33 and #37 are faithful with weak citations. Six candidates that the keyword grader counted as hits are partly unfaithful.
+
+Next step agreed in discussion: a minimal prompt change (drop "must state the why"; assistant reports stay reports; one fix is not a rule), validated on new frozen sessions written before looking at results; only if a clear residue remains, add the attribution check and a second verification pass.
