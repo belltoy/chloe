@@ -1,0 +1,867 @@
+{
+ "memories": [
+  {
+   "key": "e01",
+   "kind": "decision",
+   "title": "Separate connection pool per upstream",
+   "content": "Each upstream service gets its own egrpc_channel_pool so one slow upstream cannot exhaust connections for the others."
+  },
+  {
+   "key": "e02",
+   "kind": "decision",
+   "title": "Use gRPC deadlines, not socket timeouts",
+   "content": "Set a deadline on every call; the server cancels work when it passes. Socket-level timeouts are left at their defaults."
+  },
+  {
+   "key": "e03",
+   "kind": "gotcha",
+   "title": "ETIMEDOUT during pool warm-up",
+   "content": "Starting the pool before the upstream DNS record exists produces ETIMEDOUT and the pool never retries on its own."
+  },
+  {
+   "key": "e04",
+   "kind": "gotcha",
+   "title": "badarg from ets after a supervisor restart",
+   "content": "ETS tables owned by a crashed process vanish; callers then get badarg until the owner is restarted and recreates the table."
+  },
+  {
+   "key": "e05",
+   "kind": "procedure",
+   "title": "Hot code upgrade checklist",
+   "content": "Build the appup file, run relup in staging, and confirm that no process holds state in an old record layout."
+  },
+  {
+   "key": "e06",
+   "kind": "constraint",
+   "title": "No blocking calls in gen_server callbacks",
+   "content": "A gen_server callback must not make a synchronous call to another busy server; use a cast or a task instead."
+  },
+  {
+   "key": "e07",
+   "kind": "fact",
+   "title": "Error code E1042",
+   "content": "E1042 means the request body exceeded the 4 MiB message limit configured on the channel."
+  },
+  {
+   "key": "e08",
+   "kind": "fact",
+   "title": "Error code E2007",
+   "content": "E2007 means the caller's token lacks the scope required by the method."
+  },
+  {
+   "key": "e09",
+   "kind": "decision",
+   "title": "Retry only idempotent calls",
+   "content": "The client retries a failed call up to twice, but only when the method is marked idempotent in the protobuf options."
+  },
+  {
+   "key": "e10",
+   "kind": "procedure",
+   "title": "Rotate service certificates",
+   "content": "Issue the new certificate, deploy it next to the old one, wait for all clients to reload, then remove the old one."
+  },
+  {
+   "key": "e11",
+   "kind": "gotcha",
+   "title": "Large messages and memory",
+   "content": "Streaming a 100 MB response into a single binary doubles memory use; stream in chunks instead."
+  },
+  {
+   "key": "e12",
+   "kind": "decision",
+   "title": "Mnesia is not used for session data",
+   "content": "Session data lives in Redis because mnesia schema changes are hard to roll out across nodes."
+  },
+  {
+   "key": "e13",
+   "kind": "constraint",
+   "title": "Rate limit per tenant",
+   "content": "Each tenant is limited to 200 requests per second; excess requests get RESOURCE_EXHAUSTED."
+  },
+  {
+   "key": "e14",
+   "kind": "fact",
+   "title": "Health endpoint",
+   "content": "The /health endpoint returns 200 only when the pool has at least one ready channel."
+  },
+  {
+   "key": "e15",
+   "kind": "gotcha",
+   "title": "Log sampling hides errors",
+   "content": "With 1 percent log sampling, rare error classes can disappear from dashboards; always log errors unsampled."
+  },
+  {
+   "key": "e16",
+   "kind": "procedure",
+   "title": "Reproduce a flaky test",
+   "content": "Run the test 200 times with a fixed random seed, then bisect by removing concurrent tests."
+  },
+  {
+   "key": "e17",
+   "kind": "decision",
+   "title": "Telemetry event names",
+   "content": "Event names use the form egrpc.client.<event>.<measurement>, never dynamic values in the name."
+  },
+  {
+   "key": "e18",
+   "kind": "fact",
+   "title": "Supported OTP versions",
+   "content": "The library is tested against the two latest OTP major releases."
+  },
+  {
+   "key": "e19",
+   "kind": "constraint",
+   "title": "No atoms from user input",
+   "content": "Never call binary_to_atom on request data; use binary_to_existing_atom or keep binaries."
+  },
+  {
+   "key": "e20",
+   "kind": "gotcha",
+   "title": "Backpressure on streams",
+   "content": "A server-streaming handler that ignores send errors keeps producing after the client left, wasting CPU."
+  },
+  {
+   "key": "e21",
+   "kind": "procedure",
+   "title": "Capture a crash dump",
+   "content": "Set ERL_CRASH_DUMP to a writable directory and analyse it with the crashdump viewer."
+  },
+  {
+   "key": "e22",
+   "kind": "decision",
+   "title": "Semantic versioning",
+   "content": "Breaking protobuf changes bump the major version; field additions bump the minor version."
+  },
+  {
+   "key": "e23",
+   "kind": "fact",
+   "title": "Default pool size",
+   "content": "The default pool holds 8 channels per upstream, configurable with the pool_size option."
+  },
+  {
+   "key": "e24",
+   "kind": "gotcha",
+   "title": "DNS caching",
+   "content": "Channel resolution is cached for 30 seconds, so a changed record is picked up only after that."
+  },
+  {
+   "key": "z01",
+   "kind": "decision",
+   "title": "灰度发布比例",
+   "content": "新版本先放百分之五的流量，观察错误率半小时后再扩大到一半。"
+  },
+  {
+   "key": "z02",
+   "kind": "gotcha",
+   "title": "时钟回拨",
+   "content": "虚拟机迁移后系统时钟可能回拨，依赖单调时间以外的超时判断会提前触发。"
+  },
+  {
+   "key": "z03",
+   "kind": "procedure",
+   "title": "排查进程内存增长",
+   "content": "先用 observer 查看按内存排序的进程，再检查是否有进程邮箱持续积压。"
+  },
+  {
+   "key": "z04",
+   "kind": "constraint",
+   "title": "禁止在循环里建立连接",
+   "content": "不允许在请求处理循环里新建数据库连接，必须从连接池借用。"
+  },
+  {
+   "key": "z05",
+   "kind": "decision",
+   "title": "数据库连接池大小",
+   "content": "数据库连接池大小设为核心数的两倍，超出的请求排队等待而不是新建连接。"
+  },
+  {
+   "key": "z06",
+   "kind": "procedure",
+   "title": "备份与恢复演练",
+   "content": "每季度做一次数据库恢复演练，记录耗时和遇到的问题。"
+  },
+  {
+   "key": "z07",
+   "kind": "gotcha",
+   "title": "protobuf 字段编号复用",
+   "content": "删除字段后不能复用编号，旧客户端会把新数据解析成错误的类型。"
+  },
+  {
+   "key": "z08",
+   "kind": "procedure",
+   "title": "回滚失败的发布",
+   "content": "发现错误率上升时先切回上一个版本，再分析日志，不要在线上直接修补。"
+  },
+  {
+   "key": "z09",
+   "kind": "decision",
+   "title": "告警分级",
+   "content": "只有影响用户的故障才会呼叫值班人员，其余告警进入工作日处理队列。"
+  },
+  {
+   "key": "z10",
+   "kind": "fact",
+   "title": "值班交接",
+   "content": "值班交接在周一上午进行，交接文档记录未关闭的告警和已知风险。"
+  },
+  {
+   "key": "z11",
+   "kind": "gotcha",
+   "title": "滚动更新丢请求",
+   "content": "滚动更新时如果就绪探针过早通过，新实例会在预热完成前收到流量。"
+  },
+  {
+   "key": "z12",
+   "kind": "constraint",
+   "title": "配置不得硬编码",
+   "content": "超时、重试次数和限流阈值必须来自配置，代码里不能写死。"
+  },
+  {
+   "key": "z13",
+   "kind": "procedure",
+   "title": "压测流程",
+   "content": "压测前先冻结其他变更，使用生产数据的脱敏副本，逐步提高并发直到延迟超标。"
+  },
+  {
+   "key": "z14",
+   "kind": "decision",
+   "title": "日志格式",
+   "content": "日志使用 JSON 一行一条，必须包含请求编号和租户编号。"
+  },
+  {
+   "key": "z15",
+   "kind": "fact",
+   "title": "服务等级目标",
+   "content": "核心接口的可用性目标是百分之九十九点九，延迟 p99 低于三百毫秒。"
+  },
+  {
+   "key": "z16",
+   "kind": "gotcha",
+   "title": "重试风暴",
+   "content": "下游故障时所有客户端同时重试会放大流量，重试必须带随机抖动。"
+  },
+  {
+   "key": "z17",
+   "kind": "fact",
+   "title": "代码仓库布局",
+   "content": "核心库在 apps 目录，示例和压测脚本放在 tools 目录。"
+  },
+  {
+   "key": "z18",
+   "kind": "decision",
+   "title": "接口幂等键",
+   "content": "写操作要求客户端传入幂等键，服务端保存二十四小时用于去重。"
+  },
+  {
+   "key": "x01",
+   "kind": "decision",
+   "title": "channel_pool 的 checkout 超时",
+   "content": "egrpc_channel_pool 的 checkout 等待超过 500 毫秒就返回 pool_exhausted，不无限排队。"
+  },
+  {
+   "key": "x02",
+   "kind": "gotcha",
+   "title": "gen_server:call 默认超时",
+   "content": "gen_server:call 默认 5 秒超时，调用方崩溃会连带上游，重要调用要显式设置 timeout。"
+  },
+  {
+   "key": "x03",
+   "kind": "fact",
+   "title": "rebar3 常用命令",
+   "content": "rebar3 ct 运行 Common Test，rebar3 dialyzer 做类型检查，rebar3 as prod release 打包。"
+  },
+  {
+   "key": "x04",
+   "kind": "procedure",
+   "title": "Dialyzer 警告处理",
+   "content": "新增的 dialyzer warning 在 CI 里视为失败，确实需要忽略时在代码里加 -dialyzer 属性并写明原因。"
+  },
+  {
+   "key": "x05",
+   "kind": "gotcha",
+   "title": "supervisor 重启强度",
+   "content": "supervisor 的 intensity 和 period 设得太小会让整个应用被重启，设得太大会掩盖崩溃循环。"
+  },
+  {
+   "key": "x06",
+   "kind": "decision",
+   "title": "用 persistent_term 存配置",
+   "content": "运行时不变的配置放进 persistent_term，更新很少，因为每次更新都会触发全局 GC。"
+  },
+  {
+   "key": "x07",
+   "kind": "fact",
+   "title": "Prometheus 指标命名",
+   "content": "指标名使用下划线，单位放在后缀，比如 request_duration_seconds。"
+  },
+  {
+   "key": "x08",
+   "kind": "procedure",
+   "title": "gRPC 反射调试",
+   "content": "用 grpcurl 配合 server reflection 调用接口，生产环境默认关闭 reflection。"
+  },
+  {
+   "key": "x09",
+   "kind": "gotcha",
+   "title": "certificate_expired 握手失败",
+   "content": "出现 certificate_expired 通常是中间证书过期而不是服务证书，需要检查整条证书链。"
+  },
+  {
+   "key": "x10",
+   "kind": "constraint",
+   "title": "protobuf optional 字段",
+   "content": "新增的 protobuf 字段必须是 optional，并且在 .proto 里写明默认值的含义。"
+  },
+  {
+   "key": "x11",
+   "kind": "fact",
+   "title": "OTP 并发模型",
+   "content": "每个请求一个 Erlang 进程，进程之间不共享内存，靠消息传递通信。"
+  },
+  {
+   "key": "x12",
+   "kind": "decision",
+   "title": "Docker 镜像基础",
+   "content": "运行时镜像基于 alpine 精简版，构建镜像包含完整的 rebar3 和编译器。"
+  },
+  {
+   "key": "x13",
+   "kind": "gotcha",
+   "title": "ETS 表 public 与 protected",
+   "content": "ETS 表设为 public 会让任何进程都能写入，除非确实需要，否则用 protected。"
+  },
+  {
+   "key": "x14",
+   "kind": "procedure",
+   "title": "分析 fprof 结果",
+   "content": "fprof 开销很大，只在预发环境对单个进程启用，分析 own 时间最高的函数。"
+  },
+  {
+   "key": "x15",
+   "kind": "fact",
+   "title": "Redis 会话过期",
+   "content": "Redis 里的会话键 TTL 是 30 分钟，每次请求会续期。"
+  },
+  {
+   "key": "x16",
+   "kind": "decision",
+   "title": "错误码返回规范",
+   "content": "对外错误统一返回 gRPC status 加 E 开头的业务码，详情放在 trailer 里。"
+  },
+  {
+   "key": "x17",
+   "kind": "gotcha",
+   "title": "大 binary 与内存释放",
+   "content": "引用计数的大 binary 在进程间传递很便宜，但长期持有会让内存迟迟不释放。"
+  },
+  {
+   "key": "x18",
+   "kind": "procedure",
+   "title": "就绪探针配置",
+   "content": "readiness probe 指向 /health，initialDelay 设为 10 秒，失败三次摘除流量。"
+  }
+ ],
+ "queries": [
+  {
+   "id": "h01",
+   "lang": "en",
+   "tag": "ident",
+   "text": "what does E1042 mean",
+   "relevant": [
+    "e07"
+   ],
+   "note": ""
+  },
+  {
+   "id": "h02",
+   "lang": "en",
+   "tag": "ident",
+   "text": "E2007",
+   "relevant": [
+    "e08"
+   ],
+   "note": ""
+  },
+  {
+   "id": "h03",
+   "lang": "en",
+   "tag": "ident",
+   "text": "ETIMEDOUT when the pool starts",
+   "relevant": [
+    "e03"
+   ],
+   "note": ""
+  },
+  {
+   "id": "h04",
+   "lang": "en",
+   "tag": "ident",
+   "text": "badarg after supervisor restart",
+   "relevant": [
+    "e04"
+   ],
+   "note": ""
+  },
+  {
+   "id": "h05",
+   "lang": "en",
+   "tag": "para",
+   "text": "why is one slow backend not allowed to starve the others",
+   "relevant": [
+    "e01"
+   ],
+   "note": "hard negatives: z04, z05 (database pools)"
+  },
+  {
+   "id": "h06",
+   "lang": "en",
+   "tag": "para",
+   "text": "what stops a call from running forever",
+   "relevant": [
+    "e02"
+   ],
+   "note": ""
+  },
+  {
+   "id": "h07",
+   "lang": "en",
+   "tag": "hardneg",
+   "text": "default pool size for gRPC channels",
+   "relevant": [
+    "e23"
+   ],
+   "note": "hard negative: z05 (database pool size)"
+  },
+  {
+   "id": "h08",
+   "lang": "en",
+   "tag": "hardneg",
+   "text": "which calls does the client retry",
+   "relevant": [
+    "e09"
+   ],
+   "note": "hard negatives: z16 (retry storms), z18 (idempotency keys) are about other aspects"
+  },
+  {
+   "id": "h09",
+   "lang": "en",
+   "tag": "plain",
+   "text": "how do I run a test over and over to find a flaky failure",
+   "relevant": [
+    "e16"
+   ],
+   "note": ""
+  },
+  {
+   "id": "h10",
+   "lang": "en",
+   "tag": "plain",
+   "text": "can we create atoms from request data",
+   "relevant": [
+    "e19"
+   ],
+   "note": ""
+  },
+  {
+   "id": "h11",
+   "lang": "en",
+   "tag": "plain",
+   "text": "where do we keep session data",
+   "relevant": [
+    "e12",
+    "x15"
+   ],
+   "note": "both answer it"
+  },
+  {
+   "id": "h12",
+   "lang": "en",
+   "tag": "hardneg",
+   "text": "what must happen before the health endpoint returns 200",
+   "relevant": [
+    "e14"
+   ],
+   "note": "hard negatives: x18, z11 (probes)"
+  },
+  {
+   "id": "h13",
+   "lang": "en",
+   "tag": "plain",
+   "text": "how long is DNS information cached",
+   "relevant": [
+    "e24"
+   ],
+   "note": ""
+  },
+  {
+   "id": "h14",
+   "lang": "en",
+   "tag": "para",
+   "text": "what format do telemetry event names follow",
+   "relevant": [
+    "e17"
+   ],
+   "note": "hard negative: x07 (Prometheus metric names)"
+  },
+  {
+   "id": "h15",
+   "lang": "zh",
+   "tag": "plain",
+   "text": "一次放多少流量给新版本",
+   "relevant": [
+    "z01"
+   ],
+   "note": ""
+  },
+  {
+   "id": "h16",
+   "lang": "zh",
+   "tag": "para",
+   "text": "虚拟机迁移之后超时为什么会提前触发",
+   "relevant": [
+    "z02"
+   ],
+   "note": ""
+  },
+  {
+   "id": "h17",
+   "lang": "zh",
+   "tag": "plain",
+   "text": "内存涨得很快怎么查",
+   "relevant": [
+    "z03"
+   ],
+   "note": ""
+  },
+  {
+   "id": "h18",
+   "lang": "zh",
+   "tag": "hardneg",
+   "text": "数据库连接池设多大",
+   "relevant": [
+    "z05"
+   ],
+   "note": "hard negatives: z04, e23, e01 (other pools)"
+  },
+  {
+   "id": "h19",
+   "lang": "zh",
+   "tag": "plain",
+   "text": "删除字段之后编号能再用吗",
+   "relevant": [
+    "z07"
+   ],
+   "note": ""
+  },
+  {
+   "id": "h20",
+   "lang": "zh",
+   "tag": "para",
+   "text": "发布出问题之后怎么办",
+   "relevant": [
+    "z08"
+   ],
+   "note": ""
+  },
+  {
+   "id": "h21",
+   "lang": "zh",
+   "tag": "para",
+   "text": "什么情况下会半夜呼叫值班的人",
+   "relevant": [
+    "z09"
+   ],
+   "note": ""
+  },
+  {
+   "id": "h22",
+   "lang": "zh",
+   "tag": "plain",
+   "text": "滚动更新时请求为什么会丢",
+   "relevant": [
+    "z11"
+   ],
+   "note": ""
+  },
+  {
+   "id": "h23",
+   "lang": "zh",
+   "tag": "hardneg",
+   "text": "重试为什么要加随机",
+   "relevant": [
+    "z16"
+   ],
+   "note": "hard negative: e09 (which calls are retried)"
+  },
+  {
+   "id": "h24",
+   "lang": "zh",
+   "tag": "plain",
+   "text": "压测之前要做什么准备",
+   "relevant": [
+    "z13"
+   ],
+   "note": ""
+  },
+  {
+   "id": "h25",
+   "lang": "zh",
+   "tag": "plain",
+   "text": "日志里必须带哪些字段",
+   "relevant": [
+    "z14"
+   ],
+   "note": ""
+  },
+  {
+   "id": "h26",
+   "lang": "mixed",
+   "tag": "ident",
+   "text": "egrpc_channel_pool 的 checkout 超时",
+   "relevant": [
+    "x01"
+   ],
+   "note": ""
+  },
+  {
+   "id": "h27",
+   "lang": "mixed",
+   "tag": "hardneg",
+   "text": "gen_server:call 超时",
+   "relevant": [
+    "x02"
+   ],
+   "note": "hard negative: e06 (gen_server callbacks)"
+  },
+  {
+   "id": "h28",
+   "lang": "mixed",
+   "tag": "ident",
+   "text": "dialyzer warning 在 CI 怎么处理",
+   "relevant": [
+    "x04"
+   ],
+   "note": ""
+  },
+  {
+   "id": "h29",
+   "lang": "mixed",
+   "tag": "ident",
+   "text": "supervisor intensity 设多少",
+   "relevant": [
+    "x05"
+   ],
+   "note": ""
+  },
+  {
+   "id": "h30",
+   "lang": "mixed",
+   "tag": "ident",
+   "text": "persistent_term 更新的代价",
+   "relevant": [
+    "x06"
+   ],
+   "note": ""
+  },
+  {
+   "id": "h31",
+   "lang": "mixed",
+   "tag": "ident",
+   "text": "grpcurl 怎么调试",
+   "relevant": [
+    "x08"
+   ],
+   "note": ""
+  },
+  {
+   "id": "h32",
+   "lang": "mixed",
+   "tag": "hardneg",
+   "text": "新增 protobuf 字段要不要 optional",
+   "relevant": [
+    "x10"
+   ],
+   "note": "hard negatives: z07, e22 (other protobuf rules)"
+  },
+  {
+   "id": "h33",
+   "lang": "mixed",
+   "tag": "ident",
+   "text": "ETS 表 public 好不好",
+   "relevant": [
+    "x13"
+   ],
+   "note": "hard negative: e04 (ETS tables)"
+  },
+  {
+   "id": "h34",
+   "lang": "mixed",
+   "tag": "para",
+   "text": "binary 引用计数为什么内存不释放",
+   "relevant": [
+    "x17"
+   ],
+   "note": "hard negative: e11 (large messages)"
+  },
+  {
+   "id": "h35",
+   "lang": "mixed",
+   "tag": "hardneg",
+   "text": "certificate_expired 怎么排查",
+   "relevant": [
+    "x09"
+   ],
+   "note": "hard negative: e10 (rotate certificates)"
+  },
+  {
+   "id": "h36",
+   "lang": "cross",
+   "tag": "hardneg",
+   "text": "为什么要给每个上游单独建连接池",
+   "relevant": [
+    "e01"
+   ],
+   "note": "zh -> en; hard negatives: z04, z05 (Chinese database pools)"
+  },
+  {
+   "id": "h37",
+   "lang": "cross",
+   "tag": "plain",
+   "text": "请求体太大会报什么错",
+   "relevant": [
+    "e07"
+   ],
+   "note": "zh -> en"
+  },
+  {
+   "id": "h38",
+   "lang": "cross",
+   "tag": "plain",
+   "text": "没有权限调用某个方法返回什么码",
+   "relevant": [
+    "e08"
+   ],
+   "note": "zh -> en"
+  },
+  {
+   "id": "h39",
+   "lang": "cross",
+   "tag": "plain",
+   "text": "热升级前要检查什么",
+   "relevant": [
+    "e05"
+   ],
+   "note": "zh -> en"
+  },
+  {
+   "id": "h40",
+   "lang": "cross",
+   "tag": "para",
+   "text": "客户端已经走了服务端还在发怎么办",
+   "relevant": [
+    "e20"
+   ],
+   "note": "zh -> en; hard negative: e02"
+  },
+  {
+   "id": "h41",
+   "lang": "cross",
+   "tag": "plain",
+   "text": "每个租户一秒最多能发多少请求",
+   "relevant": [
+    "e13"
+   ],
+   "note": "zh -> en"
+  },
+  {
+   "id": "h42",
+   "lang": "cross",
+   "tag": "plain",
+   "text": "为什么不能把用户输入转成 atom",
+   "relevant": [
+    "e19"
+   ],
+   "note": "zh -> en"
+  },
+  {
+   "id": "h43",
+   "lang": "cross",
+   "tag": "hardneg",
+   "text": "证书怎么平滑轮换",
+   "relevant": [
+    "e10"
+   ],
+   "note": "zh -> en; hard negative: x09"
+  },
+  {
+   "id": "h44",
+   "lang": "cross",
+   "tag": "hardneg",
+   "text": "gen_server 回调里能不能同步调用别的服务",
+   "relevant": [
+    "e06"
+   ],
+   "note": "zh -> en; hard negative: x02"
+  },
+  {
+   "id": "h45",
+   "lang": "cross",
+   "tag": "plain",
+   "text": "how do we ship a new version gradually",
+   "relevant": [
+    "z01"
+   ],
+   "note": "en -> zh"
+  },
+  {
+   "id": "h46",
+   "lang": "cross",
+   "tag": "plain",
+   "text": "how do I find which process is eating memory",
+   "relevant": [
+    "z03"
+   ],
+   "note": "en -> zh"
+  },
+  {
+   "id": "h47",
+   "lang": "cross",
+   "tag": "hardneg",
+   "text": "what happens when certificate_expired shows up in the TLS handshake",
+   "relevant": [
+    "x09"
+   ],
+   "note": "en -> mixed; hard negative: e10"
+  },
+  {
+   "id": "h48",
+   "lang": "cross",
+   "tag": "para",
+   "text": "what is the availability target for core endpoints",
+   "relevant": [
+    "z15"
+   ],
+   "note": "en -> zh"
+  },
+  {
+   "id": "h49",
+   "lang": "cross",
+   "tag": "hardneg",
+   "text": "when should the retry be randomised",
+   "relevant": [
+    "z16"
+   ],
+   "note": "en -> zh; hard negative: e09"
+  },
+  {
+   "id": "h50",
+   "lang": "cross",
+   "tag": "plain",
+   "text": "who gets paged at night",
+   "relevant": [
+    "z09"
+   ],
+   "note": "en -> zh"
+  }
+ ]
+}

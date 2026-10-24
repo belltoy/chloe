@@ -9,12 +9,16 @@ use memory_core::{ProjectId, Result};
 use memory_engine::{Dataset, run_eval};
 use memory_store::SqliteStore;
 
-fn dataset() -> Dataset {
-    let path = concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/../../docs/evidence/milestone-b/eval/dataset.json"
+fn load(file: &str) -> Dataset {
+    let path = format!(
+        "{}/../../docs/evidence/milestone-b/eval/{file}",
+        env!("CARGO_MANIFEST_DIR")
     );
     serde_json::from_slice(&std::fs::read(path).unwrap()).unwrap()
+}
+
+fn dataset() -> Dataset {
+    load("dataset.json")
 }
 
 /// Deterministic stand-in: a bag of hashed characters. Good enough to exercise the run.
@@ -35,19 +39,17 @@ impl Embedder for Chars {
     }
 }
 
-#[test]
-fn dataset_is_well_formed() {
-    let ds = dataset();
+fn assert_well_formed(
+    ds: &Dataset,
+    memories: std::ops::RangeInclusive<usize>,
+    queries: std::ops::RangeInclusive<usize>,
+) {
     assert!(
-        (50..=100).contains(&ds.memories.len()),
+        memories.contains(&ds.memories.len()),
         "{}",
         ds.memories.len()
     );
-    assert!(
-        (20..=30).contains(&ds.queries.len()),
-        "{}",
-        ds.queries.len()
-    );
+    assert!(queries.contains(&ds.queries.len()), "{}", ds.queries.len());
     let keys: HashSet<_> = ds.memories.iter().map(|m| m.key.as_str()).collect();
     assert_eq!(keys.len(), ds.memories.len(), "duplicate memory key");
     let ids: HashSet<_> = ds.queries.iter().map(|q| q.id.as_str()).collect();
@@ -70,6 +72,31 @@ fn dataset_is_well_formed() {
             ds.queries.iter().filter(|q| q.lang == lang).count() >= 5,
             "{lang}"
         );
+    }
+}
+
+#[test]
+fn dataset_is_well_formed() {
+    assert_well_formed(&dataset(), 50..=100, 20..=30);
+}
+
+/// The held-out set (draft, awaiting review) must stay separate: no query or memory text in
+/// common with the development set, so a result on it is not about memorised items.
+#[test]
+fn holdout_is_well_formed_and_disjoint_from_the_development_set() {
+    let (dev, hold) = (dataset(), load("holdout.json"));
+    assert_well_formed(&hold, 50..=100, 30..=60);
+    let texts: HashSet<_> = dev
+        .memories
+        .iter()
+        .map(|m| m.title.as_str())
+        .chain(dev.queries.iter().map(|q| q.text.as_str()))
+        .collect();
+    for m in &hold.memories {
+        assert!(!texts.contains(m.title.as_str()), "{}", m.title);
+    }
+    for q in &hold.queries {
+        assert!(!texts.contains(q.text.as_str()), "{}", q.text);
     }
 }
 
