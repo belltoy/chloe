@@ -27,7 +27,20 @@ impl MemoryExtractor for Fixed {
     fn extract(&self, input: &ExtractionInput) -> Result<Vec<Candidate>> {
         Ok(vec![Candidate {
             kind: Kind::Fact,
-            title: format!("fact about {}", input.native_session_id),
+            // Letters instead of digits: a digit in the title is a value that the target memory
+            // (which has none) would not share, and that would make the duplicate a conflict.
+            title: format!(
+                "fact about {}",
+                input
+                    .native_session_id
+                    .replace(|c: char| c.is_ascii_digit(), "x")
+                    + &input
+                        .native_session_id
+                        .chars()
+                        .filter(char::is_ascii_digit)
+                        .map(|d| (b'a' + d.to_digit(10).unwrap() as u8) as char)
+                        .collect::<String>()
+            ),
             content: "c".into(),
             evidence: Evidence {
                 native_agent: input.native_agent.clone(),
